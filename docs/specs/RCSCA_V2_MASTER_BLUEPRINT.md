@@ -110,3 +110,10 @@ This file is the implementation baseline. Confirmed decisions must not disappear
 - CYCLE OF GOODNESS = core system/worldview; PASS IT ON is no longer a primary brand navigation item.
 - 公益行動 = CARE hub. CARE and CONNECT remain equal 50/50 pillars.
 - PEOPLE and PARTNERS remain equal 50/50 participant roles.
+
+## V12 visual-system decisions
+- Brand entrance uses **Black Space × The 1% Trace**: no literal star field. Space is communicated through darkness, restrained grain, light, silk-like haze and one hero trace/meteor.
+- Enterprise landing prioritizes **ESG Services** immediately after the hero. Enterprise visitors must understand RCSCA can plan/execute ESG and social-impact work before seeing partner gamification.
+- Desktop H1/H2 and subtitles should remain one visual line whenever viewport width permits; no authored `<br>` for visual drama. Mobile may wrap naturally.
+- Navigation uses one restrained outlined/pill language across all primary pages; RCSCA lockup always links home.
+- Luxury styling must never reduce readability. Tables and information matrices use high-contrast text; muted color is reserved for secondary metadata only.
