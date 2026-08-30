@@ -79,3 +79,10 @@ This file is the implementation baseline. Confirmed decisions must not disappear
 - 正式主文案：第一個十年，我們把關懷扎進土地。下一個十年，讓共享從這裡發芽。
 - 補充：1% 不是十年的重新開始，而是讓十年的累積開始連結更多人。
 - 視覺採抽象根系／嫩芽，不做卡通蘿蔔；99/1 僅為品牌隱喻。
+
+## V8 visual / brand corrections
+- Brand entrance must remain present: cosmic night field, restrained shooting stars, RCSCA + Cycle of Goodness × 1% lockup.
+- After click, hold the brand moment and use one large meteor sweep / luminous atmospheric expansion to reveal the homepage; do not use a fast generic page transition.
+- The 1% sprout in the ten-year roots visual must align directly above the principal root/trunk.
+- Root/service vocabulary includes: 陪伴、孩子、家庭、物資、教育、偏鄉、單親、年長、新住民、身障、行動、連結.
+- Public-facing footer brand is RCSCA. Do not use the full legal association name as the closing brand signature; legal naming belongs only where legally/operationally necessary.
