@@ -1,28 +1,15 @@
-# RCSCA V2 · 1% Cycle of Goodness
+# RCSCA V2 — Homepage V4 calibrated
 
-Official starter repository for the RCSCA V2 platform.
+Calibrated against the agreed RCSCA V2 master blueprint.
 
-## Current status
-
-This repository is the engineering starter for the approved RCSCA V2 concept. Existing HTML prototypes are preserved under `public/prototypes/`. They are reference implementations only and are not yet connected to production authentication, database, permissions, payment, SMS, or case-management systems.
-
-## Planned stack
-
-- Next.js + TypeScript
-- Supabase / PostgreSQL
-- Supabase Auth + RLS
-- Vercel
-- Cloudflare
-- SMS provider to be selected later
-
-## Security rules
-
-- Never commit `.env`, service-role keys, recovery codes, identity numbers, financial exports, or PASS IT ON case data.
-- Production ownership stays with RCSCA-Taiwan organization.
-- High-risk changes must remain auditable.
-
-## Next engineering milestone
-
-1. Create Supabase organization and separate development / production projects.
-2. Add database migrations for profiles, memberships, teams, activities, ledgers, enterprises, support cases, roles, and audit logs.
-3. Add authentication and row-level security before connecting private member data.
+Core rules represented on homepage:
+- RCSCA × 1% × Cycle of Goodness
+- 1% has no fixed unit, monetary value, or standard definition
+- Separate Individual / MY 1% and Enterprise / YOUR 1% paths
+- RCSCA member-only unlock layer and HR network preview
+- Participation progress, levels, hidden unlocks and teams without money-based scoring
+- PASS IT ON breaks the fixed giver/receiver relationship
+- Enterprise 1% partner benefits are distinct from donated public-benefit resources
+- Service footprint: 4,197+ and 1,273+, continuing to grow
+- Documentary plan excluded
+- Brand entrance: black / muted gold / slow atmospheric reveal
