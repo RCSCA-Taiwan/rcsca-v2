@@ -86,3 +86,9 @@ This file is the implementation baseline. Confirmed decisions must not disappear
 - The 1% sprout in the ten-year roots visual must align directly above the principal root/trunk.
 - Root/service vocabulary includes: 陪伴、孩子、家庭、物資、教育、偏鄉、單親、年長、新住民、身障、行動、連結.
 - Public-facing footer brand is RCSCA. Do not use the full legal association name as the closing brand signature; legal naming belongs only where legally/operationally necessary.
+
+
+## Global Navigation — mandatory
+- The RCSCA brand lockup is always a Home control. On every subpage, clicking it routes to `/`.
+- Every prototype/legacy subpage must retain a visible Home escape route; users must never be trapped in MY 1%, 1% PARTNER, 1% NETWORK, rewards, signup, or admin flows.
+- Personal and enterprise worlds may have local back-navigation, but global Home navigation is never removed.
