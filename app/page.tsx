@@ -1,49 +1,46 @@
 import BrandEntrance from './BrandEntrance';
 
-const personalFeatures = ['共享足跡','同行天數','數位共享卡','小隊','XP / Level','隱藏解鎖'];
-const enterpriseFeatures = ['YOUR 1%','1% 合作標章','會員禮遇','工作機會','Impact','年度共享紀錄'];
+const personalFeatures=['共享足跡','同行天數','數位共享卡','小隊','XP / Level','隱藏解鎖'];
+const enterpriseFeatures=['YOUR 1%','1% 合作標章','會員禮遇','工作機會','Impact','年度共享紀錄'];
+const industries=['室內設計','水電工程','保險','法律','會計','醫療健康','餐飲','旅宿','教育','汽車','科技','零售'];
 
-export default function Home() {
-  return <>
-    <BrandEntrance />
-    <main>
-      <header className="nav"><div className="navInner">
-        <a className="brandLockup" href="#top" aria-label="RCSCA 1% Cycle of Goodness"><b>RCSCA</b><span className="brandOne">1%</span><small>Cycle of Goodness</small></a>
-        <nav><a href="#now">正在發生</a><a href="#ecosystem">1% 生態</a><a href="#pass">PASS IT ON</a><a href="#impact">共享足跡</a><a className="pill" href="#join">進入 1%</a></nav>
-      </div></header>
+const OneMark=({className=''})=><span className={`oneMark ${className}`}><b>1</b><i>%</i></span>;
 
-      <section id="top" className="hero homeHero"><div className="heroInner">
-        <div className="eyebrow">RCSCA · 1% · CYCLE OF GOODNESS</div>
-        <h1>每個人的 <em>1%</em>，<br/>都不一樣。</h1>
-        <p>1% 沒有固定形式、沒有固定單位，也不比較大小。你定義自己的 1%；RCSCA 讓不同的 1% 找到彼此，讓一次參與不只停在一次。</p>
-        <div className="heroActions"><a className="primary" href="#ecosystem">找到我的 1%</a><a className="textLink" href="#one">理解 1% →</a></div>
-      </div>
-      <div className="cycleMark" aria-hidden="true"><div className="cycleCore">1%</div><span className="c1">參與</span><span className="c2">連結</span><span className="c3">接住</span><span className="c4">回到循環</span></div></section>
+export default function Home(){return <><BrandEntrance/><main>
+<header className="nav"><div className="navInner">
+<a className="brandLockup" href="#top" aria-label="回到 RCSCA 首頁"><span className="brandRcsca">RCSCA</span><span className="brandCross">×</span><OneMark className="brandOne"/><span className="brandCross">×</span><small>Cycle of<br/>Goodness</small></a>
+<nav><a href="#now">正在發生</a><a href="#roles">個人</a><a href="#roles">企業</a><a href="#network">百工百業</a><a href="#pass">PASS IT ON</a><a className="pill" href="#join">進入 1%</a></nav>
+</div></header>
 
-      <section id="now" className="nowBand"><div className="nowInner"><div><div className="eyebrow">HAPPENING NOW</div><h2>2026 中秋物資認購</h2><p>育幼院／弱勢家庭中秋禮盒、生活及清潔物資。認購最低需求 200 單位，持續增加中。</p></div><a href="#">查看目前行動 →</a></div></section>
+<section id="top" className="hero homeHero"><div className="heroInner"><div className="eyebrow">RCSCA × 1% × CYCLE OF GOODNESS</div><h1>每個人的 <OneMark className="heroOne"/>，都不一樣。</h1><p>1% 沒有固定形式、沒有固定單位，也不比較大小。你定義自己的 1%；RCSCA 讓不同的 1% 找到彼此，讓一次參與不只停在一次。</p><div className="heroActions"><a className="primary" href="#roles">找到我的 1%</a><a className="textLink" href="#one">理解 1% →</a></div></div>
+<div className="livingCycle" aria-label="1% Cycle of Goodness 動態循環"><div className="cycleGlow"></div><div className="cycleCenter"><OneMark/></div><span className="flowNode n1">時間</span><span className="flowNode n2">專業</span><span className="flowNode n3">分享</span><span className="flowNode n4">資源</span><span className="flowNode n5">工作</span><span className="flowNode n6">陪伴</span><div className="orbit o1"></div><div className="orbit o2"></div><div className="flowDot d1"></div><div className="flowDot d2"></div><div className="flowDot d3"></div><small>不同的 1% · 進入同一個 Cycle</small></div></section>
 
-      <section id="ecosystem" className="section ecosystem"><div className="sectionHead"><div><div className="eyebrow">ONE PLATFORM · DIFFERENT ROLES</div><h2>同一個循環，<br/>不是同一種參與。</h2></div><p>個人與企業各自擁有自己的 1% 入口；正式會員再解鎖更深一層的共享網絡。平台不把所有人塞進同一套玩法。</p></div>
-        <div className="roleGrid">
-          <article className="roleCard rolePersonal"><div className="roleNo">01</div><div className="eyebrow">INDIVIDUAL · MY 1%</div><h3>個人</h3><p>從一次參與開始，留下自己的共享足跡。時間、專業、介紹、分享、行動，都可以是你的 1%。</p><div className="featureCloud">{personalFeatures.map(x=><span key={x}>{x}</span>)}</div><a href="/prototypes/RCSCA_MY1percent_dashboard_prototype.html">探索 MY 1% →</a></article>
-          <article className="roleCard roleEnterprise"><div className="roleNo">02</div><div className="eyebrow">ENTERPRISE · YOUR 1%</div><h3>企業</h3><p>產品、服務、職缺、專業、員工參與或其他資源，都能形成企業自己的 YOUR 1%，並留下可追溯的共享紀錄。</p><div className="featureCloud">{enterpriseFeatures.map(x=><span key={x}>{x}</span>)}</div><a href="/prototypes/RCSCA_YOUR1percent_enterprise_dashboard.html">探索 YOUR 1% →</a></article>
-        </div>
-      </section>
+<section id="now" className="nowBand"><div className="nowInner"><div><div className="eyebrow">HAPPENING NOW</div><h2>2026 中秋物資認購</h2><p>育幼院／弱勢家庭中秋禮盒、生活及清潔物資。認購最低需求 200 單位，持續增加中。</p></div><a href="#">查看目前行動 →</a></div></section>
 
-      <section className="memberUnlock"><div className="unlockInner"><div><div className="eyebrow">RCSCA MEMBER · UNLOCK</div><h2>加入協會，不是換一個頭銜。<br/>而是解鎖更深的連結。</h2></div><div className="unlockGrid"><div><b>生活人力網</b><span>保險、水電、設計、專業服務……在會員信任圈內找到人。</span></div><div><b>工作 × 人才</b><span>串連會員與企業端的職缺、人才與合作機會。</span></div><div><b>MEMBER 專屬</b><span>會員限定資訊、交流與未來逐步開放的功能。</span></div></div><p className="fairness">一般會員與永久會員在前台不分高低；會員價值來自「能解鎖什麼」，不是誰付得比較多。</p></div></section>
+<section id="roles" className="section ecosystem"><div className="sectionHead"><div><div className="eyebrow">ONE PLATFORM · DIFFERENT ROLES</div><h2>同一個循環，不是同一種參與。</h2></div><p>個人與企業各自擁有自己的 1% 入口；正式會員再解鎖更深一層的共享網絡。</p></div><div className="roleGrid">
+<article className="roleCard rolePersonal"><div className="roleNo">01</div><div className="eyebrow">INDIVIDUAL · MY 1%</div><h3>個人</h3><p>從一次參與開始，留下自己的共享足跡。時間、專業、介紹、分享、行動，都可以是你的 1%。</p><div className="featureCloud">{personalFeatures.map(x=><span key={x}>{x}</span>)}</div><a href="/prototypes/RCSCA_MY1percent_dashboard_prototype.html">探索 MY 1% →</a></article>
+<article className="roleCard roleEnterprise"><div className="roleNo">02</div><div className="eyebrow">ENTERPRISE · YOUR 1%</div><h3>企業</h3><p>產品、服務、職缺、專業、員工參與或其他資源，都能形成企業自己的 YOUR 1%，並留下可追溯的共享紀錄。</p><div className="featureCloud">{enterpriseFeatures.map(x=><span key={x}>{x}</span>)}</div><a href="/prototypes/RCSCA_YOUR1percent_enterprise_dashboard.html">探索 YOUR 1% →</a></article>
+</div></section>
 
-      <section id="one" className="section oneSection"><div className="bigOne">1%</div><div className="oneCopy"><div className="eyebrow">THE DEFINITION IS YOURS</div><h2>1% 沒有標準答案。</h2><p>它可以是時間、能力、資源、產品、服務、工作機會、一次介紹，或任何你願意拿出來參與的一個單位。不同人的 1%，不需要相同，也不需要等值。</p><div className="three"><div><b>不定價</b><span>不以金額決定參與價值</span></div><div><b>不比較</b><span>不把公益變成誰做得比較多</span></div><div><b>可累積</b><span>每次真實參與，都成為自己的共享足跡</span></div></div></div></section>
+<section className="identitySection"><div className="section"><div className="sectionHead"><div><div className="eyebrow">IDENTITY × LEVEL × PERMISSION</div><h2>先看懂我是誰，再看下一步能到哪裡。</h2></div><p>身份決定可使用的權限；Level 記錄參與歷程。兩者分開，不用金額買等級，也不以會費換 XP。</p></div>
+<div className="identityGrid"><div className="identityCard"><small>VISITOR</small><strong>一般參觀者</strong><p>不用註冊也能理解 1%、瀏覽公開公益行動、PASS IT ON 與公開企業資訊。</p><span>公開瀏覽</span></div><div className="identityArrow">→</div><div className="identityCard active"><small>MY 1%</small><strong>共享夥伴</strong><p>註冊後開始累積共享足跡、同行天數、XP／Level、共享點、小隊與數位共享卡。</p><span>免費註冊</span></div><div className="identityArrow">→</div><div className="identityCard member"><small>RCSCA MEMBER</small><strong>正式會員</strong><p>共享夥伴功能全部保留，再解鎖生活人力網、工作與人才、MEMBER 專屬。</p><span>一般／永久前台平權</span></div></div>
+<div className="levelMap"><div className="levelIntro"><small>PARTICIPATION JOURNEY</small><b>參與等級</b><span>Level ≠ Membership ≠ Permission</span></div><div className="levelSteps"><div><i>01</i><b>開始參與</b></div><div><i>02</i><b>持續同行</b></div><div><i>03</i><b>形成連結</b></div><div className="known"><i>04</i><b>共享連結者</b></div><div className="guardian"><i>05</i><b>共享守護者</b></div></div></div>
+<div className="cardLevels"><div className="shareCard cIvory"><small>MY 1%</small><b>START</b><span>初始共享卡</span></div><div className="shareCard cSilver"><small>MY 1%</small><b>CONTINUE</b><span>持續參與</span></div><div className="shareCard cChampagne"><small>MY 1%</small><b>CONNECT</b><span>形成連結</span></div><div className="shareCard cBronze"><small>MY 1%</small><b>Lv.4</b><span>共享連結者</span></div><div className="shareCard cBlack"><small>MY 1%</small><b>Lv.5</b><span>共享守護者</span></div></div><p className="microNote">數位共享卡的材質／色階反映參與階段；身份標記另行顯示權限。企業卡採獨立系列，不與個人混淆。</p>
+</div></section>
 
-      <section className="progressSection"><div className="section progressInner"><div className="sectionHead"><div><div className="eyebrow">VISIBLE PROGRESS · NOT A PRICE TAG</div><h2>看得見自己的累積，<br/>但不替善意標價。</h2></div><p>積分、等級與隱藏關卡用來增加參與感與黏著度；活動以「是否參與」累積，不因認購金額高低決定分數。</p></div><div className="progressGrid"><div className="levelCard"><small>LEVEL</small><strong>共享守護者</strong><span>以持續參與與同行累積身分</span></div><div className="secretCard"><small>UNLOCKED</small><strong>1% 專屬</strong><span>達成里程碑後，解鎖限定內容與合作回饋</span></div><div className="teamCard"><small>TOGETHER</small><strong>共享小隊</strong><span>由介紹人／隊長形成凝聚力與團隊榮譽，不做上下線利益</span></div></div></div></section>
+<section className="memberUnlock"><div className="unlockInner"><div><div className="eyebrow">RCSCA MEMBER · UNLOCK</div><h2>加入協會，不是換一個頭銜，而是解鎖更深的連結。</h2></div><div className="unlockGrid"><div><b>生活人力網</b><span>保險、水電、設計、專業服務……在會員信任圈內找到人。</span></div><div><b>工作 × 人才</b><span>串連會員與企業端的職缺、人才與合作機會。</span></div><div><b>MEMBER 專屬</b><span>會員限定資訊、任務、活動與部分企業共享。</span></div></div><p className="fairness">一般會員與永久會員在前台不分高低；相同行為維持相同 XP，會員價值來自解鎖的網絡與服務。</p></div></section>
 
-      <section id="pass" className="pass"><div><div className="eyebrow">PASS IT ON</div><h2>沒有永遠的給予者，<br/>也沒有永遠的接受者。</h2></div><div><p>制度接不到、不代表不需要被接住。RCSCA 可以評估真實缺口；而接受幫助的人、家庭或育幼院，也能在未來用自己的方式回饋 1%，重新進入循環。</p><p className="passNote">接受，不代表虧欠。回饋，也不要求等值。</p><a href="/prototypes/RCSCA_PASS_IT_ON_1percent_support_flow.html">了解 PASS IT ON →</a></div></section>
+<section id="network" className="networkSection"><div className="section networkInner"><div className="sectionHead"><div><div className="eyebrow">RCSCA 1% NETWORK</div><h2>百工百業，不是一張名單，是一張會長大的共享網。</h2></div><p>看見目前有哪些專業已加入，也看見還缺哪一塊。公開層只呈現網絡；聯絡與媒合依身份權限開放，避免會員名單變成陌生開發工具。</p></div><div className="industryMap"><div className="networkCore"><span>RCSCA</span><OneMark/><small>Cycle of Goodness</small></div>{industries.map((x,i)=><div key={x} className={`industryNode node${i+1} ${i>8?'needed':''}`}><i></i><b>{x}</b><small>{i>8?'尚待加入':'共享節點'}</small></div>)}<div className="networkPulse p1"></div><div className="networkPulse p2"></div></div><div className="networkLegend"><span><i className="on"></i> 已有共享節點</span><span><i></i> 尚缺產業／專業</span><a href="/prototypes/RCSCA_MEMBER_1percent_HR_network.html">進入百業與人力網 →</a></div></div></section>
 
-      <section className="partnerSection"><div className="section partnerInner"><div className="partnerTitle"><div className="eyebrow">1% PARTNERS</div><h2>企業提供的 1%，<br/>先回到共享。</h2><p>合作企業可以提供產品、服務或會員專屬禮遇，也可以投入公益行動；平台清楚區分「公益資源」與「會員回饋」，不把捐助包裝成遊戲獎品。</p></div><div className="partnerBadge"><span>RCSCA</span><strong>1%</strong><small>PARTNER · CYCLE OF GOODNESS</small></div></div></section>
+<section id="one" className="section oneSection"><div className="bigOne"><OneMark/></div><div className="oneCopy"><div className="eyebrow">THE DEFINITION IS YOURS</div><h2>1% 沒有標準答案。</h2><p>它可以是時間、能力、資源、產品、服務、工作機會、一次介紹，或任何你願意拿出來參與的一個單位。不同人的 1%，不需要相同，也不需要等值。</p><div className="three"><div><b>不定價</b><span>不以金額決定參與價值</span></div><div><b>不比較</b><span>不把公益變成誰做得比較多</span></div><div><b>可累積</b><span>每次真實參與，都成為自己的共享足跡</span></div></div></div></section>
 
-      <section id="impact" className="impact"><div className="impactInner"><div className="eyebrow">SHARED FOOTPRINT</div><h2>一路累積的，不只是數字。</h2><div className="stats"><div><strong>4,197+</strong><span>偏鄉育幼院服務人次<br/>持續增加中</span></div><div><strong>1,273+</strong><span>弱勢家庭服務戶次<br/>持續增加中</span></div><div><strong>2018 →</strong><span>從這一年開始<br/>持續走下去</span></div></div></div></section>
+<section className="progressSection"><div className="section progressInner"><div className="sectionHead"><div><div className="eyebrow">VISIBLE PROGRESS · NOT A PRICE TAG</div><h2>看得見自己的累積，但不替參與標價。</h2></div><p>積分、等級與隱藏關卡增加參與感與黏著度；活動以「是否參與」累積，現金、轉帳等不同付款方式可由協會活動後批次／手動核實登錄。</p></div><div className="progressGrid"><div className="levelCard"><small>LEVEL</small><strong>共享守護者</strong><span>最高階段代表長期真實參與，不代表捐款最多。</span></div><div className="secretCard"><small>UNLOCKED</small><strong>1% 專屬</strong><span>達成里程碑後，解鎖限定內容、徽章與合作回饋。</span></div><div className="teamCard"><small>TOGETHER</small><strong>共享小隊</strong><span>保留介紹來源與加入原因；建立凝聚力與團隊榮譽，不做上下線利益。</span></div></div></div></section>
 
-      <section id="join" className="join"><div className="eyebrow">ENTER THE CYCLE</div><h2>你不需要先成為「很厲害的人」。<br/>先定義屬於你的 1%。</h2><p>個人、會員、企業、受助者、合作夥伴，都可以在不同的位置進入同一個 Cycle of Goodness。</p><div className="joinActions"><a className="primary light" href="/prototypes/RCSCA_MY1percent_signup_flow.html">我是個人</a><a className="outlineLight" href="/prototypes/RCSCA_YOUR1percent_enterprise_dashboard.html">我是企業</a></div></section>
+<section id="pass" className="pass"><div><div className="eyebrow">PASS IT ON</div><h2>沒有永遠的給予者，也沒有永遠的接受者。</h2></div><div><p>制度接不到、不代表不需要被接住。RCSCA 可以評估真實缺口；而接受幫助的人、家庭或育幼院，也能在未來用自己的方式回饋 1%，重新進入循環。</p><p className="passNote">接受，不代表虧欠。回饋，也不要求等值。</p><a href="/prototypes/RCSCA_PASS_IT_ON_1percent_support_flow.html">了解 PASS IT ON →</a></div></section>
 
-      <footer><div className="footerBrand"><b>RCSCA</b><span>1%</span><small>Cycle of Goodness</small></div><p>社團法人中華民國共享關懷協會</p></footer>
-    </main>
-  </>;
-}
+<section className="partnerSection"><div className="section partnerInner"><div className="partnerTitle"><div className="eyebrow">ENTERPRISE · YOUR 1%</div><h2>企業的 1%，也有自己的成長軌跡。</h2><p>資金、產品、服務、員工人力、專業、工作機會、場地或 Connection 都可以成為 YOUR 1%。公益資源、共享所回饋與會員禮遇分流，不把指定公益資源變成遊戲獎品。</p><div className="enterpriseStages"><span>1% Partner</span><i>→</i><span>Contributor</span><i>→</i><span>Connector</span><i>→</i><span>Impact Partner</span></div></div><div className="enterpriseCard"><span>RCSCA ×</span><OneMark/><b>IMPACT PARTNER</b><small>年度共享紀錄 · 標章 · Impact</small></div></div></section>
+
+<section id="impact" className="impact"><div className="impactInner"><div className="eyebrow">SHARED FOOTPRINT</div><h2>一路累積的，不只是數字。</h2><div className="stats"><div><strong>4,197+</strong><span>偏鄉育幼院服務人次<br/>持續增加中</span></div><div><strong>1,273+</strong><span>弱勢家庭服務戶次<br/>持續增加中</span></div><div><strong>2018 →</strong><span>從這一年開始<br/>持續走下去</span></div></div></div></section>
+<section id="join" className="join"><div className="eyebrow">ENTER THE CYCLE</div><h2>先定義屬於你的 1%。</h2><p>一般參觀者可以先看懂；想留下自己的共享足跡，再註冊成為共享夥伴。正式會員與企業則在各自的身份下解鎖更深的網絡。</p><div className="joinActions"><a className="primary light" href="/prototypes/RCSCA_MY1percent_signup_flow.html">我是個人</a><a className="outlineLight" href="/prototypes/RCSCA_YOUR1percent_enterprise_dashboard.html">我是企業</a></div></section>
+<footer><a className="footerBrand" href="#top"><span className="brandRcsca">RCSCA</span><span>×</span><OneMark/><span>×</span><small>Cycle of Goodness</small></a><p>社團法人中華民國共享關懷協會</p></footer>
+</main></>}

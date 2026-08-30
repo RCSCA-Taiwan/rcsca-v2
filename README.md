@@ -13,3 +13,11 @@ Core rules represented on homepage:
 - Service footprint: 4,197+ and 1,273+, continuing to grow
 - Documentary plan excluded
 - Brand entrance: black / muted gold / slow atmospheric reveal
+
+## V5 master-blueprint calibration
+- Added persistent Master Blueprint spec.
+- Rebuilt brand entrance timing/lockup and 1/% hierarchy.
+- Replaced static target with living Cycle animation.
+- Added Visitor → Shared Partner → RCSCA MEMBER identity/permission map.
+- Added participation-level journey and tiered digital sharing-card visual system.
+- Added interactive 百工百業 network preview and enterprise growth track.
