@@ -56,3 +56,26 @@ This file is the implementation baseline. Confirmed decisions must not disappear
 - Hero uses large 1 with smaller %, plus a living animated Cycle rather than a static target diagram.
 - Avoid forced headline line breaks on desktop; use responsive typography.
 - Visual language: black, warm ivory, mist gold/bronze; restrained, premium, not generic charity-red or gamified-cartoon styling.
+
+## V6 locked brand architecture — 2026-08-31
+- RCSCA and Cycle of Goodness are the existing bound brand lockup; 1% is the newer participation system. Front-facing lockup: `RCSCA / Cycle of Goodness × 1%` rather than three equal parallel labels.
+- Emphasize the numeral `1`; `%` is a smaller secondary mark.
+- `YOUR 1%` is retired as the front-facing enterprise name. Enterprise identity is `1% PARTNER`; an enterprise may still describe what it shares as its own 1%.
+- `PASS IT ON` is retired from the primary brand/navigation architecture. Its underlying principle is part of `CYCLE OF GOODNESS`.
+- `百工百業` / `百業` is a working term only. Front-facing name is `1% NETWORK` (共享專業網絡).
+- Highest-level model: `RCSCA = PEOPLE × PARTNERS × CARE × CONNECT`.
+- PEOPLE and PARTNERS have equal importance (50/50). CARE (public-interest care) and CONNECT (people/resource/network connection) have equal importance (50/50).
+- 1% is the participation method. Cycle of Goodness is the result formed when the four dimensions continue to flow and roles can change.
+- RCSCA must not be presented as a conventional charity site centered only on giving, sacrifice, pity, or permanent giver/recipient roles.
+- Homepage is intentionally concise: brand/hero, Cycle of Goodness explanation, equal personal/enterprise gateways, equal Care/Connect gateways, current action preview, 1% Network preview, verified impact, final gateway. Detailed identity/permissions/levels/cards belong in MY 1%; detailed enterprise stages/tools belong in 1% PARTNER.
+- 1% Network preview and full page should show industry nodes with current partner/store counts, scarce categories, empty categories, and later regional gaps. Empty/rare nodes remain visible to invite missing professions to join. No exclusive paid category seats.
+
+
+## V7 — 十年品牌敘事：99% 根系 × 1% 新生
+- 首頁最後收尾加入「根系 × 新生」Key Visual。
+- 第一個十年：以地下密集根系象徵長期、低調、真實發生的關懷服務；不把 99% 宣稱為統計數據。
+- 低調不是口號：不以受助者處境、悲情影像或被消費的故事換取曝光。
+- 下一個十年：地表的 1% 新生象徵共享機制開始發芽，將既有十年累積連結 PEOPLE × PARTNERS × CARE × CONNECT。
+- 正式主文案：第一個十年，我們把關懷扎進土地。下一個十年，讓共享從這裡發芽。
+- 補充：1% 不是十年的重新開始，而是讓十年的累積開始連結更多人。
+- 視覺採抽象根系／嫩芽，不做卡通蘿蔔；99/1 僅為品牌隱喻。
