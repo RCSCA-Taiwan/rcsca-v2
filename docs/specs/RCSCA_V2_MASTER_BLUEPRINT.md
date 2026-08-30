@@ -92,3 +92,21 @@ This file is the implementation baseline. Confirmed decisions must not disappear
 - The RCSCA brand lockup is always a Home control. On every subpage, clicking it routes to `/`.
 - Every prototype/legacy subpage must retain a visible Home escape route; users must never be trapped in MY 1%, 1% PARTNER, 1% NETWORK, rewards, signup, or admin flows.
 - Personal and enterprise worlds may have local back-navigation, but global Home navigation is never removed.
+
+
+## MY 1% V1 implementation
+- Personal identity ladder is Visitor → Sharing Partner → RCSCA MEMBER.
+- Level, membership, and permission are separate concepts.
+- Frontend never differentiates annual vs lifetime member as a prestige tier.
+- Level is driven by real participation and achievements, not donation/purchase amount.
+- Digital card material evolves with participation level; identity badge remains separate.
+- RCSCA logo always returns to `/`.
+
+## V11 platform split
+- Homepage is a brand/gateway page, not a full manual.
+- MY 1% = personal world.
+- 1% PARTNER = enterprise identity and enterprise tools; replaces YOUR 1% in front-end language.
+- 1% NETWORK = shared professional/resource network; replaces the working label 百工百業 on the public site.
+- CYCLE OF GOODNESS = core system/worldview; PASS IT ON is no longer a primary brand navigation item.
+- 公益行動 = CARE hub. CARE and CONNECT remain equal 50/50 pillars.
+- PEOPLE and PARTNERS remain equal 50/50 participant roles.
