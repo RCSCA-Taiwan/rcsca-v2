@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCSCA V2｜V1 MVP 開發施工規格</title>
+<style>
+:root{--ink:#171714;--paper:#f5f2eb;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;--accent:#8b1e2d;--dark:#11110f;--ok:#48694b;--warn:#9a6b16}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.58}
+a{text-decoration:none;color:inherit}.wrap{width:min(1200px,calc(100% - 32px));margin:auto}
+nav{position:sticky;top:0;z-index:20;background:rgba(245,242,235,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.08)}
+.navin{height:68px;display:flex;align-items:center;justify-content:space-between}.brand{font-weight:900}.brand b{color:var(--accent);font-size:23px;margin-left:8px}.back{font-size:13px;border:1px solid var(--line);padding:8px 12px;border-radius:999px}
+main{padding:38px 0 90px}.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px}.hero{padding:30px}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:900}h1{font-size:clamp(40px,7vw,72px);line-height:1;margin:10px 0 14px;letter-spacing:-.05em}.sub{color:var(--muted);max-width:880px}
+.section{margin-top:26px}.section h2{font-size:30px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{padding:21px}.card h3{font-size:19px;margin:6px 0}.card p{margin:0;color:var(--muted)}
+.tag{display:inline-block;font-size:11px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;margin:8px 5px 0 0}.must{background:#edf3ea;color:var(--ok)}.later{background:#f6efe0;color:var(--warn)}
+.tablewrap{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px}table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}th,td{padding:10px 9px;border-top:1px solid var(--line);text-align:left;vertical-align:top}thead th{border-top:0;background:#f2ede4;color:#5d5952}
+.work{display:grid;grid-template-columns:70px 1fr 120px;gap:16px;align-items:start;padding:18px 0;border-top:1px solid var(--line)}.work:first-child{border-top:0}.num{font-size:30px;font-weight:900;color:var(--accent)}.work h3{margin:0 0 5px}.work p{margin:0;color:var(--muted);font-size:14px}.status{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:6px 9px;text-align:center}
+.note{padding:15px;border-radius:15px;background:#f7f2e7;border:1px solid #e8ddc6}.dark{background:var(--dark);color:white}.dark p{color:#c9c5bc}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.work{grid-template-columns:55px 1fr}.work .status{grid-column:2}}
+</style></head><body>
+<nav><div class="wrap navin"><div class="brand">RCSCA V2 <b>V1 BUILD SPEC</b></div><a class="back" href="RCSCA_V2_1percent_SYSTEM_MAP.html">回系統總覽</a></div></nav>
+<main><div class="wrap">
+
+<section class="hero">
+<div class="eyebrow">IMPLEMENTATION SPECIFICATION</div>
+<h1>從原型，進入<br>可以施工的規格。</h1>
+<p class="sub">這份規格把 V1 拆成頁面、資料表、API／後台工作與驗收條件。之後交給工程師，不應再由工程師自行猜「這個功能到底想做什麼」。</p>
+</section>
+
+<section class="section"><h2>V1 正式頁面清單</h2><div class="grid">
+<div class="card"><div class="eyebrow">PUBLIC</div><h3>/ 首頁</h3><p>1%、Cycle of Goodness、協會成果、加入、企業、接住計畫入口。</p><span class="tag must">V1</span></div>
+<div class="card"><div class="eyebrow">AUTH</div><h3>/join · /login</h3><p>手機 OTP、介紹人、來源、小隊邀請與同意事項。</p><span class="tag must">V1</span></div>
+<div class="card"><div class="eyebrow">PERSONAL</div><h3>/my-1percent</h3><p>數位共享卡、加入天數、共享足跡、XP、Level、共享點。</p><span class="tag must">V1</span></div>
+<div class="card"><div class="eyebrow">ENTERPRISE</div><h3>/enterprise</h3><p>企業共享紀錄、標章狀態、工作機會、ESG 素材服務入口。</p><span class="tag must">V1</span></div>
+<div class="card"><div class="eyebrow">SUPPORT</div><h3>/pass-it-on</h3><p>提出需求；送出後只進協會內部，不直接公開。</p><span class="tag must">V1</span></div>
+<div class="card"><div class="eyebrow">ADMIN</div><h3>/admin</h3><p>會員、活動、企業、點數、需求個案、權限、Audit Log。</p><span class="tag must">V1</span></div>
+<div class="card"><div class="eyebrow">SHARE</div><h3>/share-market</h3><p>V1 可先做預告與少量展示，不開完整核銷。</p><span class="tag later">V1.5</span></div>
+<div class="card"><div class="eyebrow">MEMBER</div><h3>/member-network</h3><p>正式會員人力網先保留入口，完整媒合第二階段。</p><span class="tag later">V2</span></div>
+<div class="card"><div class="eyebrow">COMMUNITY</div><h3>/community</h3><p>食譜、餐廳、旅遊與生活分享社群。</p><span class="tag later">V2</span></div>
+</div></section>
+
+<section class="section"><h2>V1 必建資料表</h2>
+<div class="tablewrap"><table><thead><tr><th>資料表</th><th>用途</th><th>V1</th><th>重要限制</th></tr></thead><tbody>
+<tr><td>profiles</td><td>平台個人基本資料</td><td>必建</td><td>與 auth user 1:1；敏感欄位不公開</td></tr>
+<tr><td>identity_verifications</td><td>唯一身分驗證結果</td><td>必建</td><td>優先存 token/hash，不把身分證當公開會員編號</td></tr>
+<tr><td>memberships</td><td>協會正式會籍</td><td>必建</td><td>annual/lifetime 僅行政層；前台統一 MEMBER</td></tr>
+<tr><td>teams · team_members</td><td>小隊與隊員</td><td>必建</td><td>介紹人不可因換隊而被覆蓋</td></tr>
+<tr><td>invitations</td><td>介紹人與註冊來源</td><td>必建</td><td>保留原始來源歷史</td></tr>
+<tr><td>activities · participations</td><td>公益活動與參與</td><td>必建</td><td>同活動以「完成參與」為共享計分依據</td></tr>
+<tr><td>point_transactions</td><td>共享點流水</td><td>必建</td><td>不可直接改餘額</td></tr>
+<tr><td>xp_transactions</td><td>XP 流水</td><td>必建</td><td>XP 不因兌換扣除</td></tr>
+<tr><td>member_levels</td><td>目前 Level</td><td>必建</td><td>由 XP＋必要條件計算</td></tr>
+<tr><td>enterprises · enterprise_users</td><td>企業與管理者</td><td>必建</td><td>一統編一企業，多位授權管理者</td></tr>
+<tr><td>enterprise_shares</td><td>企業 1% 紀錄</td><td>必建</td><td>公益、會員回饋、商業合作類型分開</td></tr>
+<tr><td>support_cases · case_needs</td><td>PASS IT ON</td><td>必建</td><td>私密敘述與匿名公開摘要分欄</td></tr>
+<tr><td>admin_roles · role_permissions</td><td>後台 RBAC</td><td>必建</td><td>理監事不等於全權限</td></tr>
+<tr><td>audit_logs</td><td>重要操作紀錄</td><td>必建</td><td>append-only；禁止無痕覆寫</td></tr>
+</tbody></table></div></section>
+
+<section class="section"><h2>工程工作包</h2><div class="card">
+<div class="work"><div class="num">01</div><div><h3>Project Foundation</h3><p>Next.js、TypeScript、環境區分、部署流程、錯誤監控、基本安全標頭。</p></div><div class="status">先做</div></div>
+<div class="work"><div class="num">02</div><div><h3>Database & RLS</h3><p>建立 schema、migration、索引、Row Level Security、service role 使用邊界。</p></div><div class="status">先做</div></div>
+<div class="work"><div class="num">03</div><div><h3>Authentication</h3><p>OTP 登入、註冊、登出、session、rate limit、CAPTCHA、唯一身分流程。</p></div><div class="status">核心</div></div>
+<div class="work"><div class="num">04</div><div><h3>Member Core</h3><p>MY 1%、會籍、加入日期、小隊、介紹來源、共享足跡。</p></div><div class="status">核心</div></div>
+<div class="work"><div class="num">05</div><div><h3>Activity & Ledger</h3><p>活動建立、Excel/CSV 匯入、人工配對、核准、共享點／XP 流水。</p></div><div class="status">核心</div></div>
+<div class="work"><div class="num">06</div><div><h3>Enterprise Core</h3><p>企業申請、統編唯一、企業管理者、共享紀錄、標章審核。</p></div><div class="status">核心</div></div>
+<div class="work"><div class="num">07</div><div><h3>PASS IT ON</h3><p>需求表單、內部案件、需求拆解、匿名摘要、媒合狀態與查閱紀錄。</p></div><div class="status">核心</div></div>
+<div class="work"><div class="num">08</div><div><h3>Admin Console</h3><p>角色權限、審核佇列、更正流程、Audit Log、敏感資料遮罩。</p></div><div class="status">核心</div></div>
+<div class="work"><div class="num">09</div><div><h3>Migration</h3><p>既有會員／企業／活動歷史清理、欄位對照、測試匯入、正式匯入。</p></div><div class="status">上線前</div></div>
+<div class="work"><div class="num">10</div><div><h3>QA & Pilot</h3><p>權限測試、手機測試、重複帳號、批次匯入、點數更正、企業與個案流程實測。</p></div><div class="status">上線前</div></div>
+</div></section>
+
+<section class="section"><h2>V1 驗收條件</h2><div class="grid">
+<div class="card"><h3>身份不能串錯</h3><p>同一人重新登入仍回到同一共享身份；重複帳號有合併流程。</p></div>
+<div class="card"><h3>點數不能憑空變動</h3><p>任何共享點／XP 變動都能追到來源與操作者。</p></div>
+<div class="card"><h3>權限不能靠前端隱藏</h3><p>即使直接呼叫資料 API，未授權角色仍取不到敏感資料。</p></div>
+<div class="card"><h3>金額不進 Level</h3><p>同一活動不同認購金額，不產生不同共享等級。</p></div>
+<div class="card"><h3>個案不外洩</h3><p>PASS IT ON 私密資料不出現在會員卡、小隊、企業端或公開 API。</p></div>
+<div class="card"><h3>歷史不能消失</h3><p>既有會員加入日期與舊活動可正確帶入，不從網站上線日重新起算。</p></div>
+</div></section>
+
+<section class="section"><div class="card dark">
+<div class="eyebrow" style="color:#d7aa58">BUILD GATE</div><h2 style="margin:7px 0 10px">真正寫正式系統前，還有一個必要關卡。</h2>
+<p>下一步不是繼續加功能，而是把「既有資料匯入格式」定清楚：目前協會手上的會員名單、一般／永久會籍、加入日期、電話、介紹人、企業資料、歷史活動紀錄各自有哪些欄位。這會直接決定 migration schema，否則正式資料庫建完後很容易再改一次。</p>
+</div></section>
+
+</div></main></body></html>

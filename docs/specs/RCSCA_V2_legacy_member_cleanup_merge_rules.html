@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCSCA V2｜舊會員資料清洗與重複帳號合併規則</title>
+<style>
+:root{
+  --ink:#171714;--paper:#f5f2eb;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;
+  --accent:#8b1e2d;--soft:#ebe4d8;--dark:#11110f;--ok:#48694b;--warn:#9a6b16;--bad:#9a3848;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.6}
+a{text-decoration:none;color:inherit}
+.wrap{width:min(1120px,calc(100% - 32px));margin:auto}
+nav{position:sticky;top:0;z-index:20;background:rgba(245,242,235,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.08)}
+.navin{height:68px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900}.brand b{color:var(--accent);font-size:23px;margin-left:8px}
+.back{font-size:13px;border:1px solid var(--line);padding:8px 12px;border-radius:999px}
+main{padding:38px 0 90px}.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px}
+.hero{padding:30px}.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:900}
+h1{font-size:clamp(40px,7vw,70px);line-height:1;margin:10px 0 14px;letter-spacing:-.05em}.sub{color:var(--muted);max-width:850px}
+.section{margin-top:26px}.section h2{font-size:30px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{padding:22px}.card h3{font-size:20px;margin:6px 0}.card p{margin:0;color:var(--muted)}
+.rule{padding:18px 0;border-top:1px solid var(--line)}.rule:first-child{border-top:0}.rule b{display:block}.rule span{font-size:14px;color:var(--muted)}
+.tablewrap{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px}
+table{border-collapse:collapse;width:100%;min-width:880px;font-size:13px}th,td{padding:10px 9px;border-top:1px solid var(--line);text-align:left;vertical-align:top}thead th{border-top:0;background:#f2ede4;color:#5d5952}
+.tag{display:inline-block;font-size:11px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;margin:8px 5px 0 0}
+.ok{color:var(--ok);font-weight:800}.warn{color:var(--warn);font-weight:800}.bad{color:var(--bad);font-weight:800}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.step{border-top:3px solid var(--accent);padding-top:12px}.step b{display:block}.step span{font-size:13px;color:var(--muted)}
+.notice{padding:15px;border-radius:15px;background:#f7f2e7;border:1px solid #e8ddc6}.dark{background:var(--dark);color:#fff}.dark p{color:#c9c5bc}
+@media(max-width:850px){.grid,.flow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav><div class="wrap navin">
+  <div class="brand">RCSCA V2 <b>DATA CLEANUP</b></div>
+  <a class="back" href="RCSCA_V2_1percent_SYSTEM_MAP.html">回系統總覽</a>
+</div></nav>
+
+<main><div class="wrap">
+<section class="hero">
+  <div class="eyebrow">LEGACY DATA CLEANING · ACCOUNT MERGE</div>
+  <h1>同一個人，<br>最後只能留下同一個 1%。</h1>
+  <p class="sub">舊會員資料最容易出問題的不是「少一個欄位」，而是同一個人被不同姓名、電話、Email、會籍或活動紀錄重複建立。正式匯入前先定好規則，才能避免上線後點數、加入天數與歷史足跡被拆成兩份。</p>
+</section>
+
+<section class="section">
+  <h2>清洗順序</h2>
+  <div class="flow">
+    <div class="step"><b>01 標準化</b><span>姓名、電話、Email、日期格式先統一。</span></div>
+    <div class="step"><b>02 找疑似重複</b><span>依手機、Email、身分驗證、姓名＋生日等比對。</span></div>
+    <div class="step"><b>03 人工確認</b><span>高風險重複不自動合併。</span></div>
+    <div class="step"><b>04 合併歷史</b><span>會籍、加入日期、活動、介紹人、小隊分別處理。</span></div>
+    <div class="step"><b>05 留 Audit Log</b><span>誰合併、何時合併、來源資料都保留。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>欄位清洗規則</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>欄位</th><th>清洗方式</th><th>例子</th><th>是否可自動</th></tr></thead>
+    <tbody>
+      <tr><td>姓名</td><td>去前後空白、全半形統一；不自行改字</td><td>「 王 小明 」→「王 小明」</td><td class="warn">部分</td></tr>
+      <tr><td>手機</td><td>移除空白、-、+886 轉台灣 09 格式</td><td>+886912345678 → 0912345678</td><td class="ok">可</td></tr>
+      <tr><td>Email</td><td>轉小寫、去前後空白</td><td>ABC@MAIL.COM → abc@mail.com</td><td class="ok">可</td></tr>
+      <tr><td>日期</td><td>統一 YYYY-MM-DD</td><td>107/1/7 → 2018-01-07</td><td class="ok">可</td></tr>
+      <tr><td>會籍</td><td>只允許 annual / lifetime / inactive / pending</td><td>永久、終身 → lifetime</td><td class="ok">可</td></tr>
+      <tr><td>介紹人</td><td>保留原始文字，再連結 member_id</td><td>王姐／王○○ → 人工確認同一人</td><td class="warn">需確認</td></tr>
+      <tr><td>活動名稱</td><td>用活動代碼對照，不靠自由文字</td><td>端午、端午節活動 → DBF-2027</td><td class="warn">對照後可</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section">
+  <h2>重複帳號判定等級</h2>
+  <div class="grid">
+    <div class="card"><div class="eyebrow">HIGH CONFIDENCE</div><h3>可自動列為高疑似</h3><p>相同已驗證身分 token、相同手機＋相同姓名、相同正式會員編號。</p><span class="tag ok">仍保留人工核准</span></div>
+    <div class="card"><div class="eyebrow">MEDIUM</div><h3>需要人工比對</h3><p>同姓名＋同 Email、同姓名＋同生日、同地址＋同電話末碼等。</p><span class="tag warn">不可自動合併</span></div>
+    <div class="card"><div class="eyebrow">LOW</div><h3>不可只憑這些合併</h3><p>只有同姓名、同小隊、同公司、同地址，不能直接視為同一人。</p><span class="tag bad">禁止自動</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>合併時哪一筆資料優先？</h2>
+  <div class="card">
+    <div class="rule"><b>加入日期：取可證明的最早正式加入日期</b><span>不能因為較新的網站註冊紀錄覆蓋老會員歷史。</span></div>
+    <div class="rule"><b>手機／Email：以最近完成本人驗證者為主</b><span>舊資料保留在歷史欄，不直接刪除。</span></div>
+    <div class="rule"><b>一般／永久會籍：以協會正式行政紀錄為準</b><span>前台仍不顯示一般／永久差異。</span></div>
+    <div class="rule"><b>介紹人：保留最初介紹來源</b><span>後來被不同人帶進活動，不覆蓋最初介紹人。</span></div>
+    <div class="rule"><b>目前小隊：以最新有效小隊為準</b><span>初始小隊保留歷史。</span></div>
+    <div class="rule"><b>活動紀錄：全部合併，不取代</b><span>同一場活動若重複登錄，只保留一次有效參與，另留重複紀錄 Audit。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>點數／XP 合併規則</h2>
+  <div class="card">
+    <div class="rule"><b>舊系統沒有點數：不補猜</b><span>歷史活動可以建立共享足跡；是否補 XP／點數需另訂「歷史補登政策」，不能臨時人工亂加。</span></div>
+    <div class="rule"><b>同一活動重複兩筆：只計一次</b><span>例如同一中秋活動有現金紀錄與名冊紀錄，不能因此拿兩次 XP。</span></div>
+    <div class="rule"><b>兩個新系統帳號後來確認同一人：先凍結兌換，再合併流水</b><span>避免合併途中有人把兩邊點數先花掉。</span></div>
+    <div class="rule"><b>合併後保留 transaction 原始來源</b><span>不是把兩個餘額直接加成一個數字；每一筆仍可追溯。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>禁止直接合併的情況</h2>
+  <div class="grid">
+    <div class="card"><h3>同名不同人</h3><p>王美玲、陳淑芬這類常見姓名絕不能只靠姓名判斷。</p></div>
+    <div class="card"><h3>共用電話</h3><p>夫妻、長輩與家人可能共用電話；需再確認本人。</p></div>
+    <div class="card"><h3>企業聯絡人</h3><p>公司電話或公司 Email 不能拿來判定個人唯一身份。</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>合併工作流</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>步驟</th><th>動作</th><th>系統狀態</th><th>需要誰核准</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>系統偵測疑似重複</td><td>merge_candidate</td><td>不需</td></tr>
+      <tr><td>2</td><td>管理員比對來源資料</td><td>under_review</td><td>會員管理員</td></tr>
+      <tr><td>3</td><td>涉及身分／點數衝突</td><td>restricted</td><td>第二位管理員</td></tr>
+      <tr><td>4</td><td>執行合併</td><td>merged</td><td>雙層核准</td></tr>
+      <tr><td>5</td><td>舊 member_id 標記 alias</td><td>redirected</td><td>系統自動</td></tr>
+      <tr><td>6</td><td>寫入 Audit Log</td><td>immutable</td><td>系統自動</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section">
+  <div class="card dark">
+    <div class="eyebrow" style="color:#d7aa58">IMPORTANT</div>
+    <h2 style="margin:7px 0 10px">現在仍不需要你整理會員名單。</h2>
+    <p>這一步只是先把規則鎖住。等我下一階段把「正式匯入檢查清單＋測試匯入流程」做完後，才會需要看你目前手上的會員檔案格式。到時直接把現有檔案給我，不需要你先手動重做。</p>
+  </div>
+</section>
+
+</div></main>
+</body></html>

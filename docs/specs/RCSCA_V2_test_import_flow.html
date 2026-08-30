@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCSCA V2｜測試匯入流程</title><style>
+:root{--ink:#171714;--paper:#f5f2eb;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;--accent:#8b1e2d;--dark:#11110f}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.6}
+a{text-decoration:none;color:inherit}.wrap{width:min(1080px,calc(100% - 32px));margin:auto;padding:42px 0 80px}.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:16px}
+h1{font-size:clamp(42px,7vw,70px);line-height:1.02;margin:7px 0 14px}.muted{color:var(--muted)}.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:900}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.step{border-top:3px solid var(--accent);padding-top:12px}.step b{display:block}.step span{font-size:13px;color:var(--muted)}
+@media(max-width:800px){.flow{grid-template-columns:1fr}}</style></head><body><div class="wrap">
+<div class="card"><div class="eyebrow">TEST IMPORT</div><h1>先測 10–20 筆，<br>不要直接倒整份會員名單。</h1><p class="muted">正式匯入會先跑小批次，確認格式、重複判定、加入日期、介紹人、小隊、活動去重與權限都正確，再逐步放大。</p></div>
+<div class="card"><div class="flow">
+<div class="step"><b>01 備份</b><span>原始檔唯讀保存。</span></div>
+<div class="step"><b>02 小批測試</b><span>先匯 10–20 筆。</span></div>
+<div class="step"><b>03 比對結果</b><span>成功／人工確認／失敗。</span></div>
+<div class="step"><b>04 修規則</b><span>先改 mapping，不改原始資料。</span></div>
+<div class="step"><b>05 批次放大</b><span>20 → 100 → 全量。</span></div>
+</div></div>
+<div class="card"><h2>停止匯入的紅線</h2><p class="muted">出現任何一項即停止下一批：同名被錯誤合併、加入日期被覆蓋、同一活動雙重計點、一般／永久會員前台產生差異、PASS IT ON 私密欄位出現在一般資料、企業統編建立重複企業。</p></div>
+<div class="card"><h2>真正需要你提供資料的時點</h2><p class="muted">到這一步之後，才需要看協會目前「實際使用中的會員名單檔案」。直接給現有 Excel／CSV 即可，不需要先照我的樣板人工重抄。</p></div>
+</div></body></html>

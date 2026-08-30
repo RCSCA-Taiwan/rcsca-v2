@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCSCA 後台管理｜1% Cycle of Goodness</title>
+<style>
+:root{
+  --ink:#171714;--paper:#f3f0e9;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;
+  --accent:#8b1e2d;--soft:#ebe4d8;--dark:#11110f;--ok:#48694b;--warn:#9a6b16;--blue:#385f78;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+a{text-decoration:none;color:inherit}
+.layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--dark);color:#fff;padding:24px 18px;position:sticky;top:0;height:100vh}
+.brand{font-weight:900;font-size:20px;margin-bottom:28px}.brand b{color:#d7aa58}
+.nav a{display:block;padding:11px 12px;border-radius:12px;color:#cfcac0;margin:3px 0;font-size:14px}.nav a.active,.nav a:hover{background:#2a2925;color:#fff}
+main{padding:28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:24px}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:800}
+h1{font-size:36px;margin:5px 0 0;letter-spacing:-.035em}.user{font-size:13px;color:var(--muted)}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.k{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}.k strong{display:block;font-size:28px}.k span{font-size:12px;color:var(--muted)}
+.section{margin-top:22px}.section h2{font-size:24px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}.card h3{margin:0 0 8px;font-size:19px}.card p{color:var(--muted);margin:0}
+.row{display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-top:1px solid var(--line)}.row:first-child{border-top:0}.row b{display:block}.row small{color:var(--muted)}
+.status{font-size:12px;padding:5px 8px;border-radius:999px;white-space:nowrap;height:max-content;border:1px solid var(--line)}.ok{color:var(--ok);background:#eef3eb}.warn{color:var(--warn);background:#f7f0df}.open{color:var(--accent);background:#f7ebed}
+.btn{display:inline-block;padding:9px 12px;border-radius:999px;background:var(--dark);color:#fff;font-size:13px;font-weight:800;margin-top:12px}.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{text-align:left;padding:10px 8px;border-top:1px solid var(--line);vertical-align:top}.table th{color:var(--muted);font-weight:700;background:#faf7f1}.table tr:first-child th{border-top:0}
+.audit{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#f7f4ee;border-radius:14px;padding:14px;color:#4f4c46}
+.split{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+.notice{padding:14px;border-radius:14px;background:#f7f2e7;border:1px solid #e8ddc6;color:#5e584d}
+@media(max-width:980px){.layout{grid-template-columns:1fr}aside{position:static;height:auto}.nav{display:flex;gap:5px;overflow:auto}.nav a{white-space:nowrap}.kpi{grid-template-columns:repeat(2,1fr)}.grid,.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside>
+  <div class="brand">RCSCA <b>ADMIN</b></div>
+  <div class="nav">
+    <a class="active" href="#">總覽</a>
+    <a href="#">會員／身分</a>
+    <a href="#">活動與批次登錄</a>
+    <a href="#">共享點／XP</a>
+    <a href="#">企業／標章</a>
+    <a href="#">需求個案</a>
+    <a href="#">人力資源網</a>
+    <a href="#">檢舉／停權</a>
+    <a href="#">異動紀錄</a>
+  </div>
+</aside>
+
+<main>
+  <div class="top">
+    <div><div class="eyebrow">RCSCA × 1% OPERATIONS</div><h1>協會後台管理</h1></div>
+    <div class="user">管理員：A｜最後登入 2027.09.20 14:36</div>
+  </div>
+
+  <section class="kpi">
+    <div class="k"><strong>1,286</strong><span>已驗證共享身分</span></div>
+    <div class="k"><strong>58</strong><span>年度 1% 企業</span></div>
+    <div class="k"><strong>17</strong><span>待處理需求個案</span></div>
+    <div class="k"><strong>43</strong><span>今日待核准紀錄</span></div>
+  </section>
+
+  <section class="section split">
+    <div class="card">
+      <h3>今日待辦</h3>
+      <div class="row"><div><b>2027 中秋共享行動｜批次匯入</b><small>成功配對 276 筆｜待人工確認 19 筆｜找不到會員 5 筆</small></div><span class="status warn">待核准</span></div>
+      <div class="row"><div><b>企業年度 1% 標章申請</b><small>○○飯店、○○餐飲、○○科技</small></div><span class="status open">3 件</span></div>
+      <div class="row"><div><b>接住計畫｜新需求</b><small>就業 4、修繕 2、生活支持 3</small></div><span class="status open">9 件</span></div>
+      <div class="row"><div><b>人力網檢舉</b><small>疑似陌生推銷／重複私訊</small></div><span class="status warn">2 件</span></div>
+      <a class="btn" href="#">進入工作佇列</a>
+    </div>
+
+    <div class="card">
+      <h3>權限原則</h3>
+      <p>財務、會員、個案、企業與點數權限分開。高風險操作採雙層核准，避免單一管理員任意更改。</p>
+      <div class="notice" style="margin-top:14px"><b>建議：</b>財務人員可看金額與收據；社群管理員只看「已確認參與」，不要讓所有後台角色都看到完整金流與個案資料。</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>活動參與｜批次登錄</h2>
+    <div class="card">
+      <table class="table">
+        <tr><th>活動</th><th>會員</th><th>交付／參與</th><th>共享紀錄</th><th>點數／XP</th><th>狀態</th></tr>
+        <tr><td>2027 中秋共享行動</td><td>王○○</td><td>現金認購｜已完成對帳</td><td>參與一次</td><td>+100 / +100</td><td><span class="status ok">已核准</span></td></tr>
+        <tr><td>2027 中秋共享行動</td><td>李○○</td><td>銀行轉帳｜已完成對帳</td><td>參與一次</td><td>+100 / +100</td><td><span class="status ok">已核准</span></td></tr>
+        <tr><td>2027 中秋共享行動</td><td>陳○○</td><td>現金｜姓名重複</td><td>待確認</td><td>—</td><td><span class="status warn">人工配對</span></td></tr>
+      </table>
+      <div class="notice" style="margin-top:14px"><b>規則：</b>金額留在財務紀錄；共享系統只認定「是否完成本次活動參與」。同一活動不因支持金額不同而產生不同階級。</div>
+      <a class="btn" href="#">上傳 CSV／Excel</a> <a class="btn alt" href="#">核准並發放</a>
+    </div>
+  </section>
+
+  <section class="section grid">
+    <div class="card">
+      <h3>共享點／XP 發放</h3>
+      <div class="row"><div><b>活動參與</b><small>依活動規則固定發放</small></div><span class="status ok">自動規則</span></div>
+      <div class="row"><div><b>Connection 成功</b><small>完成媒合後，由管理員核實</small></div><span class="status warn">需審核</span></div>
+      <div class="row"><div><b>生活／知識分享</b><small>每日上限，避免刷分</small></div><span class="status ok">自動規則</span></div>
+      <div class="row"><div><b>手動更正</b><small>不可直接改餘額，必須建立更正紀錄</small></div><span class="status open">雙層核准</span></div>
+    </div>
+
+    <div class="card">
+      <h3>待認領歷史紀錄</h3>
+      <p>網站上線前已參與活動、但當時尚未有帳號的人，可以先建立待認領紀錄；未來完成身分驗證後自動合併。</p>
+      <div class="row"><div><b>王○○｜2026 中秋</b><small>手機末三碼 123</small></div><span class="status warn">待認領</span></div>
+      <div class="row"><div><b>林○○｜2027 兒童節</b><small>手機末三碼 882</small></div><span class="status warn">待認領</span></div>
+      <a class="btn" href="#">查看待認領</a>
+    </div>
+  </section>
+
+  <section class="section grid">
+    <div class="card">
+      <h3>企業／年度 1% 標章</h3>
+      <div class="row"><div><b>○○飯店</b><small>已完成：旅宿資源共享</small></div><span class="status ok">可核發</span></div>
+      <div class="row"><div><b>○○餐飲</b><small>只有會員 95 折，尚無實質共享</small></div><span class="status warn">不符合</span></div>
+      <div class="row"><div><b>○○科技</b><small>員工公益行動已完成</small></div><span class="status ok">可核發</span></div>
+      <a class="btn" href="#">標章審核</a>
+    </div>
+
+    <div class="card">
+      <h3>1% 禮遇審核</h3>
+      <p>確認優惠確實具有會員專屬價值，避免公開促銷、低價值折扣或純廣告內容混入。</p>
+      <div class="row"><div><b>○○餐廳｜會員 85 折</b><small>一般公開無此優惠</small></div><span class="status ok">建議通過</span></div>
+      <div class="row"><div><b>○○店家｜滿千折 50</b><small>與官網公開活動相同</small></div><span class="status warn">退回</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>需求個案｜接住計畫</h2>
+    <div class="card">
+      <table class="table">
+        <tr><th>案件</th><th>主要缺口</th><th>其他制度</th><th>公開方式</th><th>狀態</th></tr>
+        <tr><td>CASE-27091</td><td>兼職工作＋交通</td><td>已完成社福轉介評估</td><td>匿名需求</td><td><span class="status open">媒合中</span></td></tr>
+        <tr><td>CASE-27088</td><td>居家水電修繕</td><td>無適用即時資源</td><td>會員人力網媒合</td><td><span class="status ok">已補上</span></td></tr>
+        <tr><td>CASE-27082</td><td>生活支持</td><td>已有政府方案</td><td>不公開</td><td><span class="status ok">已轉介</span></td></tr>
+      </table>
+      <div class="notice" style="margin-top:14px">「接住紀錄」預設僅本人與授權工作人員可見，不出現在公開會員卡、Level 或社群頁。</div>
+    </div>
+  </section>
+
+  <section class="section grid">
+    <div class="card">
+      <h3>人力資源網｜風險管理</h3>
+      <div class="row"><div><b>保險類會員大量主動私訊</b><small>收到 3 次會員檢舉</small></div><span class="status warn">待處理</span></div>
+      <div class="row"><div><b>專業資格未更新</b><small>法律服務提供者資格文件即將到期</small></div><span class="status open">需補件</span></div>
+      <a class="btn" href="#">處理檢舉／停權</a>
+    </div>
+
+    <div class="card">
+      <h3>身分唯一性</h3>
+      <p>個人採一人一個共享身分；企業採一統編一企業身分。前台不顯示完整身分證與統編敏感管理欄位。</p>
+      <div class="row"><div><b>疑似重複個人帳號</b><small>同一驗證權杖對應 2 個手機帳號</small></div><span class="status warn">需合併</span></div>
+      <div class="row"><div><b>企業統編重複申請</b><small>同企業不同部門重複建立</small></div><span class="status ok">已合併</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>完整異動紀錄 Audit Log</h2>
+    <div class="card">
+      <div class="audit">
+2027-09-20 14:36  USER:admin_A  ACTION:POINT_ISSUE      MEMBER:王○○  EVENT:中秋共享行動  +100
+2027-09-20 14:37  USER:admin_B  ACTION:APPROVE          REF:POINT_ISSUE#8812
+2027-09-20 14:42  USER:admin_A  ACTION:CORRECTION_REQ   MEMBER:陳○○  REASON:重複登錄  -100
+2027-09-20 14:45  USER:admin_C  ACTION:APPROVE          REF:CORRECTION#8819
+2027-09-20 15:02  USER:admin_D  ACTION:BADGE_APPROVE     COMPANY:○○飯店  YEAR:2027
+      </div>
+      <div class="notice" style="margin-top:14px">已發生的點數、資格與重要紀錄不直接「覆蓋修改」；改用新增更正紀錄，保留誰、何時、為什麼改。</div>
+    </div>
+  </section>
+
+</main>
+</div>
+<a href="RCSCA_V2_1percent_SYSTEM_MAP.html" style="position:fixed;right:16px;bottom:16px;z-index:99;background:#171714;color:#fff;padding:9px 13px;border-radius:999px;font:700 12px -apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.18)">系統總覽</a></body>
+</html>

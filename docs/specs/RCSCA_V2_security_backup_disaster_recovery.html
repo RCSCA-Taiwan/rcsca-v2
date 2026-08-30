@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCSCA V2｜安全、備份與災難復原</title>
+<style>
+:root{
+  --ink:#171714;--paper:#f5f2eb;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;
+  --accent:#8b1e2d;--soft:#ebe4d8;--dark:#11110f;--ok:#48694b;--warn:#9a6b16;--bad:#9a3848;--blue:#385f78;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.6}
+a{text-decoration:none;color:inherit}.wrap{width:min(1160px,calc(100% - 32px));margin:auto}
+nav{position:sticky;top:0;z-index:20;background:rgba(245,242,235,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.08)}
+.navin{height:68px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900}.brand b{color:var(--accent);font-size:23px;margin-left:8px}.back{font-size:13px;border:1px solid var(--line);padding:8px 12px;border-radius:999px}
+main{padding:38px 0 90px}.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px}.hero{padding:30px}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:900}h1{font-size:clamp(40px,7vw,72px);line-height:1;margin:10px 0 14px;letter-spacing:-.05em}.sub{color:var(--muted);max-width:900px}
+.section{margin-top:26px}.section h2{font-size:30px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{padding:22px}.card h3{font-size:20px;margin:6px 0}.card p{margin:0;color:var(--muted)}
+.rule{padding:18px 0;border-top:1px solid var(--line)}.rule:first-child{border-top:0}.rule b{display:block}.rule span{font-size:14px;color:var(--muted)}
+.tablewrap{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}th,td{padding:10px 9px;border-top:1px solid var(--line);text-align:left;vertical-align:top}thead th{border-top:0;background:#f2ede4;color:#5d5952}
+.tag{display:inline-block;font-size:11px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;margin:8px 5px 0 0}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.step{border-top:3px solid var(--accent);padding-top:12px}.step b{display:block}.step span{font-size:13px;color:var(--muted)}
+.note{padding:15px;border-radius:15px;background:#f7f2e7;border:1px solid #e8ddc6}.danger{background:#f7ebed;border-color:#ead1d6}.dark{background:var(--dark);color:white}.dark p{color:#c9c5bc}
+.ok{color:var(--ok);font-weight:800}.warn{color:var(--warn);font-weight:800}.bad{color:var(--bad);font-weight:800}
+@media(max-width:850px){.grid,.flow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav><div class="wrap navin">
+  <div class="brand">RCSCA V2 <b>SECURITY & RECOVERY</b></div>
+  <a class="back" href="RCSCA_V2_1percent_SYSTEM_MAP.html">回系統總覽</a>
+</div></nav>
+
+<main><div class="wrap">
+<section class="hero">
+  <div class="eyebrow">SECURITY · BACKUP · DR · ACCOUNT CONTROL</div>
+  <h1>真正做大之前，<br>先確保不會一次失去全部。</h1>
+  <p class="sub">RCSCA 未來若累積會員、企業、活動、共享點與需求個案，最大的風險不是網站壞掉幾小時，而是帳號被接管、資料被刪除、敏感資料外洩，或沒有人知道怎麼復原。</p>
+</section>
+
+<section class="section">
+  <h2>四層安全原則</h2>
+  <div class="grid">
+    <div class="card"><div class="eyebrow">01 ACCOUNT</div><h3>帳號不能共用</h3><p>管理員、財務、會員管理、企業管理各自使用個人帳號，不使用「admin123」這類共用帳號。</p></div>
+    <div class="card"><div class="eyebrow">02 ACCESS</div><h3>最小必要權限</h3><p>誰的工作需要什麼，就只開什麼。理監事、隊長、企業、工作人員不自動取得更多資料。</p></div>
+    <div class="card"><div class="eyebrow">03 DATA</div><h3>敏感資料分層</h3><p>財務、PASS IT ON、身分驗證、特殊保護個案素材分開控管與記錄查閱。</p></div>
+    <div class="card"><div class="eyebrow">04 RECOVERY</div><h3>備份不是有做就算</h3><p>備份必須能實際還原。至少定期做還原演練，不接受「我們應該有備份」這種狀態。</p></div>
+    <div class="card"><div class="eyebrow">05 AUDIT</div><h3>高風險操作留痕</h3><p>刪除、合併帳號、調整點數、匯入資料、核發標章、查閱高敏感個案都要留紀錄。</p></div>
+    <div class="card"><div class="eyebrow">06 OFFBOARD</div><h3>離職／卸任立即撤權</h3><p>人離開職務時，不等幾週後才處理。權限移除、金鑰更換、共用設備登出需有標準流程。</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>帳號管理規則</h2>
+  <div class="card">
+    <div class="rule"><b>管理員一人一帳號</b><span>禁止多人共用同一 Email／密碼，否則 Audit Log 沒有意義。</span></div>
+    <div class="rule"><b>高權限帳號強制 MFA</b><span>正式管理後台、雲端主機、資料庫、DNS、網域、GitHub 等都應使用多因素驗證。</span></div>
+    <div class="rule"><b>Recovery Code 不放 LINE 群</b><span>恢復碼與備援帳號應放在受控密碼管理器或離線安全位置。</span></div>
+    <div class="rule"><b>權限每季檢查一次</b><span>確認目前誰還需要後台、財務、個案、企業審核權限。</span></div>
+    <div class="rule"><b>緊急 Super Admin 不做日常操作</b><span>最高權限帳號平時不用來處理一般會員資料，只保留緊急與系統治理用途。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>建議帳號責任分工</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>系統／帳號</th><th>主要持有人</th><th>備援</th><th>規則</th></tr></thead>
+    <tbody>
+      <tr><td>網域註冊</td><td>協會正式管理 Email</td><td>第二位授權管理者</td><td>不得綁私人離職即失聯帳號</td></tr>
+      <tr><td>Cloudflare / DNS</td><td>技術管理帳號</td><td>協會 Super Admin</td><td>MFA、角色分權</td></tr>
+      <tr><td>Vercel / Hosting</td><td>技術管理帳號</td><td>第二技術管理者</td><td>不要使用個人私人專案作正式站</td></tr>
+      <tr><td>Supabase / DB</td><td>技術管理＋指定資料管理者</td><td>Super Admin</td><td>service role key 不出現在前端</td></tr>
+      <tr><td>SMS Provider</td><td>協會帳務／技術共同管理</td><td>第二管理者</td><td>限制月額與異常用量警報</td></tr>
+      <tr><td>GitHub / Source Code</td><td>組織帳號</td><td>至少兩位 Owner</td><td>正式程式碼不只存在單一工程師個人帳號</td></tr>
+      <tr><td>密碼管理器</td><td>協會核心管理</td><td>指定備援</td><td>重要 Recovery Code 集中管理</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section">
+  <h2>備份策略</h2>
+  <div class="grid">
+    <div class="card"><h3>每日</h3><p>資料庫自動備份／快照。重大批次匯入、資料合併前再手動建立可回復點。</p><span class="tag">DB</span></div>
+    <div class="card"><h3>每週</h3><p>匯出關鍵結構化資料與設定摘要，存放在與正式資料庫不同的位置。</p><span class="tag">OFFSITE</span></div>
+    <div class="card"><h3>每月</h3><p>做一次抽樣還原測試，確認會員、企業、點數流水、個案資料能正確復原。</p><span class="tag">RESTORE TEST</span></div>
+  </div>
+  <div class="note" style="margin-top:14px"><b>原則：</b>同一個雲端帳號裡的「另一份備份」不算完整異地備援。至少有一份關鍵備份放在不同帳號／不同服務或受控離線位置。</div>
+</section>
+
+<section class="section">
+  <h2>災難復原流程</h2>
+  <div class="flow">
+    <div class="step"><b>01 發現</b><span>網站異常、帳號被接管、資料錯刪或外洩。</span></div>
+    <div class="step"><b>02 隔離</b><span>停用金鑰、凍結高風險帳號、暫停寫入。</span></div>
+    <div class="step"><b>03 評估</b><span>確認影響範圍、時間點與涉及哪些資料。</span></div>
+    <div class="step"><b>04 還原</b><span>從可信備份／版本回復，不直接在受感染環境硬修。</span></div>
+    <div class="step"><b>05 復盤</b><span>更新權限、規則、金鑰與事故紀錄。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>建議復原目標</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>系統</th><th>可接受中斷</th><th>可接受資料損失</th><th>優先級</th></tr></thead>
+    <tbody>
+      <tr><td>公開網站</td><td>數小時</td><td>幾乎無狀態資料</td><td class="warn">中</td></tr>
+      <tr><td>登入／會員身份</td><td>數小時</td><td>不應遺失已完成驗證</td><td class="bad">高</td></tr>
+      <tr><td>點數／XP 流水</td><td>數小時</td><td>不接受無法追溯的缺口</td><td class="bad">高</td></tr>
+      <tr><td>PASS IT ON 個案</td><td>可短暫停機</td><td>敏感資料不可遺失或錯置</td><td class="bad">最高</td></tr>
+      <tr><td>企業標章／禮遇</td><td>一天內</td><td>可從紀錄重建</td><td class="warn">中</td></tr>
+      <tr><td>生活分享內容</td><td>一天內</td><td>可接受小範圍損失</td><td class="ok">低</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section">
+  <h2>高風險操作必須雙層核准</h2>
+  <div class="grid">
+    <div class="card"><h3>帳號合併</h3><p>涉及共享點、會籍或身份衝突時，不能單人完成。</p></div>
+    <div class="card"><h3>大量點數調整</h3><p>單筆大量或批次更正，需要第二位管理者核准。</p></div>
+    <div class="card"><h3>大量匯入／刪除</h3><p>正式匯入前先建立回復點，執行後需驗證筆數與錯誤報表。</p></div>
+    <div class="card"><h3>個案資料匯出</h3><p>PASS IT ON 完整資料不得隨意下載 Excel；需理由、權限與查閱紀錄。</p></div>
+    <div class="card"><h3>角色升級</h3><p>任何人被提升為財務、個案、Super Admin 都需核准。</p></div>
+    <div class="card"><h3>網域／DNS 變更</h3><p>正式站 DNS、MX、驗證紀錄變更前需雙人確認，避免整站或 Email 中斷。</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>離職／卸任清單</h2>
+  <div class="card danger">
+    <div class="rule"><b>立即移除帳號與角色</b><span>後台、Supabase、Vercel、Cloudflare、GitHub、SMS Provider、密碼管理器。</span></div>
+    <div class="rule"><b>撤銷 API Key／Token</b><span>若曾由離任者接觸，重要 service key 直接輪替。</span></div>
+    <div class="rule"><b>移轉企業／個案負責權</b><span>不能因某人離職導致資料無人管理。</span></div>
+    <div class="rule"><b>保留操作紀錄，不刪帳號歷史</b><span>舊帳號停用即可，Audit Log 仍需知道過去是誰操作。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card dark">
+    <div class="eyebrow" style="color:#d7aa58">READY FOR BUILD</div>
+    <h2 style="margin:7px 0 10px">到這裡，正式開發前的制度骨架已經大致補齊。</h2>
+    <p>下一個真正的分水嶺，就是建立實際開發環境與雲端帳號。從那一步開始，就需要你本人建立或授權正式組織帳號，因為會牽涉網域、資料庫、SMS、付款與協會所有權。</p>
+  </div>
+</section>
+
+</div></main>
+</body>
+</html>

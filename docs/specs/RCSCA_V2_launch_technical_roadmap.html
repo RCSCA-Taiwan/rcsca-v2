@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCSCA V2｜正式上線技術架構與建置順序</title>
+<style>
+:root{
+  --ink:#171714;--paper:#f5f2eb;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;
+  --accent:#8b1e2d;--soft:#ebe4d8;--dark:#11110f;--ok:#48694b;--warn:#9a6b16;--blue:#385f78;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+a{text-decoration:none;color:inherit}.wrap{width:min(1180px,calc(100% - 32px));margin:auto}
+nav{position:sticky;top:0;z-index:20;background:rgba(245,242,235,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.08)}
+.navin{height:70px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900}.brand b{color:var(--accent);font-size:24px;margin-left:8px}
+.back{font-size:14px;border:1px solid var(--line);padding:8px 13px;border-radius:999px}
+main{padding:38px 0 90px}.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px}
+.hero{padding:30px}.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:800}
+h1{font-size:clamp(40px,7vw,72px);line-height:1;margin:10px 0 14px;letter-spacing:-.05em}.sub{color:var(--muted);max-width:860px}
+.section{margin-top:26px}.section h2{font-size:30px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{padding:22px}.card h3{font-size:20px;margin:6px 0}.card p{margin:0;color:var(--muted)}
+.tag{display:inline-block;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;margin:8px 6px 0 0}
+.stack{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.layer{border-left:4px solid var(--accent);padding:18px;background:var(--card);border-radius:0 18px 18px 0;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.layer b{display:block;font-size:19px}.layer span{color:var(--muted);font-size:14px}
+.phase{display:grid;grid-template-columns:90px 1fr;gap:18px;padding:20px 0;border-top:1px solid var(--line)}.phase:first-child{border-top:0}
+.pnum{font-size:34px;font-weight:900;color:var(--accent)}.phase h3{margin:0 0 6px}.phase p{margin:0;color:var(--muted)}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.check{font-size:13px;background:#f4efe6;border-radius:12px;padding:9px 11px}
+.decision{background:var(--dark);color:white}.decision p{color:#c9c5bc}
+.note{padding:15px;border-radius:15px;background:#f7f2e7;border:1px solid #e8ddc6}
+.yes{color:var(--ok);font-weight:800}.later{color:var(--warn);font-weight:800}
+@media(max-width:850px){.grid,.stack,.checks{grid-template-columns:1fr}.phase{grid-template-columns:1fr}.pnum{font-size:26px}}
+</style>
+</head>
+<body>
+<nav><div class="wrap navin">
+  <div class="brand">RCSCA V2 <b>LAUNCH PLAN</b></div>
+  <a class="back" href="RCSCA_V2_1percent_SYSTEM_MAP.html">回系統總覽</a>
+</div></nav>
+
+<main><div class="wrap">
+<section class="hero">
+  <div class="eyebrow">TECH STACK · MVP · LAUNCH ORDER</div>
+  <h1>先做能運作的第一版，<br>再把 1% 做大。</h1>
+  <p class="sub">現在不需要一次把所有功能上線。第一版真正需要的是：可信任的公開網站、身份登入、會員／企業資料、共享足跡、活動登錄、基本後台與權限。遊戲化、共享所、完整 HR 網與大量媒體再逐步打開。</p>
+</section>
+
+<section class="section">
+  <h2>建議技術架構</h2>
+  <div class="stack">
+    <div class="layer"><b>前端｜Next.js</b><span>同一套程式處理公開網站、MY 1%、企業 Dashboard 與後台；RWD 手機優先。</span></div>
+    <div class="layer"><b>主機｜Vercel</b><span>先用託管部署，減少自己維護伺服器的成本與風險。</span></div>
+    <div class="layer"><b>資料庫｜PostgreSQL / Supabase</b><span>會員、企業、小隊、活動、點數、個案與權限關聯資料放主資料庫。</span></div>
+    <div class="layer"><b>登入｜Supabase Auth</b><span>第一版以手機 OTP 為目標；正式環境需配置 SMS provider，並搭配 rate limit 與 CAPTCHA。</span></div>
+    <div class="layer"><b>權限｜Row Level Security</b><span>不是「把頁面藏起來」，而是資料庫層就限制誰能讀、寫哪些資料。</span></div>
+    <div class="layer"><b>防機器人｜Cloudflare Turnstile</b><span>保護註冊、登入、提出需求、企業申請等表單，減少大量假帳號與濫用。</span></div>
+    <div class="layer"><b>圖片／影片｜物件儲存</b><span>第一版少量素材可先用既有儲存；大量會員媒體後續再切 Cloudflare R2 等物件儲存。</span></div>
+    <div class="layer"><b>網域／DNS｜Cloudflare</b><span>網域 DNS、安全與未來 CDN 統一管理；不必一開始做複雜企業方案。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>第一版一定要做</h2>
+  <div class="grid">
+    <div class="card"><div class="eyebrow">01 PUBLIC</div><h3>正式首頁</h3><p>1% × Cycle of Goodness、成果、服務、企業、PASS IT ON 與加入入口。</p><span class="tag">MVP 必做</span></div>
+    <div class="card"><div class="eyebrow">02 IDENTITY</div><h3>註冊／登入</h3><p>手機 OTP、介紹人、小隊來源、平台身份與正式會員狀態。</p><span class="tag">MVP 必做</span></div>
+    <div class="card"><div class="eyebrow">03 MEMBER</div><h3>MY 1%</h3><p>加入日期、共享足跡、基本 XP／點數、數位共享卡。</p><span class="tag">MVP 必做</span></div>
+    <div class="card"><div class="eyebrow">04 ACTIVITY</div><h3>活動登錄</h3><p>協會後台可批次匯入參與紀錄，手動核准並發放點數／XP。</p><span class="tag">MVP 必做</span></div>
+    <div class="card"><div class="eyebrow">05 ENTERPRISE</div><h3>企業基本 Dashboard</h3><p>企業身份、年度共享紀錄、1% 標章資格與工作機會入口。</p><span class="tag">MVP 必做</span></div>
+    <div class="card"><div class="eyebrow">06 ADMIN</div><h3>後台與 Audit Log</h3><p>會員、企業、活動、點數、個案、權限與異動紀錄。</p><span class="tag">MVP 必做</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>第二階段再打開</h2>
+  <div class="grid">
+    <div class="card"><h3>1% 共享所</h3><p>正式兌換、抽選、核銷 QR、企業限量共享。</p><span class="tag">Phase 2</span></div>
+    <div class="card"><h3>完整 Level／Secret</h3><p>高階條件、秘密成就、卡面解鎖、年度徽章。</p><span class="tag">Phase 2</span></div>
+    <div class="card"><h3>正式會員 HR 網</h3><p>生活找人、找工作、找人才、企業端職缺串接。</p><span class="tag">Phase 2</span></div>
+    <div class="card"><h3>企業 1% 禮遇</h3><p>店家核銷、會員優惠、使用數據與年度標章 QR。</p><span class="tag">Phase 2</span></div>
+    <div class="card"><h3>生活共享社群</h3><p>食譜、餐廳、旅遊、知識分享與「有幫助」互動。</p><span class="tag">Phase 2</span></div>
+    <div class="card"><h3>大量媒體上傳</h3><p>照片壓縮、影片政策、R2/CDN、保存年限與配額。</p><span class="tag">後續討論</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>實際建置順序</h2>
+  <div class="card">
+    <div class="phase"><div class="pnum">01</div><div><h3>建立正式開發專案</h3><p>Next.js 專案、版本控制、測試環境與正式環境分開。</p><div class="checks"><div class="check">✓ 開發站</div><div class="check">✓ 正式站</div><div class="check">✓ 環境變數</div><div class="check">✓ 備份策略</div></div></div></div>
+    <div class="phase"><div class="pnum">02</div><div><h3>建立 Supabase 資料庫</h3><p>先把 members、memberships、teams、invitations、activities、participations、points、enterprises、support_cases、audit_logs 等核心表建好。</p></div></div>
+    <div class="phase"><div class="pnum">03</div><div><h3>先做登入與權限</h3><p>手機 OTP、正式會員判定、企業管理者、後台角色與 RLS。這一步沒做好，後面所有頁面都不該上線。</p></div></div>
+    <div class="phase"><div class="pnum">04</div><div><h3>把目前原型變成正式前端</h3><p>公開首頁、MY 1%、企業 Dashboard、PASS IT ON、後台改為真正連資料庫，不再使用假資料。</p></div></div>
+    <div class="phase"><div class="pnum">05</div><div><h3>匯入既有會員與歷史</h3><p>保留原始入會日期、一般／永久會籍、介紹人與已知歷史活動，避免老會員從網站上線日重新計算。</p></div></div>
+    <div class="phase"><div class="pnum">06</div><div><h3>封閉測試</h3><p>先讓少數理監事／核心會員實際註冊、查看 MY 1%、活動登錄、企業操作，修正流程。</p></div></div>
+    <div class="phase"><div class="pnum">07</div><div><h3>正式公開 V1</h3><p>只開成熟功能；尚未測好的兌換、遊戲、HR、媒體上傳先顯示「即將開放」，不硬上。</p></div></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>現在先不急著做的事</h2>
+  <div class="grid">
+    <div class="card"><h3>原生 App</h3><p>第一階段先做手機瀏覽器／PWA 體驗，不需要同時做 iOS、Android。</p><span class="later">延後</span></div>
+    <div class="card"><h3>複雜金流</h3><p>既然目前現金、轉帳並存，先做好後台對帳與活動參與登錄，不強迫所有款項經網站。</p><span class="later">延後</span></div>
+    <div class="card"><h3>完整電商商城</h3><p>共享所不是商城，第一版不要因兌換功能把整個系統做成電商。</p><span class="later">延後</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card decision">
+    <div class="eyebrow" style="color:#d7aa58">CURRENT DECISION</div>
+    <h2 style="margin:6px 0 10px">現在真正需要你介入的還不到。</h2>
+    <p>原型、資料表、權限與建置順序我可以繼續整理。等到要建立正式 Supabase、Vercel、Cloudflare、SMS Provider 與網域帳號時，才需要你本人建立／授權帳號與付款資料，我再逐步帶你完成。</p>
+  </div>
+</section>
+
+</div></main>
+</body>
+</html>

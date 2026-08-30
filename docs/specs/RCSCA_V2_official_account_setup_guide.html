@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RCSCA V2｜正式帳號建立手冊</title>
+<style>body{margin:0;background:#f5f2eb;color:#171714;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;line-height:1.65}.w{width:min(1000px,calc(100% - 32px));margin:auto;padding:48px 0}.c{background:#fffdf8;border:1px solid #d9d2c5;border-radius:22px;padding:26px;margin-bottom:16px}h1{font-size:clamp(42px,7vw,68px);line-height:1;margin:8px 0 18px}.e{font-size:12px;letter-spacing:.14em;color:#8b1e2d;font-weight:900}.m{color:#716d65}.g{display:grid;grid-template-columns:1fr 1fr;gap:14px}.n{font-size:34px;font-weight:900;color:#ddd4c6;float:right}.r{padding:14px 0;border-top:1px solid #d9d2c5}.r:first-child{border:0}.r b{display:block}.dark{background:#171714;color:#fff}.dark .m{color:#c9c5bc}@media(max-width:760px){.g{grid-template-columns:1fr}}</style></head><body><div class="w">
+<div class="c"><div class="e">ORGANIZATION OWNERSHIP · SETUP ORDER</div><h1>帳號可以晚點開，<br>但所有權不能開錯。</h1><p class="m">正式站的網域、程式碼、資料庫、部署與簡訊帳號都應屬於協會。外包公司可以被授權執行，但不能成為唯一 Owner。</p></div>
+<div class="g">
+<div class="c"><span class="n">01</span><div class="e">FOUNDATION</div><h2>協會專用管理 Email</h2><p class="m">先建立只負責數位資產治理的正式信箱；不要使用工程師私人 Gmail。</p></div>
+<div class="c"><span class="n">02</span><div class="e">CODE</div><h2>GitHub Organization</h2><p class="m">程式碼放組織底下，至少兩位 Owner；工程師以受邀成員方式加入。</p></div>
+<div class="c"><span class="n">03</span><div class="e">DATABASE</div><h2>Supabase Organization</h2><p class="m">正式與測試專案分離；會員資料、Auth、RLS 與核心資料庫放在協會組織。</p></div>
+<div class="c"><span class="n">04</span><div class="e">DEPLOY</div><h2>Vercel Team</h2><p class="m">正式網站部署在協會 Team，不放外包工程師個人帳號。</p></div>
+<div class="c"><span class="n">05</span><div class="e">DOMAIN</div><h2>Cloudflare Account</h2><p class="m">DNS 與網站安全由協會掌握；技術人員依角色授權。</p></div>
+<div class="c"><span class="n">06</span><div class="e">SMS</div><h2>SMS Provider</h2><p class="m">最後再選。依台灣送達率、費率、發票與法遵決定，不現在綁死品牌。</p></div>
+</div>
+<div class="c"><h2>建立時的硬規則</h2>
+<div class="r"><b>協會是 Owner，廠商是受邀者</b><span class="m">未來換執行公司，只撤權，不必把網站討回來。</span></div>
+<div class="r"><b>至少兩位可信任的最高管理者</b><span class="m">避免單一帳號失聯造成整套系統失控。</span></div>
+<div class="r"><b>最高權限全部開 MFA</b><span class="m">Recovery Code 另存安全位置，不放 LINE 群。</span></div>
+<div class="r"><b>API Key 視同密碼</b><span class="m">只放 Secrets／環境變數，不貼聊天群與文件。</span></div>
+<div class="r"><b>先不買高階方案、不大量充值 SMS</b><span class="m">先完成 V1 與封閉測試，再依實際量升級。</span></div>
+</div>
+<div class="c dark"><div class="e" style="color:#d7aa58">STOP POINT</div><h2>真正建立外部帳號前，先確認協會的數位資產管理 Email。</h2><p class="m">從下一步開始會產生外部登入憑證與可能的付款關係，所以應一個一個建立，不要一次全部申請。</p></div>
+</div></body></html>

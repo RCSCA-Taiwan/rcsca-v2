@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCSCA V2｜資料庫與敏感資料架構</title>
+<style>
+:root{
+  --ink:#171714;--paper:#f5f2eb;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;
+  --accent:#8b1e2d;--soft:#ebe4d8;--dark:#11110f;--ok:#48694b;--warn:#9a6b16;
+  --red:#9b3949;--blue:#385f78;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);line-height:1.58}
+a{text-decoration:none;color:inherit}.wrap{width:min(1220px,calc(100% - 32px));margin:auto}
+nav{position:sticky;top:0;z-index:20;background:rgba(245,242,235,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.08)}
+.navin{height:70px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900}.brand b{color:var(--accent);font-size:24px;margin-left:8px}
+.back{font-size:14px;border:1px solid var(--line);padding:8px 13px;border-radius:999px}
+main{padding:38px 0 90px}.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px}
+.hero{padding:30px}.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:800}
+h1{font-size:clamp(40px,7vw,72px);line-height:1;margin:10px 0 14px;letter-spacing:-.05em}.sub{color:var(--muted);max-width:880px}
+.section{margin-top:26px}.section h2{font-size:30px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{padding:22px}.card h3{font-size:20px;margin:6px 0}.card p{margin:0;color:var(--muted)}
+.tag{display:inline-block;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;margin:8px 6px 0 0}
+.schema{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.entity{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.entity h3{margin:0;padding:14px 16px;background:#f2ede4;font-size:17px}.fields{padding:10px 16px 14px}.field{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid #eee8df;font-size:13px}.field:first-child{border-top:0}.type{color:var(--muted);white-space:nowrap}
+.hot{background:#f8eeee}.mid{background:#f4f2e9}.low{background:#eef3eb}
+.legend{display:flex;gap:8px;flex-wrap:wrap}.legend span{padding:7px 10px;border-radius:999px;font-size:12px}
+.rule{padding:18px 0;border-top:1px solid var(--line)}.rule:first-child{border-top:0}.rule b{display:block}.rule span{color:var(--muted);font-size:14px}
+.tablewrap{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}
+th,td{padding:10px 9px;border-top:1px solid var(--line);text-align:left;vertical-align:top}thead th{border-top:0;background:#f4efe6;color:#5e5a53}
+.note{padding:15px;border-radius:15px;background:#f7f2e7;border:1px solid #e8ddc6}
+.ok{color:var(--ok);font-weight:800}.warn{color:var(--warn);font-weight:800}.danger{color:var(--red);font-weight:800}
+@media(max-width:850px){.grid,.schema{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav><div class="wrap navin">
+  <div class="brand">RCSCA V2 <b>DATA ARCHITECTURE</b></div>
+  <a class="back" href="RCSCA_V2_1percent_SYSTEM_MAP.html">回系統總覽</a>
+</div></nav>
+
+<main><div class="wrap">
+<section class="hero">
+  <div class="eyebrow">DATABASE · PRIVACY · SCALABILITY</div>
+  <h1>資料分開存，<br>權限分開看。</h1>
+  <p class="sub">這一層不是畫面，而是正式開發前最重要的資料骨架。會員、企業、小隊、活動、共享點、PASS IT ON 個案、人力網與財務紀錄彼此關聯，但不能混成一張大表。</p>
+  <div class="legend" style="margin-top:18px">
+    <span class="hot">高度敏感｜加密＋最小權限</span>
+    <span class="mid">中度敏感｜角色控管</span>
+    <span class="low">一般資料｜依公開設定顯示</span>
+  </div>
+</section>
+
+<section class="section">
+  <h2>核心資料群</h2>
+  <div class="grid">
+    <div class="card"><div class="eyebrow">IDENTITY</div><h3>會員與身分</h3><p>帳號、手機、Email、身分唯一驗證權杖、正式會籍、加入日期。</p></div>
+    <div class="card"><div class="eyebrow">COMMUNITY</div><h3>小隊與介紹來源</h3><p>介紹人、邀請來源、小隊、隊長、加入／退出紀錄。</p></div>
+    <div class="card"><div class="eyebrow">SHARING</div><h3>共享足跡與內容</h3><p>生活分享、Connection、活動參與、公益共享與匿名化成果。</p></div>
+    <div class="card"><div class="eyebrow">POINTS</div><h3>共享點／XP／Level</h3><p>點數交易、XP、Level 歷史、徽章與秘密成就。</p></div>
+    <div class="card"><div class="eyebrow">ENTERPRISE</div><h3>企業／店家</h3><p>統編唯一性、管理者、企業 1%、標章、禮遇、工作機會與 Impact。</p></div>
+    <div class="card"><div class="eyebrow">PASS IT ON</div><h3>需求個案</h3><p>個案狀況、需求拆解、媒合進度、匿名公開內容、個案隱私查閱紀錄。</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>主要資料表概念</h2>
+  <div class="schema">
+    <div class="entity"><h3>members｜共享身分</h3><div class="fields">
+      <div class="field"><b>member_id</b><span class="type">UUID / PK</span></div>
+      <div class="field"><b>display_name</b><span class="type">text</span></div>
+      <div class="field"><b>mobile</b><span class="type">encrypted</span></div>
+      <div class="field"><b>email</b><span class="type">nullable</span></div>
+      <div class="field"><b>identity_token</b><span class="type">hashed/tokenized</span></div>
+      <div class="field"><b>joined_at</b><span class="type">datetime</span></div>
+      <div class="field"><b>platform_registered_at</b><span class="type">datetime</span></div>
+    </div></div>
+
+    <div class="entity"><h3>memberships｜正式會籍</h3><div class="fields">
+      <div class="field"><b>membership_id</b><span class="type">PK</span></div>
+      <div class="field"><b>member_id</b><span class="type">FK</span></div>
+      <div class="field"><b>membership_type</b><span class="type">annual / lifetime</span></div>
+      <div class="field"><b>status</b><span class="type">active / inactive</span></div>
+      <div class="field"><b>member_since</b><span class="type">date</span></div>
+      <div class="field"><b>fee_status</b><span class="type">admin only</span></div>
+    </div></div>
+
+    <div class="entity"><h3>teams / team_members</h3><div class="fields">
+      <div class="field"><b>team_id</b><span class="type">PK</span></div>
+      <div class="field"><b>team_name</b><span class="type">text</span></div>
+      <div class="field"><b>leader_member_id</b><span class="type">FK</span></div>
+      <div class="field"><b>member_id</b><span class="type">FK</span></div>
+      <div class="field"><b>role</b><span class="type">leader/member</span></div>
+      <div class="field"><b>joined_at</b><span class="type">datetime</span></div>
+    </div></div>
+
+    <div class="entity"><h3>invitations｜介紹與邀請</h3><div class="fields">
+      <div class="field"><b>inviter_member_id</b><span class="type">FK</span></div>
+      <div class="field"><b>invitee_member_id</b><span class="type">FK nullable</span></div>
+      <div class="field"><b>source_type</b><span class="type">LINE/event/web</span></div>
+      <div class="field"><b>initial_team_id</b><span class="type">nullable</span></div>
+      <div class="field"><b>created_at</b><span class="type">datetime</span></div>
+    </div></div>
+
+    <div class="entity"><h3>activities / participations</h3><div class="fields">
+      <div class="field"><b>activity_id</b><span class="type">PK</span></div>
+      <div class="field"><b>activity_type</b><span class="type">children/dragonboat/midautumn...</span></div>
+      <div class="field"><b>member_id</b><span class="type">FK</span></div>
+      <div class="field"><b>participation_type</b><span class="type">action/resource/etc</span></div>
+      <div class="field"><b>verified_by</b><span class="type">admin FK</span></div>
+      <div class="field"><b>verified_at</b><span class="type">datetime</span></div>
+    </div></div>
+
+    <div class="entity"><h3>point_transactions｜點數流水</h3><div class="fields">
+      <div class="field"><b>transaction_id</b><span class="type">PK</span></div>
+      <div class="field"><b>member_id</b><span class="type">FK</span></div>
+      <div class="field"><b>type</b><span class="type">earn/spend/adjust</span></div>
+      <div class="field"><b>points</b><span class="type">integer</span></div>
+      <div class="field"><b>source_type</b><span class="type">activity/post/redeem...</span></div>
+      <div class="field"><b>source_id</b><span class="type">FK-like ref</span></div>
+      <div class="field"><b>created_by</b><span class="type">system/admin</span></div>
+    </div></div>
+
+    <div class="entity"><h3>member_levels｜XP / Level</h3><div class="fields">
+      <div class="field"><b>member_id</b><span class="type">FK</span></div>
+      <div class="field"><b>xp</b><span class="type">integer</span></div>
+      <div class="field"><b>level</b><span class="type">1–6</span></div>
+      <div class="field"><b>level_history</b><span class="type">separate table</span></div>
+      <div class="field"><b>achievement_flags</b><span class="type">separate table</span></div>
+    </div></div>
+
+    <div class="entity"><h3>enterprises｜企業</h3><div class="fields">
+      <div class="field"><b>enterprise_id</b><span class="type">PK</span></div>
+      <div class="field"><b>tax_id</b><span class="type">unique / protected</span></div>
+      <div class="field"><b>name</b><span class="type">text</span></div>
+      <div class="field"><b>industry</b><span class="type">category</span></div>
+      <div class="field"><b>status</b><span class="type">active/review</span></div>
+      <div class="field"><b>managers</b><span class="type">join table</span></div>
+    </div></div>
+
+    <div class="entity"><h3>enterprise_shares｜企業 1%</h3><div class="fields">
+      <div class="field"><b>enterprise_id</b><span class="type">FK</span></div>
+      <div class="field"><b>share_type</b><span class="type">fund/product/service/job/etc</span></div>
+      <div class="field"><b>destination</b><span class="type">公益/共享/會員</span></div>
+      <div class="field"><b>status</b><span class="type">pledged/completed</span></div>
+      <div class="field"><b>verified_at</b><span class="type">datetime</span></div>
+    </div></div>
+
+    <div class="entity"><h3>support_cases｜PASS IT ON</h3><div class="fields">
+      <div class="field"><b>case_id</b><span class="type">PK</span></div>
+      <div class="field"><b>owner_member_id</b><span class="type">nullable / protected</span></div>
+      <div class="field"><b>status</b><span class="type">review/matching/closed</span></div>
+      <div class="field"><b>priority</b><span class="type">internal</span></div>
+      <div class="field"><b>public_summary</b><span class="type">anonymous text</span></div>
+      <div class="field"><b>private_notes</b><span class="type">encrypted / restricted</span></div>
+    </div></div>
+
+    <div class="entity"><h3>support_case_needs / matches</h3><div class="fields">
+      <div class="field"><b>case_id</b><span class="type">FK</span></div>
+      <div class="field"><b>need_type</b><span class="type">job/repair/transport...</span></div>
+      <div class="field"><b>urgency</b><span class="type">internal</span></div>
+      <div class="field"><b>provider_type</b><span class="type">member/enterprise</span></div>
+      <div class="field"><b>match_status</b><span class="type">offered/accepted/completed</span></div>
+    </div></div>
+
+    <div class="entity"><h3>audit_logs｜不可無痕修改</h3><div class="fields">
+      <div class="field"><b>audit_id</b><span class="type">PK</span></div>
+      <div class="field"><b>actor_id</b><span class="type">admin/user</span></div>
+      <div class="field"><b>action</b><span class="type">text code</span></div>
+      <div class="field"><b>target_type/id</b><span class="type">reference</span></div>
+      <div class="field"><b>before/after</b><span class="type">json</span></div>
+      <div class="field"><b>created_at</b><span class="type">immutable</span></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>敏感資料分類</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>資料</th><th>敏感程度</th><th>建議處理</th><th>誰可看</th><th>前台顯示</th></tr></thead>
+      <tbody>
+        <tr><td>身分證字號／居留證號</td><td class="danger">高度敏感</td><td>第三方驗證後只留 token / hash，盡量不留原值</td><td>極少數授權角色</td><td>不顯示</td></tr>
+        <tr><td>手機／Email</td><td class="warn">中度敏感</td><td>加密儲存、遮罩顯示</td><td>會員管理／本人</td><td>依本人設定</td></tr>
+        <tr><td>捐款／認購金額</td><td class="warn">中度敏感</td><td>財務系統保存，與共享價值分離</td><td>財務授權人員</td><td>不顯示</td></tr>
+        <tr><td>PASS IT ON 個案完整敘述</td><td class="danger">高度敏感</td><td>加密＋個案角色控管＋查閱紀錄</td><td>指定個案人員</td><td>只顯示匿名摘要</td></tr>
+        <tr><td>特殊保護個案影像</td><td class="danger">高度敏感</td><td>獨立素材區，不進一般會員媒體庫</td><td>極少數授權人員</td><td>不公開</td></tr>
+        <tr><td>共享足跡／Level</td><td class="ok">一般</td><td>依會員公開設定</td><td>本人／允許範圍</td><td>可顯示</td></tr>
+        <tr><td>企業公開共享紀錄</td><td class="ok">一般</td><td>經企業與 RCSCA 審核後公開</td><td>公開</td><td>可顯示</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <h2>正式開發時的幾條硬規則</h2>
+  <div class="card">
+    <div class="rule"><b>1｜不用一張 users 表塞全部東西</b><span>帳號、會籍、角色、企業管理權、點數、個案權限分開。</span></div>
+    <div class="rule"><b>2｜點數一定是流水帳，不是直接改餘額</b><span>每次增加、扣除、調整都有 transaction；錯了用更正紀錄，不做無痕覆寫。</span></div>
+    <div class="rule"><b>3｜Level 由 XP 計算，但高階還要成就條件</b><span>避免靠簽到或生活分享刷到最高「共享守護者」。</span></div>
+    <div class="rule"><b>4｜介紹人與小隊分開</b><span>介紹來源是歷史事實；小隊是可變更的社群歸屬。</span></div>
+    <div class="rule"><b>5｜企業標章每年一筆，不覆蓋前一年</b><span>2027、2028 各自留歷史，才有公信力與稽核能力。</span></div>
+    <div class="rule"><b>6｜所有敏感讀取也要留紀錄</b><span>不只「誰修改」，連誰查閱高敏感個案都應可追蹤。</span></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>容量先預留，不先綁死</h2>
+  <div class="card">
+    <p>文字與結構化資料進主資料庫；照片／影片未來走獨立媒體儲存。現在先在資料表只留 media_id、URL、權限、類型、擁有者與保存政策，避免未來因大量上傳重做核心資料庫。</p>
+    <div class="note" style="margin-top:14px"><b>容量與媒體政策暫不定案：</b>等後續討論會員上傳量、企業 ESG 素材、影片限制與保存年限後，再決定物件儲存與 CDN。</div>
+  </div>
+</section>
+
+</div></main>
+</body>
+</html>

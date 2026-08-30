@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MY 1%｜RCSCA</title>
+<style>
+:root{
+  --ink:#171714;--paper:#f5f2eb;--card:#fffdf8;--muted:#716d65;--line:#d9d2c5;
+  --accent:#8b1e2d;--soft:#ebe4d8;--dark:#11110f;--ok:#48694b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+a{text-decoration:none;color:inherit}
+.wrap{width:min(1180px,calc(100% - 32px));margin:auto}
+nav{position:sticky;top:0;z-index:20;background:rgba(245,242,235,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.08)}
+.navin{height:70px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:900}.brand b{color:var(--accent);font-size:26px;margin-left:8px}.back{font-size:14px;border:1px solid var(--line);padding:8px 13px;border-radius:999px}
+main{padding:34px 0 90px}
+.top{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}
+.hero,.card{background:var(--card);border:1px solid var(--line);border-radius:22px}
+.hero{padding:30px}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--accent);font-weight:800}
+h1{font-size:clamp(38px,6vw,72px);line-height:1;margin:10px 0 12px;letter-spacing:-.045em}
+.sub{color:var(--muted)}
+.levelbox{margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
+.levelrow{display:flex;justify-content:space-between;gap:20px;align-items:center}
+.levelname{font-weight:800;font-size:19px}.xp{font-size:13px;color:var(--muted)}
+.bar{height:10px;background:#e4dfd6;border-radius:999px;overflow:hidden;margin-top:10px}.fill{width:68%;height:100%;background:var(--accent)}
+.quick{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px}
+.q{padding:14px;border-radius:16px;background:var(--soft)}.q strong{display:block;font-size:24px}.q span{font-size:13px;color:var(--muted)}
+.membercard{padding:26px;display:flex;flex-direction:column;justify-content:space-between;min-height:100%}
+.digital{background:var(--dark);color:#fff;border-radius:20px;padding:24px;min-height:310px;position:relative;overflow:hidden}
+.digital:after{content:"1%";position:absolute;right:-15px;bottom:-45px;font-size:160px;font-weight:900;color:rgba(255,255,255,.07)}
+.digital .mini{font-size:12px;letter-spacing:.16em;color:#d5d0c5}.digital h2{font-size:34px;margin:12px 0 4px}.digital .meta{color:#c5c0b7;font-size:14px}
+.qr{width:88px;height:88px;background:
+linear-gradient(90deg,#fff 12px,transparent 12px) 0 0/22px 22px,
+linear-gradient(#fff 12px,transparent 12px) 0 0/22px 22px,
+#fff;margin-top:28px;border:8px solid #fff}
+.notice{margin-top:12px;font-size:12px;color:#c5c0b7}
+.section{margin-top:24px}
+.section h3{font-size:28px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{padding:22px}.card h4{font-size:20px;margin:8px 0}.card p{color:var(--muted);margin:0}
+.tag{display:inline-block;font-size:12px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);margin-top:12px}
+.task{display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--line);padding:16px 0}.task:first-child{border-top:0}
+.task b{display:block}.task small{color:var(--muted)}.pts{white-space:nowrap;color:var(--accent);font-weight:800}
+.locked{background:#f0ece4;border-style:dashed}.locked .lock{font-size:30px}
+.timeline{border-left:2px solid var(--line);margin-left:8px;padding-left:20px}
+.event{position:relative;margin:0 0 22px}.event:before{content:"";position:absolute;left:-27px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.event small{color:var(--muted)}.event b{display:block}
+.bottomnav{display:none}
+@media(max-width:850px){
+  .top,.grid{grid-template-columns:1fr}
+  .quick{grid-template-columns:repeat(2,1fr)}
+  main{padding-bottom:95px}
+  .bottomnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);z-index:30}
+  .bottomnav a{text-align:center;padding:12px 5px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<nav><div class="wrap navin">
+  <div class="brand">RCSCA <b>MY 1%</b></div>
+  <div style="display:flex;gap:8px"><a class="back" href="RCSCA_MY1percent_signup_flow.html">註冊流程</a><a class="back" href="RCSCA_1percent_Cycle_of_Goodness_V2_prototype.html">回到 1% 首頁</a></div>
+</div></nav>
+
+<main><div class="wrap">
+  <section class="top">
+    <div class="hero">
+      <div class="eyebrow">MY 1% DASHBOARD</div>
+      <h1>早安，王○○。</h1>
+      <div class="sub">你已與 RCSCA 同行 2,846 天。今天，也可以從一點點開始。</div>
+
+      <div class="levelbox">
+        <div class="levelrow">
+          <div><div class="levelname">Lv.4｜共享連結者</div><div class="xp">1,420 / 1,800 XP</div></div>
+          <div class="xp">再 380 XP 升級</div>
+        </div>
+        <div class="bar"><div class="fill"></div></div>
+      </div>
+
+      <div class="quick">
+        <div class="q"><strong>1,280</strong><span>共享點</span></div>
+        <div class="q"><strong>32</strong><span>共享足跡</span></div>
+        <div class="q"><strong>6</strong><span>成功 Connection</span></div>
+        <div class="q"><strong>8</strong><span>已解鎖徽章</span></div>
+      </div>
+    </div>
+
+    <div class="membercard card">
+      <div class="digital">
+        <div class="mini">RCSCA · CYCLE OF GOODNESS</div>
+        <h2>MY 1%</h2>
+        <div class="meta">王○○｜Lv.4 共享連結者</div>
+        <div class="meta">暖陽小隊｜同行第 2,846 天</div>
+        <div class="qr" aria-label="QR code placeholder"></div>
+        <div class="notice">店家掃描時僅驗證共享身分與適用禮遇，不顯示身分證、電話等私人資料。</div>
+      </div>
+      <div style="margin-top:14px"><strong>數位共享卡</strong><div class="sub">到 1% 合作店家時出示這張卡。</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>今天的 1%</h3>
+    <div class="grid">
+      <div class="card">
+        <div class="task"><div><b>今日簽到</b><small>回來看看今天有哪些共享。</small></div><div class="pts">+1</div></div>
+        <div class="task"><div><b>每日小任務</b><small>今天缺「交通運輸」這塊拼圖，你認識相關朋友嗎？</small></div><div class="pts">+5</div></div>
+        <div class="task"><div><b>分享一個生活知識</b><small>食譜、餐廳、旅遊、生活經驗都可以。</small></div><div class="pts">+5</div></div>
+      </div>
+      <div class="card">
+        <span class="eyebrow">CONNECTION 1%</span>
+        <h4>你認識這樣的人嗎？</h4>
+        <p>本月目前特別希望連結：交通運輸、無障礙設備、旅宿、就業輔導。</p>
+        <span class="tag">幫我問問朋友 →</span>
+      </div>
+      <div class="card">
+        <span class="eyebrow">1% SECRET</span>
+        <h4>3 個秘密成就尚未發現</h4>
+        <p>不是所有解鎖條件都會先告訴你。持續、多元、真實的共享，可能打開新的 1%。</p>
+        <span class="tag">已發現 8 / 11</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>1% 禮遇與共享</h3>
+    <div class="grid">
+      <div class="card"><span class="eyebrow">本月禮遇</span><h4>○○餐廳｜會員專屬</h4><p>由 1% 共享企業提供的期間禮遇。實際方案上線前須經 RCSCA 審核。</p><a class="btn" href="RCSCA_1percent_rewards_and_levels.html">查看禮遇與共享所</a></div>
+      <div class="card"><span class="eyebrow">共享所</span><h4>○○飯店｜平日住宿</h4><p>企業自願提供給持續參與共享者的限量 1%。不是公益服務對象的指定資源。</p><a class="btn" href="RCSCA_1percent_rewards_and_levels.html">進入 1% 共享所</a></div>
+      <div class="card"><span class="eyebrow">🔒 1% 專屬</span><h4>一份新的 1% 尚未解鎖</h4><p>可能需要同行年資、真實公益足跡、Connection 或其他秘密成就。</p><span class="tag">尚未解鎖</span></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>我的小隊</h3>
+    <div class="card">
+      <div class="levelrow"><div><strong style="font-size:24px">暖陽小隊</strong><div class="sub">32 位成員｜本月共同完成 86 次共享</div></div><span class="tag">TEAM Lv.4</span></div>
+      <div class="bar"><div class="fill" style="width:74%"></div></div>
+      <div class="sub" style="margin-top:10px">再完成 3 次真實公益行動，解鎖下一個團隊里程碑。</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>我的共享足跡</h3>
+    <div class="card">
+      <div class="timeline">
+        <div class="event"><small>2027.09.12</small><b>中秋共享行動｜完成參與</b><span class="sub">+100 XP · +100 共享點</span></div>
+        <div class="event"><small>2027.08.20</small><b>Connection 1%｜成功連結旅宿夥伴</b><span class="sub">一個介紹，補上了一塊資源拼圖。</span></div>
+        <div class="event"><small>2027.07.03</small><b>生活 1%｜分享一道食譜</b><span class="sub">42 人標記「有幫助」。</span></div>
+        <div class="event"><small>2027.06.18</small><b>端午共享行動｜活動協助</b><span class="sub">這是你的第 30 次真實共享。</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>RCSCA MEMBER 專屬</h3>
+    <div class="grid">
+      <div class="card locked"><div class="lock">🔓</div><h4>1% 人力資源網</h4><p>生活找人、找專業、工作機會與人才需求。僅限本會正式會員使用。</p><a class="btn" href="RCSCA_MEMBER_1percent_HR_network.html">進入人力資源網</a></div>
+      <div class="card locked"><div class="lock">🔒</div><h4>MEMBER 1%</h4><p>會員限定任務、部分企業專屬共享與年度會員內容。</p><span class="tag">會員解鎖</span></div>
+      <div class="card locked"><div class="lock">🔒</div><h4>年度會員任務</h4><p>不靠會費買等級；會員資格＋實際參與，才能完成年度會員成就。</p><span class="tag">了解正式會員</span></div>
+    </div>
+  </section>
+</div></main>
+
+<div class="bottomnav">
+  <a href="#">MY 1%</a><a href="#">共享</a><a href="#">小隊</a><a href="#">會員</a>
+</div>
+<a href="RCSCA_V2_1percent_SYSTEM_MAP.html" style="position:fixed;right:16px;bottom:16px;z-index:99;background:#171714;color:#fff;padding:9px 13px;border-radius:999px;font:700 12px -apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.18)">系統總覽</a></body></html>
