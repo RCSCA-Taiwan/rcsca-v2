@@ -1,0 +1,2 @@
+-- Applied to RCSCA V2 Staging: publish/approve outcome drafts only after human review.
+-- See database migration publish_outcome_drafts.

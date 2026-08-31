@@ -1,0 +1,2 @@
+-- V290 deployed to staging: enterprise ESG case assignment, timeline and completion-to-outcome workflow.
+-- See Supabase migration history for canonical deployed DDL.

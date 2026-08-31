@@ -1,0 +1,2 @@
+-- V210 deployed to Staging: outcome_review_queue + controlled queue_completed_outcome RPC.
+-- Completed activity/network/enterprise outcomes enter review before any public story or ESG asset is created.

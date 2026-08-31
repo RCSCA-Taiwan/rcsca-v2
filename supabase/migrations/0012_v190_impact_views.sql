@@ -1,0 +1,2 @@
+-- Applied to RCSCA V2 Staging: security-invoker impact summary views.
+-- See database migration v190_impact_views.

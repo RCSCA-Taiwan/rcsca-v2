@@ -1,0 +1,1 @@
+-- Applied to RCSCA V2 Staging. See Supabase migration: case_due_notifications_and_esg_quality.

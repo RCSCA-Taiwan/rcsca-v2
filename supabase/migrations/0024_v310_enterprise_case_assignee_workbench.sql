@@ -1,0 +1,2 @@
+-- V310 deployed to Staging: assignee workbench, overdue flag, enterprise-reply follow-up.
+-- Canonical SQL is tracked in Supabase migration history.

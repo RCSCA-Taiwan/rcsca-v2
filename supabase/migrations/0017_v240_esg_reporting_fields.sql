@@ -1,0 +1,2 @@
+-- V240 deployed to Staging: structured, evidence-backed ESG reporting fields.
+-- See Supabase migration history for canonical deployed SQL.

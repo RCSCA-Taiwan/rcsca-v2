@@ -1,0 +1,2 @@
+-- V300 deployed to staging: enterprise-visible case timeline replies.
+-- Canonical deployed DDL is recorded in Supabase migration history.

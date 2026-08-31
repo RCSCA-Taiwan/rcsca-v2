@@ -1,0 +1,2 @@
+-- V220 deployed to staging: generate reviewable Cycle of Goodness / ESG drafts from completed outcomes.
+-- Public publishing remains a separate human approval step with consent requirements.

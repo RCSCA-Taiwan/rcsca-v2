@@ -1,0 +1,2 @@
+-- V280 deployed to staging: enterprise ESG service intake with case numbers and RLS.
+-- See Supabase migration history for canonical deployed DDL.

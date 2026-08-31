@@ -1,0 +1,2 @@
+-- V250 deployed to Staging: annual ESG summary + controlled report-ready state.
+-- See Supabase migration history for canonical executed SQL.

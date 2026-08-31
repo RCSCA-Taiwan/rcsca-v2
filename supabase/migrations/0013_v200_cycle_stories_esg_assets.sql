@@ -1,0 +1,2 @@
+-- Applied to RCSCA V2 Staging as migration cycle_stories_and_esg_assets.
+-- Adds publish-safe Cycle of Goodness stories and enterprise ESG deliverables.
