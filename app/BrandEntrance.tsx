@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react';
 
 export default function BrandEntrance(){
-  const [visible,setVisible]=useState(false);
+  const [visible,setVisible]=useState(true);
   const [opening,setOpening]=useState(false);
   const [ready,setReady]=useState(false);
   useEffect(()=>{
-    try{ if(!sessionStorage.getItem('rcsca-brand-entered-v12')) setVisible(true); }
-    catch{ setVisible(true); }
+    try{ if(sessionStorage.getItem('rcsca-brand-entered-v20')) setVisible(false); }
+    catch{}
     const t=setTimeout(()=>setReady(true),1450);
     return()=>clearTimeout(t);
   },[]);
@@ -15,7 +15,7 @@ export default function BrandEntrance(){
     if(opening||!ready)return;
     setOpening(true);
     window.dispatchEvent(new CustomEvent('rcsca:start-music'));
-    try{sessionStorage.setItem('rcsca-brand-entered-v12','1')}catch{}
+    try{sessionStorage.setItem('rcsca-brand-entered-v20','1')}catch{}
     setTimeout(()=>setVisible(false),4400);
   };
   if(!visible)return null;

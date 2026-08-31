@@ -1,0 +1,12 @@
+'use client';
+import SiteHeader from '../../SiteHeader';
+import {useState} from 'react';
+const options=['資金／物資','產品／服務','專業能力','員工人力','工作機會','場地','人脈連結','尚未確定'];
+export default function PartnerApply(){const [step,setStep]=useState(1);const [done,setDone]=useState(false);return <main className="flowPage"><SiteHeader/>
+<section className="flowHero"><div className="portalWrap"><div className="eyebrow">1% 企業共享夥伴 · 加入流程</div><h1>先讓我們知道，企業可以從哪一個 1% 開始。</h1><p>加入不以贊助金額為門檻。企業可以從產品、專業、工作機會、人力、場地或一個人脈連結開始。</p></div></section>
+<section className="portalSection"><div className="portalWrap flowShell"><div className="flowSteps">{['企業身份','可分享的 1%','合作方向','送出審核'].map((x,i)=><button key={x} className={step===i+1?'active':step>i+1?'done':''} onClick={()=>setStep(i+1)}><span>0{i+1}</span><b>{x}</b></button>)}</div>
+<div className="flowPanel">{step===1&&<><small>STEP 01</small><h2>企業基本資料</h2><div className="briefFields"><input placeholder="企業／店家名稱"/><input placeholder="統一編號"/><input placeholder="聯絡人"/><input placeholder="Email" type="email"/><input placeholder="電話"/><input placeholder="所在縣市"/></div></>}
+{step===2&&<><small>STEP 02</small><h2>企業目前可能分享的 1%</h2><p>可以複選，也可以先選「尚未確定」。</p><div className="needGrid">{options.map(x=><label key={x}><input type="checkbox"/><span>{x}</span></label>)}</div></>}
+{step===3&&<><small>STEP 03</small><h2>企業目前比較想從哪裡開始？</h2><div className="choiceCards"><label><input name="direction" type="radio"/><b>公益關懷</b><span>參與真實需求、公益專案或員工行動。</span></label><label><input name="direction" type="radio"/><b>資源連結</b><span>工作、人才、專業、服務與 1% Network。</span></label><label><input name="direction" type="radio"/><b>ESG 專案</b><span>由企業目標出發，規劃可落地的合作與成果。</span></label><label><input name="direction" type="radio"/><b>先聊聊</b><span>還不知道最適合哪一條路，先由 RCSCA 協助判斷。</span></label></div></>}
+{step===4&&<><small>STEP 04</small><h2>送出後會發生什麼？</h2><div className="reviewTimeline"><div><b>1</b><span>RCSCA 檢查企業身份與需求</span></div><div><b>2</b><span>確認適合的共享／合作路徑</span></div><div><b>3</b><span>完成第一筆真實共享後，建立年度共享紀錄</span></div><div><b>4</b><span>符合條件後取得年度 1% 標章</span></div></div><button className="submitLead" onClick={()=>setDone(true)}>{done?'已建立申請草稿 ✓':'送出加入申請 →'}</button>{done&&<p className="formNote">目前為流程原型；正式資料庫上線後才會建立案件編號。</p>}</>}
+<div className="flowNav"><button disabled={step===1} onClick={()=>setStep(Math.max(1,step-1))}>← 上一步</button>{step<4&&<button className="primaryFlow" onClick={()=>setStep(Math.min(4,step+1))}>下一步 →</button>}</div></div></div></section></main>}

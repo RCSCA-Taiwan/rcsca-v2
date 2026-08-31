@@ -1,0 +1,3 @@
+import SiteHeader from '../../SiteHeader';
+const years=[['2026','中秋物資認購','進行中'],['2026','端午關懷行動','已完成'],['2025','年度偏鄉與育幼院服務','已完成'],['2024','年度關懷行動','已完成']];
+export default function Archive(){return <main><SiteHeader/><section className="careHero"><div className="portalWrap"><div className="eyebrow">關懷行動紀錄</div><h1>不靠悲情堆疊，也能清楚留下做過的事。</h1><p>公開的是行動、需求、完成狀態與必要成果；受服務者的隱私與尊嚴優先。</p></div></section><section className="portalSection"><div className="portalWrap"><div className="archiveList">{years.map((x,i)=><article key={i}><b>{x[0]}</b><h3>{x[1]}</h3><span>{x[2]}</span></article>)}</div></div></section></main>}

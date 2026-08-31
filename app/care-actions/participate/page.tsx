@@ -1,0 +1,12 @@
+'use client';
+import SiteHeader from '../../SiteHeader';
+import {FormEvent,useEffect,useState} from 'react';
+import {getSupabaseBrowserClient} from '../../../lib/supabase-browser';
+type Activity={id:string;name:string;code:string};
+export default function Participate(){
+ const [activities,setActivities]=useState<Activity[]>([]);const [activityId,setActivityId]=useState('');const [method,setMethod]=useState('');const [message,setMessage]=useState('');const [sending,setSending]=useState(false);
+ useEffect(()=>{(async()=>{const s=getSupabaseBrowserClient();const {data}=await s.from('activities').select('id,name,code').in('status',['published','active']).order('starts_at',{ascending:true});setActivities((data||[]) as Activity[]);if(data?.[0])setActivityId(data[0].id);})();},[]);
+ async function submit(e:FormEvent){e.preventDefault();setSending(true);setMessage('');const s=getSupabaseBrowserClient();const {data:{session}}=await s.auth.getSession();if(!session){setMessage('請先登入，再登記參與。');setSending(false);return;}if(!activityId){setMessage('目前沒有可登記的公開活動。');setSending(false);return;}
+ const {error}=await s.from('activity_participations').insert({activity_id:activityId,user_id:session.user.id,participation_type:'participant',source_channel:method||'website',status:'pending'});
+ setMessage(error?(error.code==='23505'?'你已經登記過這個活動。':`登記失敗：${error.message}`):'已登記。活動完成後由 RCSCA 核實是否完成參與。');setSending(false);}
+ return <main className="flowPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">公益行動 · 參與登記</div><h1>先留下「我會參與」，付款方式不決定共享價值。</h1><p>共享紀錄依是否完成參與建立，不依金額決定共享等級。</p></div></section><section className="portalSection"><div className="portalWrap actionForm"><form onSubmit={submit}><div className="briefFields"><select required value={activityId} onChange={e=>setActivityId(e.target.value)}><option value="">選擇目前活動</option>{activities.map(a=><option value={a.id} key={a.id}>{a.name}</option>)}</select><select value={method} onChange={e=>setMethod(e.target.value)}><option value="">預計交付／參與方式</option><option value="transfer">轉帳</option><option value="cash">現金</option><option value="volunteer">現場參與</option><option value="contact">由 RCSCA 聯絡</option></select></div><button className="submitLead" disabled={sending}>{sending?'登記中…':'登記參與 →'}</button>{message&&<div className="authMessage sent">{message}</div>}</form><aside><b>財務與共享足跡分開</b><p>付款方式或金額不會直接改變共享等級。活動完成後才由 RCSCA 核實是否完成參與。</p></aside></div></section></main>}

@@ -1,0 +1,11 @@
+'use client';
+import SiteHeader from '../../SiteHeader';
+import {FormEvent,useState} from 'react';
+import {getSupabaseBrowserClient} from '../../../lib/supabase-browser';
+export default function MemberRequest(){
+ const [category,setCategory]=useState('');const [region,setRegion]=useState('');const [detail,setDetail]=useState('');const [message,setMessage]=useState('');const [sending,setSending]=useState(false);
+ async function submit(e:FormEvent){e.preventDefault();setSending(true);setMessage('');const s=getSupabaseBrowserClient();const {data:{session}}=await s.auth.getSession();if(!session){setMessage('請先登入，再送出媒合需求。');setSending(false);return;}
+ const title=category?`${category}${region?`｜${region}`:''}`:'共享媒合需求';
+ const {error}=await s.from('network_requests').insert({requester_user_id:session.user.id,request_kind:category||'其他',title,public_summary:detail.slice(0,120),private_detail:detail,privacy:'member_only',status:'submitted'});
+ setMessage(error?`送出失敗：${error.message}`:'已送出。你可以到「我的需求與進度」查看目前狀態。');if(!error){setCategory('');setRegion('');setDetail('');}setSending(false);}
+ return <main className="flowPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">正式會員 · 生活找人</div><h1>告訴我們你需要什麼，不需要先拿到一整份名單。</h1><p>需求摘要先進入媒合；對方願意回應後，才進一步交換必要聯絡方式。</p></div></section><section className="portalSection"><div className="portalWrap actionForm"><form onSubmit={submit}><div className="briefFields"><select required value={category} onChange={e=>setCategory(e.target.value)}><option value="">選擇需求類別</option><option>水電／工程</option><option>室內設計</option><option>法律</option><option>保險</option><option>會計</option><option>照護</option><option>汽車</option><option>工作／人才</option><option>其他</option></select><input required placeholder="需求地區" value={region} onChange={e=>setRegion(e.target.value)}/><textarea required placeholder="簡單說明需要協助的事情、時間與條件" value={detail} onChange={e=>setDetail(e.target.value)}></textarea></div><button className="submitLead" disabled={sending}>{sending?'送出中…':'送出媒合需求 →'}</button>{message&&<div className="authMessage sent">{message}</div>}</form><aside><b>聯絡資料不公開</b><p>對方先看到需求摘要，不是你的電話與私人資料。</p><b>雙方同意才交換</b><p>避免共享專業網絡變成陌生開發名單。</p></aside></div></section></main>}

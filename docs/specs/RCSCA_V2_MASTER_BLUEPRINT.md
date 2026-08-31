@@ -117,3 +117,49 @@ This file is the implementation baseline. Confirmed decisions must not disappear
 - Desktop H1/H2 and subtitles should remain one visual line whenever viewport width permits; no authored `<br>` for visual drama. Mobile may wrap naturally.
 - Navigation uses one restrained outlined/pill language across all primary pages; RCSCA lockup always links home.
 - Luxury styling must never reduce readability. Tables and information matrices use high-contrast text; muted color is reserved for secondary metadata only.
+
+## V13 implementation checkpoint
+- 1% NETWORK is not a decorative industry map. Public users must be able to see industry occupancy, scarcity/open nodes, visible partner/shop names, regional coverage, and the forms of 1% currently offered.
+- Open/scarce industries remain intentionally visible to create a constructive "fill the missing node" invitation; never sell exclusivity or a single-industry monopoly.
+- Enterprise ESG is a first-layer conversion path. The enterprise page routes to a dedicated ESG project-intake experience before deeper Partner gamification.
+- ESG project intake starts from enterprise goals/needs, not from asking how much the enterprise wants to donate.
+- Multilingual content implementation remains deferred until the current information architecture and core pages stabilize; do not treat the visible language control as completed localization.
+
+## V14 前台語言規則
+- 品牌識別可保留 MY 1%、1% PARTNER、1% NETWORK、Cycle of Goodness、RCSCA 等正式名稱。
+- 所有操作、權限、狀態、服務與說明文字以繁體中文為第一語言；不要求使用者理解英文才能操作。
+- 英文若屬品牌識別，必須由鄰近中文說明承擔功能理解，不以英文術語單獨傳達重要資訊。
+- 一般參觀者、共享夥伴、RCSCA 正式會員、共享等級、使用權限、影響力成果、人脈連結等採中文前台名稱。
+
+## V40 深化規格
+- 1% 共享所正式成為個人端回饋機制：共享點可兌換，XP 不扣；公益指定資源不得轉入共享所。
+- 共享小隊是凝聚與來源辨識，不是上下線／抽成制度；最初介紹人歷史永久保留。
+- RCSCA MEMBER 深層網絡採「需求先行、雙方同意後才交換聯絡方式」，禁止公開會員名單供陌生開發。
+- CARE 活動頁需支援不同交付款項方式，由協會活動後人工／批次核實「完成參與」並登錄共享足跡；金額不決定等級。
+- Cycle of Goodness 的案例必須展示角色可變動、資源可回流，而不是單向施與受。
+
+## V50｜從展示頁走向可操作流程
+- 企業端：新增「成為 1% 企業共享夥伴」四步驟加入流程；ESG 合作另外提供合作流程說明，先談企業目標，不以贊助額作為入口。
+- 1% Network：新增公開夥伴目錄與加入專業網絡流程。公開資訊與私人聯絡資料嚴格分開；0 家／稀缺產業維持可見。
+- 公益行動：新增「登記參與」與「提出真實需求」兩個入口。活動參與與財務交付方式分流；不依金額決定共享等級。
+- 正式會員深層共享：生活找人改為正式需求媒合流程；工作機會有獨立列表與意願回應，企業／會員仍不能取得公開會員名單。
+- 所有新增流程目前為前端互動原型；正式資料送出待 Supabase／權限／Audit Log 接上後啟用。
+
+## V60 operational-flow additions
+- 個人端增加「我的共享紀錄」：呈現核實後的公益參與、資源連結與小隊足跡；金額不作為共享等級依據。
+- 企業端增加「合作案例模型」：正式上線後只使用經授權且可公開的真實案例；成果敘事不得依賴消費受服務者處境。
+- 公益關懷增加歷年行動紀錄：公開行動、需求、完成狀態與必要成果，個案隱私優先。
+- 企業 ESG 服務的轉換路徑：第一屏價值 → ESG 服務 → 合作流程／案例 → 提出需求 → 1% PARTNER 長期關係。
+
+## V70｜成果、通知與隱私層
+- 個人端新增通知中心：只通知核實、媒合、小隊與權限等必要事件；敏感個資不得出現在通知預覽。
+- 企業端新增「企業影響力成果」：以已核實的行動、參與、資源流向與循環成果形成年度摘要；捐款金額不等於 Impact。
+- CARE 新增「關懷足跡」：服務對象包含偏鄉／育幼院、單親、年長、新住民、身障等；公開成果而非消費個案故事。
+- 公開資料與內部資料分層。個案、會員與企業未公開合作內容遵守最小揭露原則。
+
+## V90｜資料狀態與作業規則補充
+- 前台所有「進度」使用同一狀態語言，不讓公益、企業、Network 各自發明一套狀態。
+- 活動完成核實是共享足跡／XP 的前置條件；交付金額與付款方式不影響共享等級。
+- 企業共享先確認用途，再分流 CARE／Connection／Benefit／Job／Professional／Resource。
+- 個人與企業皆應能看到自己的 Request 進度與下一步，但不能因此看見其他人的限制資料。
+- Admin 後台採角色分工與最小必要權限；重大操作必須寫入 append-only Audit Log。
