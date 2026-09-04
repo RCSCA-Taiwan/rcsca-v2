@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = Number(process.env.RCSCA_BROWSER_TEST_PORT ?? "3200");
-const baseURL = process.env.RCSCA_E2E_BASE_URL ?? `http://127.0.0.1:${port}`;
+const baseURL = process.env.RCSCA_E2E_BASE_URL ?? `http://localhost:${port}`;
 const usesLocalServer = !process.env.RCSCA_E2E_BASE_URL;
 
 export default defineConfig({
@@ -24,7 +24,7 @@ export default defineConfig({
   ],
   webServer: usesLocalServer
     ? {
-        command: `npm run start -- --hostname 127.0.0.1 --port ${port}`,
+        command: `npm run start -- --hostname localhost --port ${port}`,
         url: `${baseURL}/api/health`,
         reuseExistingServer: false,
         timeout: 30_000,
