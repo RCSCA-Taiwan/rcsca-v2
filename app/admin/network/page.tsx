@@ -1,2 +1,2 @@
-import SiteHeader from '../../SiteHeader';import LiveAdminNetwork from './LiveAdminNetwork';
+import AdminPageIntro from '../AdminPageIntro';import SiteHeader from '../../SiteHeader';import LiveAdminNetwork from './LiveAdminNetwork';
 export default function Page(){return <main className="adminPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">1% Network 後台</div><h1>媒合不是丟出聯絡方式，而是管理一段關係。</h1><p>審核回應、補件、媒合成立到完成，都留下狀態與操作紀錄。</p></div></section><section className="portalSection"><div className="portalWrap"><LiveAdminNetwork/></div></section></main>}

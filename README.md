@@ -119,3 +119,17 @@ Supabase Auth URL Configuration 也需要加入 Vercel 正式／預覽站的 `/a
 - Added ESG delivery-readiness checks: approved + report-ready + quality-complete + source-verified.
 - Added enterprise management summary by reporting period.
 - Enterprise impact UI now distinguishes prepared material from formally deliverable evidence-backed results.
+
+## V401
+- Fix Vercel build blocker: admin enterprise-cases SiteHeader import now resolves to app/SiteHeader.tsx.
+- Relative-import static scan: 0 missing local imports.
+
+## V410
+- Removed the decorative pseudo-star grid from the brand entrance; the opening now relies on restrained light traces and a cinematic vignette.
+- Added a real mobile navigation menu so every primary route remains reachable on phones.
+- Moved the homepage quick-route guide below the main brand statement for a cleaner first impression.
+- Strengthened enterprise ESG first-screen hierarchy with a visible 3-stage service chain.
+- Unified public portal hero treatment, heading behavior, text contrast, and the sprout/root growth axis.
+
+## V530
+已核准公開資料的修改／下架改走變更申請與管理審核；Network 回應、共享所兌換、公益登記與 ESG 合作案件建立改走受控 RPC，避免前端直接寫入關鍵營運資料。

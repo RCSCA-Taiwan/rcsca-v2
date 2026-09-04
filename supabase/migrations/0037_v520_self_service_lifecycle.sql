@@ -1,0 +1,116 @@
+-- V520: guarded self-service lifecycle for profiles, notifications, enterprise shares, and Network profiles.
+
+create or replace function public.account_update_basic_profile(p_display_name text, p_mobile text)
+returns void language plpgsql security definer set search_path=public as $$
+declare v_actor uuid:=auth.uid();
+begin
+  if v_actor is null then raise exception 'authentication_required'; end if;
+  update public.profiles
+  set display_name=nullif(trim(p_display_name),''), mobile=nullif(trim(p_mobile),''), updated_at=now()
+  where id=v_actor;
+  if not found then raise exception 'profile_not_found'; end if;
+  insert into public.audit_logs(actor_user_id,actor_role,action,subject_type,subject_id,note)
+  values(v_actor,'user','update_basic_profile','profile',v_actor::text,'使用者更新自己的基本資料');
+end;$$;
+revoke all on function public.account_update_basic_profile(text,text) from public,anon;
+grant execute on function public.account_update_basic_profile(text,text) to authenticated;
+
+create or replace function public.account_set_notification_read(p_notification_id uuid, p_read boolean)
+returns void language plpgsql security definer set search_path=public as $$
+declare v_actor uuid:=auth.uid();
+begin
+  if v_actor is null then raise exception 'authentication_required'; end if;
+  update public.user_notifications
+  set read_at=case when p_read then now() else null end
+  where id=p_notification_id and recipient_user_id=v_actor;
+  if not found then raise exception 'notification_not_found'; end if;
+end;$$;
+revoke all on function public.account_set_notification_read(uuid,boolean) from public,anon;
+grant execute on function public.account_set_notification_read(uuid,boolean) to authenticated;
+
+create or replace function public.account_mark_all_notifications_read()
+returns integer language plpgsql security definer set search_path=public as $$
+declare v_actor uuid:=auth.uid(); v_count integer;
+begin
+  if v_actor is null then raise exception 'authentication_required'; end if;
+  update public.user_notifications set read_at=now()
+  where recipient_user_id=v_actor and read_at is null;
+  get diagnostics v_count = row_count;
+  return v_count;
+end;$$;
+revoke all on function public.account_mark_all_notifications_read() from public,anon;
+grant execute on function public.account_mark_all_notifications_read() to authenticated;
+
+create or replace function public.enterprise_submit_share(p_share_type text,p_title text,p_description text)
+returns uuid language plpgsql security definer set search_path=public as $$
+declare v_actor uuid:=auth.uid(); v_enterprise uuid; v_id uuid;
+begin
+  if v_actor is null then raise exception 'authentication_required'; end if;
+  select enterprise_id into v_enterprise from public.enterprise_users
+  where user_id=v_actor order by created_at asc limit 1;
+  if v_enterprise is null then raise exception 'enterprise_membership_required'; end if;
+  if coalesce(trim(p_title),'')='' then raise exception 'title_required'; end if;
+  if p_share_type not in ('care','connection','benefit','job','professional','resource') then raise exception 'invalid_share_type'; end if;
+  insert into public.enterprise_shares(enterprise_id,share_type,title,description,status,public_result)
+  values(v_enterprise,p_share_type::public.share_type,trim(p_title),nullif(trim(p_description),''),'submitted',false)
+  returning id into v_id;
+  insert into public.audit_logs(actor_user_id,actor_role,action,subject_type,subject_id,note)
+  values(v_actor,'enterprise_user','submit_enterprise_share','enterprise_share',v_id::text,'企業送出共享內容審核');
+  return v_id;
+end;$$;
+revoke all on function public.enterprise_submit_share(text,text,text) from public,anon;
+grant execute on function public.enterprise_submit_share(text,text,text) to authenticated;
+
+create or replace function public.enterprise_cancel_share(p_share_id uuid)
+returns void language plpgsql security definer set search_path=public as $$
+declare v_actor uuid:=auth.uid(); v_share public.enterprise_shares%rowtype;
+begin
+  if v_actor is null then raise exception 'authentication_required'; end if;
+  select * into v_share from public.enterprise_shares where id=p_share_id for update;
+  if not found then raise exception 'share_not_found'; end if;
+  if not private.is_enterprise_user(v_share.enterprise_id) then raise exception 'insufficient_privilege'; end if;
+  if v_share.status not in ('submitted','under_review','needs_info','draft') then raise exception 'share_not_cancellable'; end if;
+  update public.enterprise_shares set status='cancelled',public_result=false where id=p_share_id;
+  insert into public.audit_logs(actor_user_id,actor_role,action,subject_type,subject_id,note)
+  values(v_actor,'enterprise_user','cancel_enterprise_share','enterprise_share',p_share_id::text,'企業取消尚未核准的共享內容');
+end;$$;
+revoke all on function public.enterprise_cancel_share(uuid) from public,anon;
+grant execute on function public.enterprise_cancel_share(uuid) to authenticated;
+
+create or replace function public.network_submit_profile(p_category text,p_display_name text,p_region text,p_website_url text,p_public_description text)
+returns uuid language plpgsql security definer set search_path=public as $$
+declare v_actor uuid:=auth.uid(); v_enterprise uuid; v_id uuid;
+begin
+  if v_actor is null then raise exception 'authentication_required'; end if;
+  if coalesce(trim(p_category),'')='' or coalesce(trim(p_display_name),'')='' or coalesce(trim(p_region),'')='' or coalesce(trim(p_public_description),'')='' then raise exception 'required_fields_missing'; end if;
+  select enterprise_id into v_enterprise from public.enterprise_users where user_id=v_actor order by created_at asc limit 1;
+  insert into public.network_profiles(user_id,enterprise_id,owner_type,category,display_name,region,website_url,public_description,public_visible,status,updated_at)
+  values(v_actor,v_enterprise,case when v_enterprise is null then 'person' else 'enterprise' end,trim(p_category),trim(p_display_name),trim(p_region),nullif(trim(p_website_url),''),trim(p_public_description),true,'submitted',now())
+  on conflict(user_id,category) do update set
+    enterprise_id=excluded.enterprise_id, owner_type=excluded.owner_type, display_name=excluded.display_name,
+    region=excluded.region, website_url=excluded.website_url, public_description=excluded.public_description,
+    public_visible=true, status='submitted', updated_at=now()
+  where public.network_profiles.status in ('draft','submitted','needs_info','rejected','cancelled')
+  returning id into v_id;
+  if v_id is null then raise exception 'profile_locked_after_approval'; end if;
+  insert into public.audit_logs(actor_user_id,actor_role,action,subject_type,subject_id,note)
+  values(v_actor,'user','submit_network_profile','network_profile',v_id::text,'使用者送出 Network 公開節點審核');
+  return v_id;
+end;$$;
+revoke all on function public.network_submit_profile(text,text,text,text,text) from public,anon;
+grant execute on function public.network_submit_profile(text,text,text,text,text) to authenticated;
+
+create or replace function public.network_cancel_profile(p_profile_id uuid)
+returns void language plpgsql security definer set search_path=public as $$
+declare v_actor uuid:=auth.uid(); v_row public.network_profiles%rowtype;
+begin
+  if v_actor is null then raise exception 'authentication_required'; end if;
+  select * into v_row from public.network_profiles where id=p_profile_id for update;
+  if not found or v_row.user_id<>v_actor then raise exception 'profile_not_found'; end if;
+  if v_row.status='approved' then raise exception 'approved_profile_requires_admin_unpublish'; end if;
+  update public.network_profiles set status='cancelled',public_visible=false,updated_at=now() where id=p_profile_id;
+  insert into public.audit_logs(actor_user_id,actor_role,action,subject_type,subject_id,note)
+  values(v_actor,'user','cancel_network_profile','network_profile',p_profile_id::text,'使用者取消尚未核准的 Network 節點申請');
+end;$$;
+revoke all on function public.network_cancel_profile(uuid) from public,anon;
+grant execute on function public.network_cancel_profile(uuid) to authenticated;

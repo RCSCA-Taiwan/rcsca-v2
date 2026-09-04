@@ -1,17 +1,7 @@
+'use client';
 import SiteHeader from '../../SiteHeader';
-import { publicSelect } from '../../../lib/supabase-public';
-
-type Enterprise = {id:string;display_name:string|null;legal_name:string;industry:string|null;region:string|null;public_description:string|null};
-type Share = {enterprise_id:string;share_type:string;title:string;description:string|null};
-
-export const dynamic = 'force-dynamic';
-
-export default async function Directory(){
- const enterprises=await publicSelect<Enterprise>('enterprises','select=id,display_name,legal_name,industry,region,public_description&status=eq.approved&order=display_name.asc');
- const shares=await publicSelect<Share>('enterprise_shares','select=enterprise_id,share_type,title,description&status=eq.approved&public_result=eq.true');
- return <main className="networkPage"><SiteHeader/>
- <section className="networkHero"><div className="portalWrap"><div className="eyebrow">1% NETWORK · 公開夥伴</div><h1>看見已經連上的專業與資源。</h1><p>這裡只顯示企業同意公開的資料；私人聯絡方式與會員資料不會公開。</p></div></section>
- <section className="portalSection"><div className="portalWrap"><div className="sectionHead"><div><div className="eyebrow">STAGING LIVE DATA</div><h2>目前公開夥伴</h2></div><p>{enterprises.length} 個公開節點 · 資料由 RCSCA V2 Staging 即時讀取</p></div>
- <div className="portalGrid three">{enterprises.length?enterprises.map(e=>{const es=shares.filter(s=>s.enterprise_id===e.id);return <article key={e.id}><small>{e.industry||'其他'} · {e.region||'未設定'}</small><h3>{e.display_name||e.legal_name}</h3><p>{e.public_description||'尚未提供公開說明'}</p>{es.map(s=><div key={s.title} className="networkOffers"><small>正在分享的 1%</small><b>{s.title}</b></div>)}</article>}):<article><small>目前沒有公開資料</small><h3>等待第一個 1%</h3><p>Staging 連線正常時，核准且公開的企業會出現在這裡。</p></article>}</div></div></section>
- </main>;
-}
+import {useEffect,useMemo,useState} from 'react';
+import {getSupabaseBrowserClient} from '../../../lib/supabase-browser';
+import {useI18n} from '../../i18n'; import {networkCopy} from '../../networkCopy';
+type Row={id:string;category:string;display_name:string;region:string|null;public_description:string|null;website_url:string|null};
+export default function NetworkDirectory(){const {locale}=useI18n(),c=networkCopy[locale];const [rows,setRows]=useState<Row[]>([]),[q,setQ]=useState(''),[cat,setCat]=useState('ALL'),[loading,setLoading]=useState(true);useEffect(()=>{(async()=>{try{const s=getSupabaseBrowserClient();const {data}=await s.from('network_profiles').select('id,category,display_name,region,public_description,website_url').eq('status','approved').eq('public_visible',true).order('category');setRows((data||[]) as Row[])}finally{setLoading(false)}})()},[]);const cats=useMemo(()=>['ALL',...Array.from(new Set(rows.map(x=>x.category)))],[rows]);const filtered=useMemo(()=>rows.filter(x=>(cat==='ALL'||x.category===cat)&&(!q||`${x.display_name} ${x.region||''} ${x.category} ${x.public_description||''}`.toLowerCase().includes(q.toLowerCase()))),[rows,q,cat]);return <main className="flowPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">{c.dirEyebrow}</div><h1>{c.dirTitle}</h1><p>{c.dirLead}</p></div></section><section className="portalSection"><div className="portalWrap"><div className="networkFilter directoryFilter"><input value={q} onChange={e=>setQ(e.target.value)} placeholder={c.search}/><select value={cat} onChange={e=>setCat(e.target.value)}>{cats.map(x=><option key={x} value={x}>{x==='ALL'?({en:'All',ja:'すべて',ko:'전체'} as any)[locale]||'全部':x}</option>)}</select></div>{loading?<div className="liveAccountLoading">{c.loading}</div>:<div className="portalGrid three">{filtered.length?filtered.map(x=><article key={x.id}><small>{x.category} · {x.region||c.regionNone}</small><h3>{x.display_name}</h3><p>{x.public_description||c.descNone}</p>{x.website_url&&<a className="textRoute" href={x.website_url} target="_blank" rel="noreferrer">{c.website}</a>}</article>):<article><small>{c.none}</small><h3>{c.gap}</h3><p>{c.gapDesc}</p><a className="textRoute" href="/1percent-network/join">{c.join}</a></article>}</div>}</div></section></main>}

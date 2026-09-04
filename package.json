@@ -6,19 +6,31 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:env": "node scripts/check-env.mjs",
+    "verify:auth-e2e": "node scripts/verify-auth-e2e.mjs",
+    "verify:canonical-migrations": "node scripts/verify-canonical-migrations.mjs",
+    "verify:canonical-replay": "node scripts/replay-canonical-migrations.mjs",
+    "verify:preview-http": "node scripts/verify-preview-http.mjs",
+    "verify:browser": "playwright test",
+    "verify:browser:list": "playwright test --list",
+    "verify": "npm run check:env && npm run verify:canonical-migrations && npm run build && npm run verify:preview-http"
   },
   "dependencies": {
+    "@supabase/ssr": "0.10.0",
+    "@supabase/supabase-js": "2.112.4",
     "next": "^15.5.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "@supabase/supabase-js": "^2.57.0",
-    "@supabase/ssr": "^0.7.0"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.8.0"
+  },
+  "overrides": {
+    "postcss": "8.5.26"
   }
 }
