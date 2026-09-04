@@ -2,20 +2,5 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowserClient } from '../../../lib/supabase-browser';
-
-export default function AuthCallback(){
-  const router=useRouter();
-  const [message,setMessage]=useState('正在確認登入…');
-  useEffect(()=>{
-    const run=async()=>{
-      const code=new URLSearchParams(window.location.search).get('code');
-      if(!code){setMessage('登入連結缺少驗證資訊，請重新登入。');return;}
-      const supabase=getSupabaseBrowserClient();
-      const {error}=await supabase.auth.exchangeCodeForSession(code);
-      if(error){setMessage('登入驗證失敗，請重新寄送登入連結。');return;}
-      router.replace('/account'); router.refresh();
-    };
-    run();
-  },[router]);
-  return <main className="authCallback"><div><div className="brandRcsca">RCSCA</div><p>{message}</p></div></main>
-}
+import { safeInternalPath } from '../../../lib/auth-navigation';
+export default function AuthCallback(){const router=useRouter();const[message,setMessage]=useState('正在確認登入…');useEffect(()=>{const run=async()=>{const q=new URLSearchParams(window.location.search);const code=q.get('code');const invite=q.get('invite');const next=safeInternalPath(q.get('next'));if(!code){setMessage('登入連結缺少驗證資訊，請重新登入。');return}const s=getSupabaseBrowserClient();const{error}=await s.auth.exchangeCodeForSession(code);if(error){setMessage('登入驗證失敗，請重新寄送登入連結。');return}if(invite){setMessage('登入完成，正在確認共享小隊邀請…');const{error:joinError}=await s.rpc('team_accept_invitation',{p_token:invite});if(joinError){setMessage(joinError.message.includes('already_in_another_team')?'你目前已在另一個共享小隊，這次邀請沒有變更你的原有小隊。':'登入完成，但小隊邀請可能已失效或已被使用。');setTimeout(()=>{router.replace('/team');router.refresh()},1800);return}router.replace('/team?joined=1');router.refresh();return}router.replace(next);router.refresh()};run()},[router]);return <main className="authCallback"><div><div className="brandRcsca">RCSCA</div><p>{message}</p></div></main>}

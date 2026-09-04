@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import {useI18n} from './i18n';
 
 const SRC='/audio/space-ambient-cinematic.mp3';
 export default function MusicController(){
+  const {t}=useI18n();
   const audioRef=useRef<HTMLAudioElement|null>(null);
   const [on,setOn]=useState(false);
   const [available,setAvailable]=useState(true);
@@ -18,5 +20,5 @@ export default function MusicController(){
     return()=>{window.removeEventListener('rcsca:start-music',handler as EventListener);window.removeEventListener('beforeunload',save)};
   },[]);
   const toggle=async()=>{const a=audioRef.current;if(!a)return;if(a.paused){try{await a.play();setOn(true);sessionStorage.setItem('rcsca-music-on','1')}catch{}}else{a.pause();setOn(false);sessionStorage.setItem('rcsca-music-on','0')}};
-  return <><audio ref={audioRef} src={SRC} preload="auto" onError={()=>setAvailable(false)}/><button className={`soundToggle ${on?'on':''}`} onClick={toggle} aria-label={on?'關閉背景音樂':'開啟背景音樂'} title={available?(on?'關閉背景音樂':'播放背景音樂'):'請先放入授權音樂檔'}>{on?'◉':'○'} <span>SOUND</span></button></>;
+  return <><audio ref={audioRef} src={SRC} preload="auto" onError={()=>setAvailable(false)}/><button className={`soundToggle ${on?'on':''}`} onClick={toggle} aria-label={on?t('system.soundOff'):t('system.soundOn')} title={available?(on?t('system.soundOff'):t('system.soundPlay')):t('system.soundMissing')}>{on?'◉':'○'} <span>SOUND</span></button></>;
 }

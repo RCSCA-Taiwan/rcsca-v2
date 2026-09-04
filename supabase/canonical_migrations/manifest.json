@@ -1,0 +1,463 @@
+{
+  "source_project": "skznlreavgipfhyapzjr",
+  "exported_at": "2026-09-03",
+  "normalization": "Files without a remote trailing newline are stored with one filesystem trailing newline; verifier removes only that added newline.",
+  "count": 65,
+  "migrations": [
+    {
+      "version": "20260830212659",
+      "name": "core_schema",
+      "bytes": 9369,
+      "md5": "39a9fca81a55be502e991031c8dd1bd5",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830212721",
+      "name": "rls_baseline",
+      "bytes": 5116,
+      "md5": "02af886a1829295755c022839587541a",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830212727",
+      "name": "auth_profile_trigger",
+      "bytes": 530,
+      "md5": "4e36a57c6cbbf0c6847e99bd655e2d67",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830212735",
+      "name": "trusted_server_functions",
+      "bytes": 1347,
+      "md5": "563ca1708cc9a1853e1f4d7504654a18",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830212748",
+      "name": "harden_function_permissions",
+      "bytes": 603,
+      "md5": "077644d3cf58b77a123bf172d332d224",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830212859",
+      "name": "harden_function_execution",
+      "bytes": 2300,
+      "md5": "db45aea592acd4d0118157eb5994a2f1",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830212914",
+      "name": "staging_reference_data",
+      "bytes": 1645,
+      "md5": "67c77ccf333b32507f34018171bc6f46",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830213219",
+      "name": "private_rls_helpers",
+      "bytes": 6867,
+      "md5": "1e75391f416dd2981b7245f10f5fbdd3",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260830213612",
+      "name": "initialize_new_user_level",
+      "bytes": 723,
+      "md5": "e3235850c0bd1e9ee5a4726391317bef",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831055803",
+      "name": "self_service_authenticated_writes",
+      "bytes": 1672,
+      "md5": "bb72140f31e69551bcf790ac774cac87",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831061001",
+      "name": "performance_indexes",
+      "bytes": 1528,
+      "md5": "d496a4787ab4ce443872b818cd533181",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831061350",
+      "name": "enterprise_network_workflow",
+      "bytes": 4619,
+      "md5": "0b17104db11fa1a4a57077977ba8adaf",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831062733",
+      "name": "contact_consent_and_partner_review",
+      "bytes": 10336,
+      "md5": "5a8ba541186eb67cc497cb3ef026d9ce",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831062911",
+      "name": "contact_consent_hardening",
+      "bytes": 3451,
+      "md5": "07cc58ba184967ff811f804e54edbef7",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831063809",
+      "name": "workflow_completion",
+      "bytes": 2864,
+      "md5": "4fe472a54a77215c9cd240bb8cac6684",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831064003",
+      "name": "complete_network_match_footprints",
+      "bytes": 2983,
+      "md5": "98b5513197956a32a52f70ffe95a2de8",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831064524",
+      "name": "v190_impact_views",
+      "bytes": 1298,
+      "md5": "7287880480a6c0bb52d8121a49f02fc4",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831064839",
+      "name": "cycle_stories_and_esg_assets",
+      "bytes": 3619,
+      "md5": "2ae5e4237eb9b37597602eabb13e383c",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831065151",
+      "name": "outcome_review_workflow",
+      "bytes": 2363,
+      "md5": "5171eba8cb6f7b0a26500e4bce2c7334",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831065453",
+      "name": "outcome_draft_generation",
+      "bytes": 3173,
+      "md5": "8a84c0de9fd4ec37564e07295bf4b2c3",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831065633",
+      "name": "publish_outcome_drafts",
+      "bytes": 3293,
+      "md5": "0eff7ad27e88ccd4ad98f00ad8575243",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831065907",
+      "name": "esg_reporting_fields",
+      "bytes": 2940,
+      "md5": "997bb7f28ea037cbe0fc6add5ed89a55",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831070033",
+      "name": "enterprise_esg_annual_summary",
+      "bytes": 1967,
+      "md5": "84611d3f2ca19f46bee04019f65cc118",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831070151",
+      "name": "public_impact_and_traceability",
+      "bytes": 969,
+      "md5": "c5437a19db80c8e8abe360d6dcad024b",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831070314",
+      "name": "enterprise_annual_report_view",
+      "bytes": 941,
+      "md5": "236d8ce855ab0fd4bc5a39e6d9232725",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831070614",
+      "name": "enterprise_service_intake",
+      "bytes": 2076,
+      "md5": "75f262b1bf9826ca8c4fd0b63e761a0a",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831070832",
+      "name": "enterprise_case_management",
+      "bytes": 4793,
+      "md5": "fe98bb4669f30e4ccc0a17f9385d271d",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831071112",
+      "name": "enterprise_case_timeline_replies",
+      "bytes": 1689,
+      "md5": "9b20682021aea831edfadccba30de72c",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831071321",
+      "name": "enterprise_case_assignee_workbench",
+      "bytes": 2673,
+      "md5": "17ab82f256d7e29f49ce5b8abc16f18c",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831071519",
+      "name": "case_due_notifications_and_esg_quality",
+      "bytes": 2486,
+      "md5": "d712c76906d7c976248b65394fbf9250",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831071807",
+      "name": "esg_evidence_chain",
+      "bytes": 1363,
+      "md5": "393a04aea368709eb99fb376dc88650c",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831072348",
+      "name": "esg_delivery_readiness",
+      "bytes": 1349,
+      "md5": "6bfe1b12987f9fa1dcebc43925930d00",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831072558",
+      "name": "annual_esg_delivery_report",
+      "bytes": 657,
+      "md5": "f76b97ae8539c8f08f74318f49dc8331",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831074642",
+      "name": "esg_evidence_review_workbench",
+      "bytes": 1920,
+      "md5": "1874420ed81b4c94b8a6b2c23cde0d26",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831075841",
+      "name": "enterprise_management_summary",
+      "bytes": 1016,
+      "md5": "baf6b1d13e8e9c5b6b0de17286fc905c",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831155057",
+      "name": "v470_member_network_completion",
+      "bytes": 2226,
+      "md5": "ed589e8b64aa49616071770379b9ebdd",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831155728",
+      "name": "v480_activity_and_user_progress",
+      "bytes": 3151,
+      "md5": "39b5c419731b974de99c18580a3db6a0",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831160847",
+      "name": "v500_support_case_history_notifications",
+      "bytes": 5332,
+      "md5": "17fc5ea0e7a542a719707aaafe2b1ddd",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831161536",
+      "name": "v510_enterprise_badge_verification",
+      "bytes": 3471,
+      "md5": "26ed2629d326bbd84a1154e08b6a4f4c",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831162352",
+      "name": "v430_network_profiles_rewards_reconcile_v2",
+      "bytes": 5627,
+      "md5": "ebbf0853c246541752e9e1bfc672c606",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831162416",
+      "name": "v520_self_service_lifecycle_v2",
+      "bytes": 7946,
+      "md5": "cbb996ac8cc344402452937ae4df5df1",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831165248",
+      "name": "v530_change_requests_guarded_submissions",
+      "bytes": 14447,
+      "md5": "ba426f3f4c8f2b994f241173f1b18a9d",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831174411",
+      "name": "v540_profile_preferences_consent",
+      "bytes": 9144,
+      "md5": "f018ccec5af3b6730a9ec94cda0a1142",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831174931",
+      "name": "v550_enterprise_members_admin_roles",
+      "bytes": 6144,
+      "md5": "0c9f3b645080373b2ef5f5cabe45cbd4",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831175753",
+      "name": "v560_enterprise_role_enforcement",
+      "bytes": 2734,
+      "md5": "0d72947240506b73c1351e895d1e53a2",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831180934",
+      "name": "team_invitation_lifecycle",
+      "bytes": 7663,
+      "md5": "3288689bea61c9c4c84a00c21ab361f4",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831181224",
+      "name": "v580_referral_source_visibility",
+      "bytes": 1742,
+      "md5": "9a000550b3fafbcb5652a4e0d51a58cd",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831181456",
+      "name": "v590_reward_catalog_admin",
+      "bytes": 3374,
+      "md5": "ae07cfaee2e99e31124f6b65293ccfe3",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260831182455",
+      "name": "v610_auth_account_recovery",
+      "bytes": 810,
+      "md5": "bc1ee0b2ee913b2a10538de0db5f4b30",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260901153302",
+      "name": "v1180_restore_missing_admin_rpcs",
+      "bytes": 13872,
+      "md5": "b79ddcca8fb4837227eebde3f31720eb",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260901153426",
+      "name": "v1181_resolve_outcome_rpc_overload",
+      "bytes": 523,
+      "md5": "83b46211095a620d70fd7c9de64b9f10",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260901153552",
+      "name": "v1182_normalize_outcome_admin_rpcs",
+      "bytes": 3832,
+      "md5": "6683ab6b586f96784c0156f045344463",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260901154640",
+      "name": "v1190_restore_network_response_decision",
+      "bytes": 2941,
+      "md5": "d3381c7fb9e24cb9dd4d1a4bafa7ad10",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260901155223",
+      "name": "v1200_restore_remaining_frontend_rpcs",
+      "bytes": 17892,
+      "md5": "9fbdba85aeb4a266037fb2fde136b6cf",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260901160541",
+      "name": "v1210_revoke_anon_security_definer_access",
+      "bytes": 456,
+      "md5": "80568a65d5e7c4baa601b5c135c19f88",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260902194710",
+      "name": "v1220_performance_hardening",
+      "bytes": 3131,
+      "md5": "2458f635ed049a18dc58e6775b248d88",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260902200507",
+      "name": "v1230_consolidate_overlapping_rls",
+      "bytes": 2481,
+      "md5": "d629eaa8c4792159b9e577534190b343",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260902200600",
+      "name": "v1231_finish_rls_policy_consolidation",
+      "bytes": 3406,
+      "md5": "1bbb6e376367753fe016a10dc565feb5",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260902200656",
+      "name": "v1232_scope_membership_helper_to_caller",
+      "bytes": 696,
+      "md5": "a1a5fa66341f69ddc9ed3d819ffaee44",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260902201408",
+      "name": "v1250_revoke_anonymous_internal_view_access",
+      "bytes": 1074,
+      "md5": "aaca7b4c9c03971a7bdab43c21e11f74",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260902201502",
+      "name": "v1251_scope_enterprise_summary_views",
+      "bytes": 3700,
+      "md5": "d145388abb0f14aed4887535b7fc27a3",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260902201815",
+      "name": "v1260_reduce_rpc_attack_surface",
+      "bytes": 1118,
+      "md5": "0f618dc1539ed4db761c63539058aa30",
+      "trailing_newline": true
+    },
+    {
+      "version": "20260902202618",
+      "name": "v1280_revoke_direct_table_mutations",
+      "bytes": 480,
+      "md5": "ebd64b32ce92dbe3094cad0c06f0b715",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260902203045",
+      "name": "v1290_fix_identity_digest_resolution",
+      "bytes": 112,
+      "md5": "f2b185883b576395025febc0f2377d85",
+      "trailing_newline": false
+    },
+    {
+      "version": "20260902203551",
+      "name": "v1300_replace_legacy_notifications",
+      "bytes": 5484,
+      "md5": "f21826f8993df0d0da33b4e1fb9860a2",
+      "trailing_newline": true
+    }
+  ]
+}

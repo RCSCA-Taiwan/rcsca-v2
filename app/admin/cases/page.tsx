@@ -1,0 +1,2 @@
+import AdminPageIntro from '../AdminPageIntro';import SiteHeader from '../../SiteHeader';import LiveSupportCases from './LiveSupportCases';
+export default function AdminCases(){return <main className="adminPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">受保護需求案件</div><h1>個案處理要有歷程，也要有界線。</h1><p>完整處境與聯絡資料只開放具個案權限的承辦；對使用者可見的回覆與內部工作筆記分開保存。</p></div></section><section className="portalSection"><div className="portalWrap"><LiveSupportCases/></div></section></main>}
