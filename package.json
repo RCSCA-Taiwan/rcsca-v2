@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "check:env": "node scripts/check-env.mjs",
+    "bootstrap:e2e-member": "node scripts/bootstrap-e2e-member.mjs",
     "verify:auth-e2e": "node scripts/verify-auth-e2e.mjs",
     "verify:canonical-migrations": "node scripts/verify-canonical-migrations.mjs",
     "verify:canonical-replay": "node scripts/replay-canonical-migrations.mjs",

@@ -39,7 +39,7 @@ test("protected account route redirects signed-out visitors", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("verified Staging account completes sign-in and sign-out", async ({ page }) => {
+test("verified formal member completes sign-in and sign-out", async ({ page }) => {
   test.skip(
     !process.env.RCSCA_E2E_EMAIL || !process.env.RCSCA_E2E_PASSWORD,
     "RCSCA_E2E_EMAIL and RCSCA_E2E_PASSWORD are required for authenticated coverage",
@@ -53,6 +53,7 @@ test("verified Staging account completes sign-in and sign-out", async ({ page })
   await page.getByRole("button", { name: "登入", exact: true }).click();
 
   await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByText("RCSCA MEMBER", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "安全登出" })).toBeVisible();
   await expect.poll(() => errors).toEqual([]);
 
