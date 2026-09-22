@@ -8,3 +8,8 @@
   `main` push and manual verification.
 - Kept application build, HTTP smoke tests, Playwright browser coverage and
   disposable empty-database replay in the required CI path.
+- Isolated application verification and database replay into independent jobs,
+  so one failure cannot hide the other result.
+- Gated credentialed browser coverage behind the repository variable
+  `RCSCA_E2E_AUTH_ENABLED=true`; public browser checks continue to run while a
+  replacement verified test account is prepared.
