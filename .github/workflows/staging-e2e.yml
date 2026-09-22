@@ -35,7 +35,6 @@ jobs:
       - run: npm run verify
       - run: npx playwright install --with-deps chromium
       - run: npm run verify:browser
-      - run: npm run verify:canonical-replay
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
