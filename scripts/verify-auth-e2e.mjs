@@ -9,7 +9,6 @@ const required = [
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "RCSCA_E2E_EMAIL",
   "RCSCA_E2E_PASSWORD",
-  "RCSCA_E2E_BASE_URL",
 ];
 const missing = required.filter((name) => !process.env[name]?.trim());
 if (missing.length) {
@@ -41,7 +40,7 @@ const { data: signIn, error: signInError } = await supabase.auth.signInWithPassw
   password: process.env.RCSCA_E2E_PASSWORD,
 });
 if (signInError || !signIn.user) {
-  throw new Error(`Staging sign-in failed: ${signInError?.message || "no user"}`);
+  throw new Error(`E2E sign-in failed: ${signInError?.message || "no user"}`);
 }
 
 const { data: verified, error: userError } = await supabase.auth.getUser();
@@ -58,31 +57,70 @@ if (profileError || profile?.id !== signIn.user.id) {
   throw new Error(`Profile ownership check failed: ${profileError?.message || "missing row"}`);
 }
 
-const cookieHeader = [...cookieJar.entries()]
-  .map(([name, value]) => `${name}=${value}`)
-  .join("; ");
-const accountUrl = new URL("/account", process.env.RCSCA_E2E_BASE_URL);
-const signedInResponse = await fetch(accountUrl, {
-  headers: { cookie: cookieHeader },
-  redirect: "manual",
-});
-if (signedInResponse.status !== 200) {
-  throw new Error(`Protected route returned HTTP ${signedInResponse.status} after sign-in`);
+const { data: membership, error: membershipError } = await supabase
+  .from("memberships")
+  .select("membership_type,status")
+  .eq("user_id", signIn.user.id)
+  .maybeSingle();
+if (
+  membershipError ||
+  membership?.status !== "active" ||
+  !["annual", "lifetime"].includes(membership?.membership_type)
+) {
+  throw new Error(
+    `Formal membership check failed: ${membershipError?.message || "inactive or missing membership"}`,
+  );
+}
+
+const { count: adminRoleCount, error: adminRoleError } = await supabase
+  .from("admin_roles")
+  .select("id", { count: "exact", head: true })
+  .eq("user_id", signIn.user.id);
+if (adminRoleError || adminRoleCount !== 0) {
+  throw new Error(
+    `Least-privilege check failed: ${adminRoleError?.message || "unexpected admin role"}`,
+  );
+}
+
+const { error: adminRpcError } = await supabase.rpc("admin_referral_overview");
+if (!adminRpcError || !adminRpcError.message.includes("admin_required")) {
+  throw new Error(
+    `Admin denial check failed: ${adminRpcError?.message || "admin RPC unexpectedly succeeded"}`,
+  );
+}
+
+let accountUrl;
+if (process.env.RCSCA_E2E_BASE_URL?.trim()) {
+  const cookieHeader = [...cookieJar.entries()]
+    .map(([name, value]) => `${name}=${value}`)
+    .join("; ");
+  accountUrl = new URL("/account", process.env.RCSCA_E2E_BASE_URL);
+  const signedInResponse = await fetch(accountUrl, {
+    headers: { cookie: cookieHeader },
+    redirect: "manual",
+  });
+  if (signedInResponse.status !== 200) {
+    throw new Error(`Protected route returned HTTP ${signedInResponse.status} after sign-in`);
+  }
 }
 
 const { error: signOutError } = await supabase.auth.signOut();
 if (signOutError) throw new Error(`Sign-out failed: ${signOutError.message}`);
 
-const signedOutResponse = await fetch(accountUrl, {
-  headers: {
-    cookie: [...cookieJar.entries()]
-      .map(([name, value]) => `${name}=${value}`)
-      .join("; "),
-  },
-  redirect: "manual",
-});
-if (signedOutResponse.status !== 307) {
-  throw new Error(`Protected route returned HTTP ${signedOutResponse.status} after sign-out`);
+if (accountUrl) {
+  const signedOutResponse = await fetch(accountUrl, {
+    headers: {
+      cookie: [...cookieJar.entries()]
+        .map(([name, value]) => `${name}=${value}`)
+        .join("; "),
+    },
+    redirect: "manual",
+  });
+  if (signedOutResponse.status !== 307) {
+    throw new Error(`Protected route returned HTTP ${signedOutResponse.status} after sign-out`);
+  }
 }
 
-console.log("Auth E2E passed: sign-in, verified user, owned profile, protected route, sign-out redirect.");
+console.log(
+  "Auth E2E passed: sign-in, owned profile, formal membership, admin denial, and sign-out.",
+);
