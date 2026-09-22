@@ -3260,6 +3260,21 @@ export type Database = {
         Args: { p_profile_id: string }
         Returns: undefined
       }
+      network_list_matchable_requests: {
+        Args: never
+        Returns: {
+          created_at: string
+          has_responded: boolean
+          id: string
+          is_owner: boolean
+          public_summary: string | null
+          request_kind: string
+          requester_enterprise_id: string | null
+          requester_user_id: string
+          status: string
+          title: string
+        }[]
+      }
       network_set_contact_consent: {
         Args: { p_consented: boolean; p_response_id: string }
         Returns: undefined
@@ -3523,4 +3538,3 @@ export const Constants = {
     },
   },
 } as const
-
