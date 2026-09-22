@@ -1,10 +1,20 @@
-name: Staging E2E
+name: Application and Database Verification
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - codex-v1400-final-validation
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rcsca-verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
@@ -22,8 +32,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
       - run: npm run verify
+      - run: npx playwright install --with-deps chromium
       - run: npm run verify:browser
       - run: npm run verify:canonical-replay
       - uses: actions/upload-artifact@v4
