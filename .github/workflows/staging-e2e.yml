@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: rcsca-verify-${{ github.workflow }}-${{ github.ref }}
+  group: rcsca-verify-v1520-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
