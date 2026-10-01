@@ -19,7 +19,7 @@ export default function BrandEntrance(){
     setTimeout(()=>setVisible(false),4400);
   };
   if(!visible)return null;
-  return <button className={`brandEntrance traceEntrance ${ready?'isReady':''} ${opening?'isOpening':''}`} onClick={enter} aria-label="進入 RCSCA">
+  return <button className={`brandEntrance traceEntrance ${ready?'isReady':''} ${opening?'isOpening':''}`} onClick={enter} disabled={!ready||opening} aria-busy={!ready||opening} aria-label="進入 RCSCA">
     <div className="blackSpace" aria-hidden="true"><i className="ambientGlow"></i><i className="preTrace traceA"></i><i className="preTrace traceB"></i><i className="heroTrace"></i><i className="traceSilk"></i><i className="traceWash"></i></div>
     <div className="entranceLockup luxuryLockup"><div className="entranceLegacy"><span className="entranceRcsca">RCSCA</span><span className="entranceCycle">Cycle of Goodness</span></div><span className="entranceCross">×</span><span className="entranceOne"><b>1</b><i>%</i></span></div>
     <span className="traceCaption">THE 1% TRACE</span>
