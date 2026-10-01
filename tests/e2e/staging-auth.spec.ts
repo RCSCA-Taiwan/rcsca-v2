@@ -104,12 +104,12 @@ test("account never presents an unreadable point balance as zero and can retry",
   await page.locator('input[type="password"]').fill(process.env.RCSCA_E2E_PASSWORD!);
   await page.getByRole("button", {name:"登入",exact:true}).click();
   await expect(page).toHaveURL(/\/account$/);
-  await expect(page.getByRole("alert")).toContainText("點數與共享狀態尚未確認");
+  await expect(page.locator('.liveAccountGuest[role="alert"]')).toContainText("點數與共享狀態尚未確認");
   await expect(page.locator(".liveIdentity")).toHaveCount(0);
   rejectPoints = false;
   await page.getByRole("button", {name:"重新讀取",exact:true}).click();
   await expect(page.getByText("RCSCA MEMBER", {exact:true})).toBeVisible();
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator('.liveAccountGuest[role="alert"]')).toHaveCount(0);
   await page.reload();
   await expect(page.getByText("RCSCA MEMBER", {exact:true})).toBeVisible();
   await page.getByRole("button", {name:"安全登出"}).click();
