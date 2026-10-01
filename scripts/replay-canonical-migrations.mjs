@@ -82,6 +82,10 @@ try {
     replayRoot,
   ]);
   console.log(`Canonical empty-database replay passed: ${manifest.count}/${manifest.count}`);
+  const config = fs.readFileSync(path.join(replayRoot, "supabase", "config.toml"), "utf8");
+  const projectId = config.match(/^project_id\s*=\s*"([^"]+)"/m)?.[1];
+  if (!projectId) throw new Error("Disposable replay project ID missing");
+  run(process.execPath, ["scripts/verify-database-workflows.mjs", `supabase_db_${projectId}`]);
 } finally {
   if (stackStarted) {
     spawnSync("npx", [...cli, "stop", "--workdir", replayRoot, "--no-backup"], {
