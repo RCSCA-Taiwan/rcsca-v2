@@ -21,6 +21,7 @@ export default function LiveOutcomeDrafts() {
     [assets, setAssets] = useState<Asset[]>([]),
     [msg, setMsg] = useState(""),
     [busy, setBusy] = useState("");
+  const [assetEdits, setAssetEdits] = useState<Record<string, Partial<Asset>>>({});
   async function load() {
     const sb = getSupabaseBrowserClient();
     if (!sb) return;
@@ -66,6 +67,11 @@ export default function LiveOutcomeDrafts() {
     setBusy("");
   }
   async function approveAsset(x: Asset) {
+    x = { ...x, ...assetEdits[x.id] };
+    if (!x.title.trim() || !x.summary.trim()) {
+      setMsg("請填寫成果標題與摘要。");
+      return;
+    }
     if (busy || !window.confirm(`確定完成「${x.title}」企業 ESG 素材嗎？`))
       return;
     const sb = getSupabaseBrowserClient();
@@ -120,6 +126,9 @@ export default function LiveOutcomeDrafts() {
             <h3>{x.title}</h3>
             <p>{x.summary}</p>
             <p className="muted">{x.period_label || "尚未設定期間"}</p>
+            <label htmlFor={`asset-title-${x.id}`}>成果標題</label><input id={`asset-title-${x.id}`} value={assetEdits[x.id]?.title ?? x.title} onChange={e => setAssetEdits(v => ({...v, [x.id]: {...v[x.id], title: e.target.value}}))}/>
+            <label htmlFor={`asset-summary-${x.id}`}>成果摘要</label><textarea id={`asset-summary-${x.id}`} value={assetEdits[x.id]?.summary ?? x.summary} onChange={e => setAssetEdits(v => ({...v, [x.id]: {...v[x.id], summary: e.target.value}}))}/>
+            <label htmlFor={`asset-period-${x.id}`}>成果期間</label><input id={`asset-period-${x.id}`} value={assetEdits[x.id]?.period_label ?? x.period_label ?? ""} onChange={e => setAssetEdits(v => ({...v, [x.id]: {...v[x.id], period_label: e.target.value}}))}/>
             <button
               className="button"
               disabled={!!busy}

@@ -3107,6 +3107,10 @@ export type Database = {
         Args: { p_asset_id: string; p_note?: string; p_report_ready: boolean }
         Returns: undefined
       }
+      admin_update_esg_evidence: {
+        Args: { p_asset_id: string; p_evidence_note: string; p_sdg_tags?: string[]; p_note?: string }
+        Returns: undefined
+      }
       admin_set_membership: {
         Args: {
           p_member_number?: string

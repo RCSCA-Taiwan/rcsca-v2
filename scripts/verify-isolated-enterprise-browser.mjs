@@ -39,7 +39,7 @@ async function login(page, person, next) {
 }
 try {
   const owner = await user("enterprise"), admin = await user("reviewer");
-  sql(`insert into public.admin_roles(user_id,role_key) values('${admin.id}','enterprise_reviewer');
+  sql(`insert into public.admin_roles(user_id,role_key) values('${admin.id}','enterprise_reviewer'),('${admin.id}','outcome_reviewer');
     insert into public.enterprise_applications(requester_user_id,company_name,tax_id,contact_name,contact_email)
     values('${owner.id}','${company}','${randomUUID()}','Replay contact','${owner.email}');`);
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3301"], {
@@ -94,6 +94,63 @@ try {
   await expect(row.getByRole("button", { name: "申請修改", exact: true })).toBeVisible();
   const state = JSON.parse(sql(`select json_build_object('status',s.status,'public',s.public_result,'role',eu.role,'notifications',(select count(*) from public.user_notifications where related_type='enterprise_share' and related_id=s.id)) from public.enterprise_shares s join public.enterprise_users eu on eu.enterprise_id=s.enterprise_id and eu.user_id='${owner.id}' where s.title='${shareTitle}';`));
   if (state.status !== "approved" || state.public !== false || state.role !== "manager" || state.notifications !== 1 || errors.length) throw new Error(`Enterprise browser state mismatch: ${JSON.stringify(state)}; ${errors.join(";")}`);
+  await ownerPage.goto("http://127.0.0.1:3301/1percent-partner/esg");
+  await ownerPage.getByLabel("企業或品牌名稱", { exact: true }).fill(company);
+  await ownerPage.getByLabel("聯絡人", { exact: true }).fill("Replay contact");
+  await ownerPage.getByLabel("Email", { exact: true }).fill(owner.email);
+  await ownerPage.getByLabel("合作目標", { exact: true }).fill("Verified community cooperation");
+  await ownerPage.getByRole("button", { name: "建立正式合作案件 →", exact: true }).click();
+  await expect(ownerPage.getByText(/已建立正式合作案件 ESG-/)).toBeVisible();
+  await adminPage.goto("http://127.0.0.1:3301/admin/enterprise-cases");
+  const serviceCase = adminPage.locator("article").filter({ has: adminPage.getByRole("heading", { name: company, exact: true }) });
+  await serviceCase.getByRole("button", { name: "進入評估", exact: true }).click();
+  await expect(serviceCase.getByText("評估中", { exact: true })).toBeVisible();
+  await serviceCase.getByRole("button", { name: "完成", exact: true }).click();
+  await expect(serviceCase.getByText("已完成", { exact: true })).toBeVisible();
+  await adminPage.goto("http://127.0.0.1:3301/admin/outcomes");
+  const queue = adminPage.locator("section.panel").filter({ has: adminPage.getByRole("heading", { name: "待整理成果", exact: true }) });
+  await queue.getByRole("button", { name: "建立成果草稿", exact: true }).click();
+  await expect(queue.getByRole("button", { name: "草稿已建立", exact: true })).toBeDisabled();
+  await adminPage.reload();
+  const assetTitle = `Browser ESG ${randomUUID()}`;
+  const draft = adminPage.locator("article").filter({ has: adminPage.getByRole("heading", { name: "ESG 成果素材草稿", exact: true }) });
+  await draft.getByLabel("成果標題", { exact: true }).fill(assetTitle);
+  await draft.getByLabel("成果摘要", { exact: true }).fill("Verified community cooperation result");
+  await draft.getByLabel("成果期間", { exact: true }).fill("2026");
+  await draft.getByRole("button", { name: "完成企業素材", exact: true }).click();
+  await expect(adminPage.getByText("ESG 素材已完成，企業端將收到通知。", { exact: true })).toBeVisible();
+  await adminPage.reload();
+  const asset = adminPage.locator("article").filter({ has: adminPage.getByRole("heading", { name: assetTitle, exact: true }) });
+  await expect(asset.getByRole("button", { name: "確認可供報告使用", exact: true })).toBeDisabled();
+  await asset.getByRole("button", { name: "編輯核實依據", exact: true }).click();
+  await asset.getByLabel("核實依據", { exact: true }).fill("Verified completed case records");
+  await asset.getByLabel("SDG 對應（逗號分隔）", { exact: true }).fill("SDG 1, SDG 10");
+  await asset.getByRole("button", { name: "儲存核實依據", exact: true }).click();
+  await expect(asset.getByRole("button", { name: "確認可供報告使用", exact: true })).toBeEnabled();
+  await asset.getByRole("button", { name: "確認可供報告使用", exact: true }).click();
+  await expect(asset.getByText("✓ 可正式交付", { exact: true })).toBeVisible();
+  await asset.getByRole("button", { name: "暫緩交付", exact: true }).click();
+  await expect(asset.getByText("尚未達正式交付標準", { exact: true })).toBeVisible();
+  await asset.getByRole("button", { name: "確認可供報告使用", exact: true }).click();
+  await expect(asset.getByText("✓ 可正式交付", { exact: true })).toBeVisible();
+  // An intentionally inconsistent legacy-style flag must not bypass export quality.
+  sql(`insert into public.enterprise_service_requests(enterprise_id,requester_user_id,company_name,contact_name,contact_email,status)
+    select enterprise_id,'${owner.id}','Invalid export fixture','Replay','invalid@example.test','completed' from public.enterprise_users where user_id='${owner.id}';
+    insert into public.enterprise_esg_assets(enterprise_id,title,asset_type,summary,source_type,source_id,status,report_ready)
+    select enterprise_id,'Incomplete export fixture','impact_summary','Missing evidence must not export','enterprise_service_request',id,'approved',true from public.enterprise_service_requests where company_name='Invalid export fixture';`);
+  await ownerPage.goto("http://127.0.0.1:3301/1percent-partner/impact");
+  await expect(ownerPage.locator(".esgAssetPanel").getByRole("heading", { name: assetTitle, exact: true })).toBeVisible();
+  const downloadPromise = ownerPage.waitForEvent("download");
+  await ownerPage.getByRole("button", { name: "匯出可用成果資料", exact: true }).click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  let exported = "";
+  for await (const chunk of stream) exported += chunk;
+  const exportedRows = JSON.parse(exported);
+  if (exportedRows.length !== 1 || exportedRows[0].title !== assetTitle || exportedRows[0].source_verified !== true || exportedRows[0].evidence_note !== "Verified completed case records") throw new Error("Browser ESG export mismatch");
+  const outcome = JSON.parse(sql(`select json_build_object('queue',(select count(*) from public.outcome_review_queue q join public.enterprise_service_requests r on r.id=q.source_id where r.requester_user_id='${owner.id}'),'asset',(select count(*) from public.enterprise_esg_assets where title='${assetTitle}' and report_ready),'case_notifications',(select count(*) from public.user_notifications where recipient_user_id='${owner.id}' and kind='enterprise_case'),'report_notifications',(select count(*) from public.user_notifications where recipient_user_id='${owner.id}' and kind='esg_report'));`));
+  if (JSON.stringify(outcome) !== JSON.stringify({queue:1,asset:1,case_notifications:1,report_notifications:1}) || errors.length) throw new Error(`Browser outcome state mismatch: ${JSON.stringify(outcome)}; ${errors.join(";")}`);
+  console.log("PASS: real mobile case intake, reviewer evaluation/completion, outcome drafts, edited ESG approval/evidence, hold/release, owner JSON export, one case/report notification");
   console.log("PASS: real browser sign-in, enterprise needs-info→approval/manager link, mobile sharing submission/correction/resubmission, admin private approval, owner sees approved result and one notification");
 } finally {
   await browser?.close();

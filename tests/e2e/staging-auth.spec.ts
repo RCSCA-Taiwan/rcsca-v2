@@ -6,6 +6,12 @@ function captureBrowserErrors(page: Page) {
     if (message.type() === "error") errors.push(`console: ${message.text()}`);
   });
   page.on("pageerror", (error) => errors.push(`page: ${error.message}`));
+  page.on("response", (response) => {
+    if (response.status() === 401) {
+      const url = new URL(response.url());
+      errors.push(`http: 401 ${url.origin}${url.pathname}`);
+    }
+  });
   return errors;
 }
 

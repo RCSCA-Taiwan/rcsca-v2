@@ -20,6 +20,7 @@ export default function LiveESGEvidenceWorkbench() {
   const [rows, setRows] = useState<Row[]>([]),
     [msg, setMsg] = useState(""),
     [busy, setBusy] = useState<string | null>(null);
+  const [editor, setEditor] = useState<{id: string; evidence: string; tags: string} | null>(null);
   async function load() {
     const s = getSupabaseBrowserClient();
     if (!s) return;
@@ -65,6 +66,7 @@ export default function LiveESGEvidenceWorkbench() {
         : "成果暫緩交付，待補強",
     });
     setBusy(null);
+    if (!error) await load();
     setMsg(
       error
         ? "更新失敗，請確認權限與成果狀態。"
@@ -72,7 +74,28 @@ export default function LiveESGEvidenceWorkbench() {
           ? "已標記可供報告使用。"
           : "已暫緩交付。",
     );
-    await load();
+  }
+  async function editEvidence(x: Row) {
+    if (busy) return;
+    setBusy(x.id);
+    const s = getSupabaseBrowserClient();
+    const { data, error } = await s.from("enterprise_esg_assets").select("evidence_note,sdg_tags").eq("id",x.id).single();
+    setBusy(null);
+    if (error || !data) { setMsg("無法讀取核實依據，請稍後再試。"); return; }
+    setEditor({id:x.id,evidence:data.evidence_note || "",tags:(data.sdg_tags || []).join(", ")});
+  }
+  async function saveEvidence() {
+    if (!editor || busy || !editor.evidence.trim()) return;
+    setBusy(editor.id);
+    const s = getSupabaseBrowserClient();
+    const { error } = await s.rpc("admin_update_esg_evidence", {
+      p_asset_id:editor.id,p_evidence_note:editor.evidence.trim(),
+      p_sdg_tags:editor.tags.split(/[,，]/).map(t=>t.trim()).filter(Boolean),
+      p_note:"後台更新核實依據與 SDG 對應",
+    });
+    if (!error) { setEditor(null); await load(); }
+    setBusy(null);
+    setMsg(error ? "儲存失敗，請確認成果審核權限與核實依據。" : "核實依據已儲存；修改後需重新確認才能交付。");
   }
   return (
     <section className="panel">
@@ -123,10 +146,19 @@ export default function LiveESGEvidenceWorkbench() {
               {x.delivery_ready ? "✓ 可正式交付" : "尚未達正式交付標準"}
             </strong>
             <div>
+              <button className="button secondary" disabled={!!busy} onClick={() => editEvidence(x)}>編輯核實依據</button>
+              {editor?.id === x.id && <div className="shareCorrection">
+                <label htmlFor={`evidence-${x.id}`}>核實依據</label><textarea id={`evidence-${x.id}`} value={editor.evidence} onChange={e=>setEditor(v=>v ? {...v,evidence:e.target.value} : v)}/>
+                <label htmlFor={`sdg-${x.id}`}>SDG 對應（逗號分隔）</label><input id={`sdg-${x.id}`} value={editor.tags} onChange={e=>setEditor(v=>v ? {...v,tags:e.target.value} : v)}/>
+                <p>說明成果來源與核實方式；修改後會暫緩交付，待重新確認。</p>
+                <button className="button" disabled={!!busy || !editor.evidence.trim()} onClick={saveEvidence}>儲存核實依據</button>
+                <button className="button secondary" disabled={!!busy} onClick={()=>setEditor(null)}>取消編輯</button>
+              </div>}
               <button
                 className="button"
                 disabled={
                   !!busy ||
+                  x.report_ready ||
                   x.status !== "approved" ||
                   !x.export_ready ||
                   !x.source_verified
