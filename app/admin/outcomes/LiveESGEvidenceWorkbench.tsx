@@ -148,8 +148,8 @@ export default function LiveESGEvidenceWorkbench() {
             <div>
               <button className="button secondary" disabled={!!busy} onClick={() => editEvidence(x)}>編輯核實依據</button>
               {editor?.id === x.id && <div className="shareCorrection">
-                <label>核實依據<textarea value={editor.evidence} onChange={e=>setEditor(v=>v ? {...v,evidence:e.target.value} : v)}/></label>
-                <label>SDG 對應（逗號分隔）<input value={editor.tags} onChange={e=>setEditor(v=>v ? {...v,tags:e.target.value} : v)}/></label>
+                <label htmlFor={`evidence-${x.id}`}>核實依據</label><textarea id={`evidence-${x.id}`} value={editor.evidence} onChange={e=>setEditor(v=>v ? {...v,evidence:e.target.value} : v)}/>
+                <label htmlFor={`sdg-${x.id}`}>SDG 對應（逗號分隔）</label><input id={`sdg-${x.id}`} value={editor.tags} onChange={e=>setEditor(v=>v ? {...v,tags:e.target.value} : v)}/>
                 <p>說明成果來源與核實方式；修改後會暫緩交付，待重新確認。</p>
                 <button className="button" disabled={!!busy || !editor.evidence.trim()} onClick={saveEvidence}>儲存核實依據</button>
                 <button className="button secondary" disabled={!!busy} onClick={()=>setEditor(null)}>取消編輯</button>
