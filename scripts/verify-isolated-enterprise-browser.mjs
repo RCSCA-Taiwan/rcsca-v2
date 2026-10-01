@@ -139,7 +139,7 @@ try {
     insert into public.enterprise_esg_assets(enterprise_id,title,asset_type,summary,source_type,source_id,status,report_ready)
     select enterprise_id,'Incomplete export fixture','impact_summary','Missing evidence must not export','enterprise_service_request',id,'approved',true from public.enterprise_service_requests where company_name='Invalid export fixture';`);
   await ownerPage.goto("http://127.0.0.1:3301/1percent-partner/impact");
-  await expect(ownerPage.getByRole("heading", { name: assetTitle, exact: true })).toBeVisible();
+  await expect(ownerPage.locator(".esgAssetPanel").getByRole("heading", { name: assetTitle, exact: true })).toBeVisible();
   const downloadPromise = ownerPage.waitForEvent("download");
   await ownerPage.getByRole("button", { name: "匯出可用成果資料", exact: true }).click();
   const download = await downloadPromise;
