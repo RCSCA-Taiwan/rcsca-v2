@@ -86,6 +86,7 @@ try {
   const projectId = config.match(/^project_id\s*=\s*"([^"]+)"/m)?.[1];
   if (!projectId) throw new Error("Disposable replay project ID missing");
   run(process.execPath, ["scripts/verify-database-workflows.mjs", `supabase_db_${projectId}`]);
+  run(process.execPath, ["scripts/verify-isolated-enterprise-browser.mjs", `supabase_db_${projectId}`, replayRoot]);
 } finally {
   if (stackStarted) {
     spawnSync("npx", [...cli, "stop", "--workdir", replayRoot, "--no-backup"], {
