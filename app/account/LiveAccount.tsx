@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import type { Session } from '@supabase/supabase-js';
 import { useEffect, useMemo, useState } from 'react';
 import { getSupabaseBrowserClient } from '../../lib/supabase-browser';
 import {Locale,useI18n} from '../i18n';
@@ -19,13 +20,18 @@ type Snapshot={
 export default function LiveAccount(){
   const {locale}=useI18n();const c=copy[locale];
   const [loading,setLoading]=useState(true);
+  const [failed,setFailed]=useState(false);
+  const [refresh,setRefresh]=useState(0);
   const [data,setData]=useState<Snapshot>({signedIn:false,level:1,xp:0,points:0,footprints:0,membership:null});
   useEffect(()=>{
     const supabase=getSupabaseBrowserClient();
     let alive=true;
-    const load=async()=>{
-      const {data:{session}}=await supabase.auth.getSession();
-      if(!session){if(alive){setData(d=>({...d,signedIn:false}));setLoading(false);}return;}
+    let generation=0;
+    const load=async(session:Session|null)=>{
+      const current=++generation;
+      const active=()=>alive&&current===generation;
+      if(active()){setLoading(true);setFailed(false);}
+      if(!session){if(active()){setData(d=>({...d,signedIn:false}));setLoading(false);}return;}
       const uid=session.user.id;
       const [profile,membership,level,points,footprints,team,enterprise]=await Promise.all([
         supabase.from('profiles').select('display_name,email').eq('id',uid).maybeSingle(),
@@ -36,20 +42,24 @@ export default function LiveAccount(){
         supabase.from('team_members').select('teams(name)').eq('user_id',uid).is('left_at',null).limit(1).maybeSingle(),
         supabase.from('enterprise_users').select('enterprises(display_name,legal_name)').eq('user_id',uid).limit(1).maybeSingle(),
       ]);
+      if(!active())return;
+      if([profile,membership,level,points,footprints,team,enterprise].some(result=>result.error)){setFailed(true);setLoading(false);return;}
       const pointTotal=(points.data||[]).reduce((sum:any,row:any)=>sum+(row.tx_type==='spend'?-Math.abs(row.points):row.points),0);
       const teamName=(team.data as any)?.teams?.name || null;
       const enterpriseName=(enterprise.data as any)?.enterprises?.display_name || (enterprise.data as any)?.enterprises?.legal_name || null;
-      if(alive)setData({signedIn:true,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
-      if(alive)setLoading(false);
+      if(active())setData({signedIn:true,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
+      if(active())setLoading(false);
     };
-    load();
-    const {data:listener}=supabase.auth.onAuthStateChange(()=>load());
+    const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>{
+      void load(session);
+    });
     return()=>{alive=false;listener.subscription.unsubscribe();};
-  },[locale]);
+  },[locale,refresh]);
   const identity=useMemo(()=>!data.signedIn?c.visitor:data.membership?'RCSCA MEMBER':c.partner,[data,locale]);
   const levelNames=c.levels;
   async function logout(){await getSupabaseBrowserClient().auth.signOut();window.location.href='/';}
   if(loading)return <div className="liveAccountLoading">{c.loading}</div>;
+  if(failed)return <section className="liveAccountGuest" role="alert"><p>{locale==='zh-Hant'?'目前無法讀取會員資料，點數與共享狀態尚未確認。':locale==='ja'?'会員情報を読み込めません。ポイントと共有状況は未確認です。':locale==='ko'?'회원 정보를 불러올 수 없습니다. 포인트와 공유 상태는 아직 확인되지 않았습니다.':'Member data could not be loaded. Points and sharing status are not yet confirmed.'}</p><button onClick={()=>setRefresh(value=>value+1)}>{locale==='zh-Hant'?'重新讀取':locale==='ja'?'再読み込み':locale==='ko'?'다시 불러오기':'Retry'}</button></section>;
   if(!data.signedIn)return <section className="liveAccountGuest"><div><small>{c.identity}</small><strong>{c.visitor}</strong><p>{c.guestLead}</p></div><Link href="/login">{c.login}</Link></section>;
   return <>
     <section className="liveIdentity"><div><small>{c.identity}</small><strong>{identity}</strong><span>{data.displayName}</span></div><div><small>{c.level}</small><strong>Lv.{data.level} · {levelNames[data.level]||levelNames[1]}</strong><span>{data.xp.toLocaleString(locale)} XP</span></div><div><small>{c.footprints}</small><strong>{data.footprints.toLocaleString(locale)}</strong><span>{c.database}</span></div><div><small>{c.points}</small><strong>{data.points.toLocaleString(locale)}</strong><span>{c.available}</span></div></section>

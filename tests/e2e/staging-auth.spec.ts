@@ -87,3 +87,31 @@ test("verified formal member completes sign-in and sign-out", async ({ page }) =
   await page.goto("/account");
   await expect(page).toHaveURL(/\/login\?next=%2Faccount$/);
 });
+
+
+test("account never presents an unreadable point balance as zero and can retry", async ({ page }) => {
+  test.skip(!process.env.RCSCA_E2E_EMAIL || !process.env.RCSCA_E2E_PASSWORD,
+    "Authenticated coverage requires the CI member credentials");
+  let rejectPoints = true;
+  await page.route("**/rest/v1/point_transactions?**", async route => {
+    if (!rejectPoints) return route.continue();
+    await route.fulfill({status:401, contentType:"application/json",
+      body:JSON.stringify({code:"PGRST303",message:"JWT claims validation failed"})});
+  });
+  await page.goto("/login?next=%2Faccount");
+  await page.getByRole("button", {name:"Email＋密碼"}).click();
+  await page.locator('input[type="email"]').fill(process.env.RCSCA_E2E_EMAIL!);
+  await page.locator('input[type="password"]').fill(process.env.RCSCA_E2E_PASSWORD!);
+  await page.getByRole("button", {name:"登入",exact:true}).click();
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByRole("alert")).toContainText("點數與共享狀態尚未確認");
+  await expect(page.locator(".liveIdentity")).toHaveCount(0);
+  rejectPoints = false;
+  await page.getByRole("button", {name:"重新讀取",exact:true}).click();
+  await expect(page.getByText("RCSCA MEMBER", {exact:true})).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByText("RCSCA MEMBER", {exact:true})).toBeVisible();
+  await page.getByRole("button", {name:"安全登出"}).click();
+  await expect(page).toHaveURL(/\/$/);
+});
