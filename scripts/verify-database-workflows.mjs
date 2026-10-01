@@ -41,7 +41,7 @@ try {
   sql(`insert into auth.users(id,email,raw_user_meta_data) values('${member}','${member}@example.invalid','{}');
     insert into public.memberships(user_id,membership_type,status) values('${member}','annual','active')
     on conflict(user_id) do update set membership_type='annual',status='active';`);
-  for (const file of ["participation_review_once.sql", "reward_review_lifecycle.sql", "redemption_balance.sql", "enterprise_review_lifecycle.sql", "enterprise_share_lifecycle.sql"]) {
+  for (const file of ["participation_review_once.sql", "reward_review_lifecycle.sql", "redemption_balance.sql", "enterprise_review_lifecycle.sql", "enterprise_share_lifecycle.sql", "case_outcome_delivery.sql"]) {
     console.log(sql(fs.readFileSync(`supabase/tests/${file}`, "utf8").replaceAll(":'member_id'", `'${member}'`)));
   }
   sql(`insert into public.admin_roles(user_id,role_key) values('${member}','admin');
