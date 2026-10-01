@@ -4,7 +4,7 @@
   "exported_at": "2026-09-03",
   "updated_at": "2026-10-01",
   "normalization": "Files without a remote trailing newline are stored with one filesystem trailing newline; verifier removes only that added newline.",
-  "count": 68,
+  "count": 70,
   "migrations": [
     {
       "version": "20260830212659",
@@ -480,6 +480,20 @@
       "name": "v1450_activity_private_admin_helper",
       "bytes": 754,
       "md5": "ba45f908b57e5b1dc7f546fb1af153f3",
+      "trailing_newline": true
+    },
+    {
+      "version": "20261001081835",
+      "name": "v1460_participation_review_once",
+      "bytes": 1645,
+      "md5": "2514a6cb3b802d481d2146a66d1a338c",
+      "trailing_newline": true
+    },
+    {
+      "version": "20261001082052",
+      "name": "v1461_reward_notification_transition",
+      "bytes": 3317,
+      "md5": "691bf9455d5f6d928d5f54a2e43b4210",
       "trailing_newline": true
     }
   ]
