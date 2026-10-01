@@ -2,9 +2,9 @@
   "source_project": "skznlreavgipfhyapzjr",
   "supplemental_source_project": "zoogppmgajbiridffohm",
   "exported_at": "2026-09-03",
-  "updated_at": "2026-10-01T08:38:00Z",
+  "updated_at": "2026-10-01T12:46:13Z",
   "normalization": "Files without a remote trailing newline are stored with one filesystem trailing newline; verifier removes only that added newline.",
-  "count": 72,
+  "count": 73,
   "migrations": [
     {
       "version": "20260830212659",
@@ -508,6 +508,13 @@
       "name": "v1471_enterprise_review_permissions",
       "bytes": 2840,
       "md5": "1ce9b60f480ac4f806c27039bea644e5",
+      "trailing_newline": true
+    },
+    {
+      "version": "20261001124613",
+      "name": "v1500_enterprise_share_review_lifecycle",
+      "bytes": 2397,
+      "md5": "ba6165bee77840638e14565422e4d3aa",
       "trailing_newline": true
     }
   ]

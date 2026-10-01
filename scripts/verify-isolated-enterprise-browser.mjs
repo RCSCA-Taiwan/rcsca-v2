@@ -76,6 +76,17 @@ try {
   await expect(ownerPage.getByText("已送出給 RCSCA 審核；核准前不會公開。", { exact: true })).toBeVisible();
   await adminPage.reload();
   const share = adminPage.locator("article").filter({ has: adminPage.getByRole("heading", { name: shareTitle, exact: true }) });
+  await share.getByPlaceholder("給企業的審核說明（選填）").fill("Please add delivery details");
+  await share.getByRole("button", { name: "請補資料", exact: true }).click();
+  await expect(adminPage.getByText("審核狀態已更新，企業端會收到通知。", { exact: true })).toBeVisible();
+  await ownerPage.reload();
+  const correction = ownerPage.locator(".elRow").filter({ hasText: shareTitle });
+  await expect(correction.getByRole("button", { name: "補件並重新送審", exact: true })).toBeVisible();
+  await correction.locator("textarea").fill("Complete delivery details after review");
+  await correction.getByRole("button", { name: "補件並重新送審", exact: true }).click();
+  await expect(correction.getByRole("button", { name: "取消申請", exact: true })).toBeVisible();
+  await adminPage.reload();
+  await expect(share.getByText("Complete delivery details after review", { exact: true })).toBeVisible();
   await share.getByRole("button", { name: "核准但不公開", exact: true }).click();
   await expect(adminPage.getByText("已完成企業共享審核。", { exact: true })).toBeVisible();
   await ownerPage.reload();
@@ -83,7 +94,7 @@ try {
   await expect(row.getByRole("button", { name: "申請修改", exact: true })).toBeVisible();
   const state = JSON.parse(sql(`select json_build_object('status',s.status,'public',s.public_result,'role',eu.role,'notifications',(select count(*) from public.user_notifications where related_type='enterprise_share' and related_id=s.id)) from public.enterprise_shares s join public.enterprise_users eu on eu.enterprise_id=s.enterprise_id and eu.user_id='${owner.id}' where s.title='${shareTitle}';`));
   if (state.status !== "approved" || state.public !== false || state.role !== "manager" || state.notifications !== 1 || errors.length) throw new Error(`Enterprise browser state mismatch: ${JSON.stringify(state)}; ${errors.join(";")}`);
-  console.log("PASS: real browser sign-in, enterprise needs-info→approval/manager link, mobile sharing submission, admin private approval, owner sees approved result and one notification");
+  console.log("PASS: real browser sign-in, enterprise needs-info→approval/manager link, mobile sharing submission/correction/resubmission, admin private approval, owner sees approved result and one notification");
 } finally {
   await browser?.close();
   server?.kill("SIGTERM");
