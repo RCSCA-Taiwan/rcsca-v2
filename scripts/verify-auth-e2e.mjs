@@ -89,6 +89,17 @@ if (!adminRpcError || !adminRpcError.message.includes("admin_required")) {
   );
 }
 
+const { error: activityAdminError } = await supabase.rpc("admin_upsert_activity", {
+  p_activity_id: null,
+  p_code: "E2E-FORBIDDEN",
+  p_name: "E2E forbidden activity",
+});
+if (!activityAdminError || !activityAdminError.message.includes("insufficient_privilege")) {
+  throw new Error(
+    `Activity admin denial check failed: ${activityAdminError?.message || "activity creation unexpectedly succeeded"}`,
+  );
+}
+
 let accountUrl;
 if (process.env.RCSCA_E2E_BASE_URL?.trim()) {
   const cookieHeader = [...cookieJar.entries()]
@@ -122,5 +133,5 @@ if (accountUrl) {
 }
 
 console.log(
-  "Auth E2E passed: sign-in, owned profile, formal membership, admin denial, and sign-out.",
+  "Auth E2E passed: sign-in, owned profile, formal membership, referral/activity admin denial, and sign-out.",
 );
