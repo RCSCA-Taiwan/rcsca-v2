@@ -39,6 +39,22 @@ test("protected account route redirects signed-out visitors", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
+test("mobile navigation opens the enterprise entrance without horizontal overflow", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "Mobile navigation coverage");
+  const errors = captureBrowserErrors(page);
+  await page.goto("/");
+  const entrance = page.getByRole("button", { name: "進入 RCSCA", exact: true });
+  if (await entrance.isVisible()) await entrance.click();
+  await page.locator(".mobileMenu summary").click();
+  const enterprise = page.locator('.mobileMenuPanel a[href="/1percent-partner"]');
+  await expect(enterprise).toBeVisible();
+  await enterprise.click();
+  await expect(page).toHaveURL(/\/1percent-partner$/);
+  await expect(page.locator("main")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  await expect.poll(() => errors).toEqual([]);
+});
+
 test("verified formal member completes sign-in and sign-out", async ({ page }) => {
   test.skip(
     !process.env.RCSCA_E2E_EMAIL || !process.env.RCSCA_E2E_PASSWORD,
