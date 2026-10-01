@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   application:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -35,7 +35,12 @@ jobs:
       - run: npm run verify
       - name: Install browser dependencies
         timeout-minutes: 5
-        run: npx playwright install --with-deps chromium
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          printf '%s\n' 'Acquire::Retries "1";' 'Acquire::http::Timeout "20";' 'Acquire::https::Timeout "20";' | sudo tee /etc/apt/apt.conf.d/99-rcsca-ci-timeouts >/dev/null
+          npx playwright install --with-deps chromium
       - run: npm run verify:browser
       - name: Verify formal-member authorization
         if: ${{ vars.RCSCA_E2E_AUTH_ENABLED == 'true' }}
@@ -50,7 +55,7 @@ jobs:
           retention-days: 7
 
   database-replay:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -61,5 +66,10 @@ jobs:
       - run: npm ci
       - name: Install browser dependencies
         timeout-minutes: 5
-        run: npx playwright install --with-deps chromium
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          printf '%s\n' 'Acquire::Retries "1";' 'Acquire::http::Timeout "20";' 'Acquire::https::Timeout "20";' | sudo tee /etc/apt/apt.conf.d/99-rcsca-ci-timeouts >/dev/null
+          npx playwright install --with-deps chromium
       - run: npm run verify:canonical-replay

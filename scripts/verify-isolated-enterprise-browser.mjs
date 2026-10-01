@@ -17,6 +17,7 @@ const company = `Browser enterprise ${randomUUID()}`;
 const shareTitle = `Browser sharing ${randomUUID()}`;
 const users = [];
 let server, browser;
+const diagnosticPages = [];
 function sql(query) {
   const r = spawnSync("docker", ["exec", "-i", container, "psql", "-X", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-At"], { input: query, encoding: "utf8", timeout: 15000 });
   if (r.status !== 0) throw new Error(r.stderr);
@@ -56,9 +57,15 @@ try {
   browser = await chromium.launch();
   const adminPage = await (await browser.newContext()).newPage();
   const ownerPage = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  diagnosticPages.push(adminPage, ownerPage);
   const errors = [];
   for (const page of [adminPage, ownerPage]) {
     page.on("pageerror", (e) => errors.push(e.message));
+    page.on("response", (response) => {
+      if (response.url().startsWith(env.API_URL) && response.status() >= 400) {
+        errors.push(`http: ${response.status()} ${new URL(response.url()).pathname}`);
+      }
+    });
     page.on("dialog", (dialog) => dialog.accept());
     page.setDefaultTimeout(30000);
   }
@@ -152,6 +159,13 @@ try {
   if (JSON.stringify(outcome) !== JSON.stringify({queue:1,asset:1,case_notifications:1,report_notifications:1}) || errors.length) throw new Error(`Browser outcome state mismatch: ${JSON.stringify(outcome)}; ${errors.join(";")}`);
   console.log("PASS: real mobile case intake, reviewer evaluation/completion, outcome drafts, edited ESG approval/evidence, hold/release, owner JSON export, one case/report notification");
   console.log("PASS: real browser sign-in, enterprise needs-info→approval/manager link, mobile sharing submission/correction/resubmission, admin private approval, owner sees approved result and one notification");
+} catch (error) {
+  for (const page of diagnosticPages) {
+    if (!page.isClosed()) {
+      console.error(`Isolated browser failure at ${new URL(page.url()).pathname}: ${await page.locator("body").innerText().catch(()=>"Page unavailable")}`);
+    }
+  }
+  throw error;
 } finally {
   await browser?.close();
   server?.kill("SIGTERM");
