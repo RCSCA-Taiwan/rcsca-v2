@@ -5,3 +5,5 @@ Canonical replay now runs activity, reward and enterprise rollback scenarios on 
 The runner accepts only the generated canonical-replay container. It requires no production credentials and creates no production users or ledger entries. Test fixtures are removed before the disposable stack is stopped. CI execution is the source of verification; a syntax check alone is insufficient.
 
 This covers database workflows. Browser acceptance with enterprise/admin identities and mobile form interactions remains separate.
+
+Mobile coverage also runs real-member sign-in/sign-out, password-form interaction and enterprise navigation. The entrance animation now disables its button until ready and while opening: previously a click in the first 1.45 seconds was silently ignored while the button appeared actionable. Navigation testing waits for the entrance to close before using the menu.

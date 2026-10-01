@@ -44,7 +44,10 @@ test("mobile navigation opens the enterprise entrance without horizontal overflo
   const errors = captureBrowserErrors(page);
   await page.goto("/");
   const entrance = page.getByRole("button", { name: "進入 RCSCA", exact: true });
-  if (await entrance.isVisible()) await entrance.click();
+  await expect(entrance).toBeVisible();
+  await expect(entrance).toBeEnabled();
+  await entrance.click();
+  await expect(entrance).toBeHidden({ timeout: 7000 });
   await page.locator(".mobileMenu summary").click();
   const enterprise = page.locator('.mobileMenuPanel a[href="/1percent-partner"]');
   await expect(enterprise).toBeVisible();
