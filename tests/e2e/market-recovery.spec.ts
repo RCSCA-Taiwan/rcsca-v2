@@ -28,7 +28,7 @@ test('market read failures can retry and never present unknown balance as zero',
 test('member sees point preview, cannot duplicate submission, and balance stays unchanged before approval', async ({ page }) => {
   test.skip(!process.env.RCSCA_E2E_EMAIL || !process.env.RCSCA_E2E_PASSWORD, 'Disposable member required');
   await page.route('**/rest/v1/reward_catalog?**', route => route.fulfill({contentType:'application/json',body:JSON.stringify([reward])}));
-  await page.route('**/rest/v1/point_transactions?**', route => route.fulfill({contentType:'application/json',body:'[{"points":20}]'}));
+  await page.route('**/rest/v1/rpc/point_wallet_self', route => route.fulfill({contentType:'application/json',body:JSON.stringify({balance:20,status:'admission_pending',expires_on:null,expires_at:null,days_left:null})}));
   await page.route('**/rest/v1/reward_redemptions?**', route => route.fulfill({contentType:'application/json',body:'[]'}));
   let calls = 0;
   let release!: () => void;
@@ -58,7 +58,7 @@ test('member sees point preview, cannot duplicate submission, and balance stays 
 test('registered nonmember can view points but cannot submit a redemption', async ({ page }) => {
   test.skip(!process.env.RCSCA_E2E_EMAIL || !process.env.RCSCA_E2E_PASSWORD, 'Disposable member required');
   await page.route('**/rest/v1/reward_catalog?**', route => route.fulfill({contentType:'application/json',body:JSON.stringify([reward])}));
-  await page.route('**/rest/v1/point_transactions?**', route => route.fulfill({contentType:'application/json',body:'[{"points":20}]'}));
+  await page.route('**/rest/v1/rpc/point_wallet_self', route => route.fulfill({contentType:'application/json',body:JSON.stringify({balance:20,status:'admission_pending',expires_on:null,expires_at:null,days_left:null})}));
   await page.route('**/rest/v1/memberships?**', route => route.fulfill({contentType:'application/json',body:'null'}));
   let calls = 0;
   await page.route('**/rest/v1/rpc/reward_submit_redemption', route => { calls += 1; return route.abort(); });

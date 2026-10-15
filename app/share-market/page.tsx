@@ -1,5 +1,7 @@
 'use client';
 import SiteHeader from '../SiteHeader';
+import PointsExpiry from '../PointsExpiry';
+import type {PointsWallet} from '../../lib/points';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getSupabaseBrowserClient } from '../../lib/supabase-browser';
 import { useI18n } from '../i18n';
@@ -11,7 +13,7 @@ type Reward = {
   point_cost: number; stock_remaining: number | null; stock_total: number | null;
   min_level: number | null; min_footprints: number; starts_at: string | null; ends_at: string | null;
 };
-type Account = { signed: boolean; member: boolean; points: number; level: number; footprints: number; pending: string[] };
+type Account = { signed: boolean; member: boolean; points: number; wallet?:PointsWallet; level: number; footprints: number; pending: string[] };
 const emptyAccount: Account = { signed: false, member: false, points: 0, level: 1, footprints: 0, pending: [] };
 export default function ShareMarket() {
   const { t, locale } = useI18n();
@@ -44,17 +46,17 @@ export default function ShareMarket() {
         let next = emptyAccount;
         if (user) {
           const [points, level, footprints, membership, pending] = await Promise.all([
-            s.from('point_transactions').select('points').eq('user_id', user.id),
+            s.rpc('point_wallet_self'),
             s.from('member_levels').select('level').eq('user_id', user.id).maybeSingle(),
             s.from('sharing_footprints').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
             s.from('memberships').select('status').eq('user_id', user.id).maybeSingle(),
-            s.from('reward_redemptions').select('reward_id').eq('user_id', user.id).in('status', ['submitted', 'under_review', 'approved']),
+            s.from('reward_redemptions').select('reward_id,status,points_expires_at').eq('user_id', user.id).in('status', ['submitted', 'under_review', 'approved']),
           ]);
           for (const result of [points, level, footprints, membership, pending]) if (result.error) throw result.error;
           next = { signed: true, member: membership.data?.status === 'active',
-            points: (points.data || []).reduce((sum, row) => sum + row.points, 0),
+            points: (points.data as unknown as PointsWallet).balance, wallet: points.data as unknown as PointsWallet,
             level: level.data?.level || 1, footprints: footprints.count || 0,
-            pending: (pending.data || []).map(row => row.reward_id) };
+            pending: (pending.data || []).filter(row => row.status==='approved'||!row.points_expires_at||new Date(row.points_expires_at).getTime()>Date.now()).map(row => row.reward_id) };
         }
         if (!cancelled) { setRewards((catalog.data || []) as Reward[]); setAccount(next); }
       } catch { if (!cancelled) setReadError(true); }
@@ -102,6 +104,7 @@ export default function ShareMarket() {
     </div><div className="marketWallet"><small>{t('market.points')}</small>
       <strong aria-live="polite">{balance}</strong>
       {!loading && !readError && account.signed && <span>Lv.{account.level} · {account.footprints} {c.footprints}</span>}
+      {!loading&&!readError&&account.signed&&<PointsExpiry wallet={account.wallet||null} onRetry={()=>setAttempt(x=>x+1)}/> }
     </div></div></section>
     <section className="portalSection"><div className="portalWrap">
       <p>{c.memberOnly} <a className="textRoute" href="/account/identity">{c.identity} →</a></p>

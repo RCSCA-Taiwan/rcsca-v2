@@ -94,7 +94,7 @@ test("account never presents an unreadable point balance as zero and can retry",
   test.skip(!process.env.RCSCA_E2E_EMAIL || !process.env.RCSCA_E2E_PASSWORD,
     "Authenticated coverage requires the CI member credentials");
   let rejectPoints = true;
-  await page.route("**/rest/v1/point_transactions?**", async route => {
+  await page.route("**/rest/v1/rpc/point_wallet_self", async route => {
     if (!rejectPoints) return route.continue();
     await route.fulfill({status:401, contentType:"application/json",
       body:JSON.stringify({code:"PGRST303",message:"JWT claims validation failed"})});

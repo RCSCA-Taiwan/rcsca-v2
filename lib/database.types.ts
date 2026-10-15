@@ -2017,6 +2017,7 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
+          points_expires_at: string | null
           point_cost: number
           redemption_code: string | null
           reward_id: string
@@ -2028,6 +2029,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          points_expires_at?: string | null
           point_cost: number
           redemption_code?: string | null
           reward_id: string
@@ -2039,6 +2041,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          points_expires_at?: string | null
           point_cost?: number
           redemption_code?: string | null
           reward_id?: string
@@ -2950,6 +2953,7 @@ export type Database = {
       }
     }
     Functions: {
+      point_wallet_self: { Args: Record<PropertyKey, never>; Returns: Json }
       account_mark_all_notifications_read: { Args: never; Returns: number }
       account_referral_source: {
         Args: never
