@@ -34,3 +34,9 @@ body:has(.gatedEntrance) .siteFooter { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .gatedEntrance *, .gatedEntrance *::before, .gatedEntrance *::after { animation: none !important; }
 }
+/* A fullscreen entry surface must not inherit the site's button hover lift. */
+.brandEntrance.gatedEntrance,
+.brandEntrance.gatedEntrance:hover {
+  transform: none !important;
+  border-radius: 0 !important;
+}
