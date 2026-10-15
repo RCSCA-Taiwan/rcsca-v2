@@ -190,8 +190,10 @@ try {
   if(sql(`select count(*) from public.memberships where user_id='${applicant.id}';`)!=="0") throw new Error("Pending application activated membership");
   await login(reviewPage, membershipAdmin, "/admin/members");
   const membershipCard = reviewPage.locator("article").filter({has:reviewPage.getByRole("heading", {name:applicantName,exact:true})});
+  await expect(reviewPage.locator(".liveAccountLoading")).toHaveCount(0);
+  await expect(reviewPage.getByText("目前帳號沒有會員管理權限，或資料讀取失敗。",{exact:true})).toHaveCount(0);
   await membershipCard.getByRole("button",{name:"檢視及審核"}).click();
-  await reviewPage.getByLabel("結果",{exact:true}).selectOption("approved");
+  await reviewPage.getByRole("combobox",{name:"審核結果",exact:true}).selectOption("approved");
   await reviewPage.getByLabel("正式入會日期＊",{exact:true}).fill(new Date().toISOString().slice(0,10));
   await reviewPage.getByLabel("處理原因＊",{exact:true}).fill("Synthetic verified membership");
   await reviewPage.getByRole("checkbox",{name:/已核對/}).check();

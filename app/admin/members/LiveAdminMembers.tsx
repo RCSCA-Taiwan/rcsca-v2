@@ -46,7 +46,7 @@ export default function LiveAdminMembers() {
       s
         .from("identity_verifications")
         .select(
-          "id,user_id,verification_kind,status,created_at,profiles(display_name,email)",
+          "id,user_id,verification_kind,status,created_at,profiles!identity_verifications_user_id_fkey(display_name,email)",
         )
         .eq("status", "pending")
         .order("created_at"),
