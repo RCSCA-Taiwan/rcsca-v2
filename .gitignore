@@ -7,3 +7,5 @@ out
 .DS_Store
 *.icloud
 *.log
+playwright-report/
+test-results/
