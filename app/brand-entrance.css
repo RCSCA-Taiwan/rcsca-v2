@@ -1,0 +1,36 @@
+/* The first layer owns the viewport, including before React hydration. */
+html:has(.gatedEntrance),
+body:has(.gatedEntrance) {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+  height: 100%;
+  scrollbar-width: none;
+}
+body:has(.gatedEntrance) {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
+body:has(.gatedEntrance) .siteFooter { display: none !important; }
+.brandEntrance.gatedEntrance {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  box-sizing: border-box;
+  touch-action: none;
+  overscroll-behavior: none;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 950ms ease !important;
+}
+.brandEntrance.gatedEntrance[data-phase="fading"] {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gatedEntrance *, .gatedEntrance *::before, .gatedEntrance *::after { animation: none !important; }
+}

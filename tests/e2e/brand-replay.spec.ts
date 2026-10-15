@@ -17,3 +17,58 @@ test('logo replays the entrance from home and another page after it was already 
   await expect(entrance).toBeEnabled();
   expect(await page.evaluate(() => sessionStorage.getItem('rcsca-brand-entered-v20'))).toBe('1');
 });
+
+test('entrance owns the viewport until deliberate entry, rings before fading, then unlocks the site', async ({ page, isMobile }) => {
+  await page.addInitScript(() => {
+    const NativeAudioContext = window.AudioContext;
+    (window as any).__doorbellNotes = [];
+    window.AudioContext = class extends NativeAudioContext {
+      createOscillator() {
+        const oscillator = super.createOscillator();
+        const start = oscillator.start.bind(oscillator);
+        oscillator.start = (when?: number) => {
+          (window as any).__doorbellNotes.push({frequency: oscillator.frequency.value, when});
+          start(when);
+        };
+        return oscillator;
+      }
+    };
+  });
+  await page.goto('/#gateway');
+  const entrance = page.getByRole('button', {name: '進入 RCSCA', exact: true});
+  await expect(entrance).toBeEnabled();
+  await expect(page.locator('main')).toHaveCount(0);
+  await expect(page.locator('.siteFooter')).toBeHidden();
+  const viewport = await page.evaluate(() => ({width: innerWidth, height: innerHeight}));
+  const bounds = await entrance.boundingBox();
+  expect(bounds?.x).toBe(0);
+  expect(bounds?.y).toBe(0);
+  expect(bounds?.width).toBe(viewport.width);
+  expect(bounds?.height).toBe(viewport.height);
+  await page.keyboard.press('PageDown');
+  await page.keyboard.press('End');
+  if (!isMobile) await page.mouse.wheel(0, 2000);
+  await page.evaluate(() => {
+    window.scrollTo(0, 2000);
+    window.dispatchEvent(new Event('touchmove', {cancelable:true}));
+  });
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.clientWidth === innerWidth)).toBe(true);
+  await expect(page.locator('main')).toHaveCount(0);
+  await entrance.click();
+  await expect(entrance).toHaveAttribute('data-phase', 'ringing');
+  await expect(entrance).toHaveCSS('opacity', '1');
+  await expect(page.locator('main')).toHaveCount(0);
+  const notes = await page.evaluate(() => (window as any).__doorbellNotes);
+  expect(notes).toHaveLength(6);
+  expect(notes[0].frequency).toBeCloseTo(659.25);
+  expect(notes[3].frequency).toBeCloseTo(523.25);
+  expect(notes[3].when - notes[0].when).toBeCloseTo(0.45);
+  await expect(entrance).toHaveAttribute('data-phase', 'fading');
+  await expect(page.locator('main')).toHaveCount(0);
+  await expect(entrance).toHaveCount(0);
+  await expect(page.locator('main')).toBeVisible();
+  await expect(page.locator('.siteFooter')).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 1000));
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+});
