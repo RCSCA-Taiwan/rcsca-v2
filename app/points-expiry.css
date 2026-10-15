@@ -1,0 +1,12 @@
+.pointsExpiry {margin-top:16px;padding:14px 16px;border:1px solid currentColor;border-radius:14px;font-size:12px;line-height:1.7;color:inherit;position:relative;z-index:1}
+.pointsExpiry p {margin:4px 0;font-size:inherit;line-height:inherit;color:inherit}
+.pointsExpiry small {display:block;font-size:11px;line-height:1.65;color:inherit;opacity:1}
+.pointsExpiry time {font-weight:800;white-space:nowrap}
+.pointsAvailable {display:flex;align-items:baseline;justify-content:space-between;gap:15px}
+.pointsAvailable strong {font-size:26px;line-height:1.2;color:inherit}
+.pointsExpiry.isSoon {border-width:2px}
+.digitalIdentityCard .pointsExpiry {color:#29251e;background:#f4eee2;margin-bottom:20px}
+.marketWallet .pointsExpiry {max-width:360px;color:#f5eddf}
+.marketWallet .pointsExpiry span {display:inline}
+@media(max-width:600px){.pointsAvailable {flex-wrap:wrap}.digitalIdentityCard .pointsExpiry {padding:12px}}
+.digitalIdentityCard .cardFooter {position:relative;left:auto;bottom:auto;max-width:none;opacity:1;margin-top:28px}

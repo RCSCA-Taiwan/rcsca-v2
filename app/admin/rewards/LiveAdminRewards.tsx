@@ -4,6 +4,7 @@ import { getSupabaseBrowserClient } from "../../../lib/supabase-browser";
 type R = {
   id: string;
   point_cost: number;
+  points_expires_at: string | null;
   status: string;
   created_at: string;
   redemption_code: string | null;
@@ -19,7 +20,7 @@ export default function LiveAdminRewards() {
     const { data, error } = await s
       .from("reward_redemptions")
       .select(
-        "id,point_cost,status,created_at,redemption_code,profiles(display_name,email),reward_catalog(title,stock_remaining)",
+        "id,point_cost,status,created_at,points_expires_at,redemption_code,profiles(display_name,email),reward_catalog(title,stock_remaining)",
       )
       .in("status", ["submitted", "approved"])
       .order("created_at", { ascending: true });
@@ -48,7 +49,7 @@ export default function LiveAdminRewards() {
     });
     setNotice(
       error
-        ? "操作未完成，請確認核銷權限、兌換狀態與庫存後再試。"
+        ? error.message.includes("redemption_points_expired") ? "這筆申請的積分已到期，不能核准扣點；請駁回並請會員重新申請。" : "操作未完成，請確認核銷權限、兌換狀態、可用積分與庫存後再試。"
         : d === "approved"
           ? "已核准：點數與庫存已由同一受控流程結算。"
           : d === "completed"
@@ -79,6 +80,7 @@ export default function LiveAdminRewards() {
                   {r.profiles?.display_name || r.profiles?.email || "會員"}
                   {r.redemption_code ? ` · 兌換碼 ${r.redemption_code}` : ""}
                 </p>
+                {r.status === "submitted" && r.points_expires_at && new Date(r.points_expires_at).getTime() <= Date.now() && <p>這筆申請的本期積分已到期，請駁回並請會員重新申請。</p>}
               </div>
               <div className="reviewActions">
                 {r.status === "submitted" ? (

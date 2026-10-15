@@ -214,6 +214,15 @@ try {
   if(sql(`select count(*) from public.team_members where user_id='${applicant.id}' and team_id='${membershipTeam}' and left_at is null;`)!=="1") throw new Error("Typed enterprise source did not join its resolved team");
   console.log("PASS: typed enterprise source auto-fills a read-only team, survives submission and approval, and joins the verified team");
   console.log("PASS: real mobile membership form → protected RPC/Vault → admin approval → activated membership and member-only directory; no contact leakage");
+  sql(`insert into public.point_transactions(user_id,tx_type,points,source_type) values('${applicant.id}','adjust',42,'isolated_anniversary_browser');`);
+  const verifiedWallet=JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`));
+  await membershipPage.goto("http://127.0.0.1:3301/my-1percent");
+  await expect(membershipPage.locator(".digitalIdentityCard .pointsAvailable strong")).toHaveText("42");
+  await expect(membershipPage.locator(".digitalIdentityCard time")).toHaveAttribute("datetime",verifiedWallet.expires_on);
+  await membershipPage.goto("http://127.0.0.1:3301/share-market");
+  await expect(membershipPage.locator(".marketWallet>strong")).toHaveText("42");
+  await expect(membershipPage.locator(".marketWallet time")).toHaveAttribute("datetime",verifiedWallet.expires_on);
+  console.log("PASS: confirmed admission → real point wallet → matching mobile identity card and market balances/deadlines");
 
 } catch (error) {
   for (const page of diagnosticPages) {

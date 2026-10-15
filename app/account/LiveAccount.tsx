@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import PointsExpiry from '../PointsExpiry';
+import type {PointsWallet} from '../../lib/points';
 import type { Session } from '@supabase/supabase-js';
 import { useEffect, useMemo, useState } from 'react';
 import { getSupabaseBrowserClient } from '../../lib/supabase-browser';
@@ -14,7 +16,7 @@ const copy:Record<Locale,any>={
 
 type Snapshot={
   signedIn:boolean; email?:string; displayName?:string; membership?:string|null;
-  level:number; xp:number; points:number; footprints:number; team?:string|null; enterprise?:string|null;
+  level:number; xp:number; points:number; wallet?:PointsWallet; footprints:number; team?:string|null; enterprise?:string|null;
 };
 
 export default function LiveAccount(){
@@ -37,17 +39,17 @@ export default function LiveAccount(){
         supabase.from('profiles').select('display_name,email').eq('id',uid).maybeSingle(),
         supabase.from('memberships').select('membership_type,status').eq('user_id',uid).maybeSingle(),
         supabase.from('member_levels').select('level,lifetime_xp').eq('user_id',uid).maybeSingle(),
-        supabase.from('point_transactions').select('points,tx_type').eq('user_id',uid),
+        supabase.rpc('point_wallet_self'),
         supabase.from('sharing_footprints').select('id').eq('user_id',uid),
         supabase.from('team_members').select('teams(name)').eq('user_id',uid).is('left_at',null).limit(1).maybeSingle(),
         supabase.from('enterprise_users').select('enterprises(display_name,legal_name)').eq('user_id',uid).limit(1).maybeSingle(),
       ]);
       if(!active())return;
       if([profile,membership,level,points,footprints,team,enterprise].some(result=>result.error)){setFailed(true);setLoading(false);return;}
-      const pointTotal=(points.data||[]).reduce((sum:any,row:any)=>sum+(row.tx_type==='spend'?-Math.abs(row.points):row.points),0);
+      const wallet=points.data as unknown as PointsWallet;const pointTotal=wallet.balance;
       const teamName=(team.data as any)?.teams?.name || null;
       const enterpriseName=(enterprise.data as any)?.enterprises?.display_name || (enterprise.data as any)?.enterprises?.legal_name || null;
-      if(active())setData({signedIn:true,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
+      if(active())setData({signedIn:true,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,wallet,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
       if(active())setLoading(false);
     };
     const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>{
@@ -63,6 +65,6 @@ export default function LiveAccount(){
   if(!data.signedIn)return <section className="liveAccountGuest"><div><small>{c.identity}</small><strong>{c.visitor}</strong><p>{c.guestLead}</p></div><Link href="/login">{c.login}</Link></section>;
   return <>
     <section className="liveIdentity"><div><small>{c.identity}</small><strong>{identity}</strong><span>{data.displayName}</span></div><div><small>{c.level}</small><strong>Lv.{data.level} · {levelNames[data.level]||levelNames[1]}</strong><span>{data.xp.toLocaleString(locale)} XP</span></div><div><small>{c.footprints}</small><strong>{data.footprints.toLocaleString(locale)}</strong><span>{c.database}</span></div><div><small>{c.points}</small><strong>{data.points.toLocaleString(locale)}</strong><span>{c.available}</span></div></section>
-    <section className="liveContext"><div><small>{c.team}</small><strong>{data.team||c.notJoined}</strong></div><div><small>{c.enterprise}</small><strong>{data.enterprise||c.none}</strong></div><button onClick={logout}>{c.logout}</button></section>
+    <PointsExpiry wallet={data.wallet||null} onRetry={()=>setRefresh(x=>x+1)}/><section className="liveContext"><div><small>{c.team}</small><strong>{data.team||c.notJoined}</strong></div><div><small>{c.enterprise}</small><strong>{data.enterprise||c.none}</strong></div><button onClick={logout}>{c.logout}</button></section>
   </>;
 }
