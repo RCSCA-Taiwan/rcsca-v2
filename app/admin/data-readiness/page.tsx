@@ -1,98 +1,57 @@
 import SiteHeader from "../../SiteHeader";
 
+// Dated evidence, not a live monitoring feed or an assertion about later releases.
 const checks = [
-  ["核心資料結構", "已建立"],
-  ["RLS 權限邊界", "已建立"],
-  ["登入建立個人資料", "已啟用"],
-  ["活動完成核實", "受控流程"],
-  ["個案敏感資料", "限制存取"],
-  ["會員／企業歷史資料", "匯入前需清洗與驗證"],
-  ["財務／金額", "與 XP、共享點及等級分離"],
-  ["RPC 完整性", "前端 52／52 個 RPC 已於 Staging 對齊"],
-  ["高權限 RPC 攻擊面", "前端 52／52；額外對外函式 0"],
-  ["匿名高權限函式", "Advisor 警告 0"],
-  ["外鍵索引／RLS 效能", "結構性警告 0"],
-  ["重疊 RLS Policy", "Advisor 警告 0"],
-  ["越權拒絕測試", "12 個管理 RPC 與 9 個敏感資料面通過"],
-  ["View 資料邊界", "13／13 security_invoker；內部 View 匿名權限 0"],
-  ["Migration 基線", "Staging 65／65 原始 SQL 已完整封存"],
-  ["Schema Contract", "10／10 結構與權限指紋通過"],
-  ["直接資料表寫入", "前端 0；anon／authenticated DML grants 0"],
-  ["角色正向測試", "會員／案件／企業／管理 7／7 通過"],
-  ["管理狀態轉換", "成果／ESG／企業案件／Network／標章 9／9 通過"],
-  ["舊通知表引用", "函式引用 0"],
-  ["未登入路由防護", "帳戶／後台／企業私有入口均導回登入"],
-  ["Session Cookie 快取防護", "刷新回應自動禁止 CDN 快取"],
-  ["登入 E2E 驗證器", "登入／Profile／私有路由／登出流程已就緒"],
-  ["前端依賴漏洞", "Production audit 0"],
-  ["Data API 匿名邊界", "公開摘要可讀；敏感列舉與寫入受阻"],
+  ["資料庫重建", "88 份遷移已於隔離環境重播通過"],
+  ["正式／Staging 核對", "75 個函式定義與權限及 public RLS 政策已核對"],
+  ["瀏覽器流程", "V1550：29 項通過，1 項裝置不適用略過"],
+  ["角色與狀態流程", "登入登出、企業審核、ESG、活動登記及工作意願已驗證"],
+  ["測試資料", "認證測試使用隔離環境與臨時帳號"],
+  ["案例公開", "須具備公開同意並經核准"],
+  ["正式名單", "匯入前仍須清洗、去重及核對身份與用途"],
 ];
-const rpcBlockers = [
-  "成果草稿建立",
-  "善循環案例發布",
-  "ESG 素材核准",
-  "ESG 報告開放／暫緩",
-  "企業案件到期提醒",
-  "企業案件狀態更新",
-  "Network 媒合狀態決策",
+const remaining = [
+  ["正式資料匯入", "依協會確認的名單與公開同意逐批處理"],
+  ["外洩密碼防護", "尚未啟用；須完成方案及帳號設定確認"],
+  ["手機實機驗收", "自動測試已涵蓋手機；實機驗收仍須完成"],
+  ["安全檢查", "仍有高權限函式等 Advisor 提醒；不可視為零風險"],
 ];
+const additions = [
+  ["共享點規則", "註冊可累積，兌換限有效協會會員；後端資格檢查待整合驗證"],
+  ["捐款貢獻", "後台核實匯入、共享點與獨立貢獻徽章；比例與門檻待核定"],
+  ["企業產品／服務", "必要供給方案、協會審核、點數與有效期限設定待擴充"],
+  ["兌換與履約", "總表、點數預覽、預約保留、配送與取消退點待擴充"],
+  ["交流與圖片", "主題討論、權限、圖片上傳與內容管理待建置"],
+];
+function Rows({ items }: { items: string[][] }) {
+  return <>{items.map(([label, status]) => (
+    <div className="statusRow" key={label}><span>{label}</span><strong>{status}</strong></div>
+  ))}</>;
+}
 export default function DataReadiness() {
   return (
     <main className="shell">
       <SiteHeader />
       <section className="pageHero compactHero">
         <p className="eyebrow">後台｜資料治理</p>
-        <h1>真實資料進入系統前，先確認來源、權限與用途。</h1>
-        <p className="lead">
-          會員、企業、活動與受保護個案採不同資料邊界；歷史資料匯入前必須完成清洗、去重與必要驗證。
-        </p>
+        <h1>資料準備與驗證紀錄</h1>
+        <p className="lead">驗證快照：2026 年 10 月 15 日，V1550。此頁記錄已完成的檢查與待辦，不代表即時服務狀態或整站最終驗收完成。</p>
       </section>
       <section className="sectionGrid twoCol">
-        <article className="glassCard">
-          <h2>資料層檢查</h2>
-          {checks.map(([a, b]) => (
-            <div className="statusRow" key={a}>
-              <span>{a}</span>
-              <strong>{b}</strong>
-            </div>
-          ))}
-        </article>
-        <article className="glassCard">
-          <h2>匯入原則</h2>
-          <p>
-            不把舊名單直接視為有效會員資料。身份、聯絡方式、企業關係與歷史參與紀錄應依來源逐批核對。
-          </p>
-          <p>
-            特殊保護個案與敏感需求資料維持限制層，不因資料匯入而轉成公開內容。
-          </p>
-        </article>
+        <article className="glassCard"><h2>已完成的驗證</h2><Rows items={checks} /></article>
+        <article className="glassCard"><h2>正式營運前待辦</h2><Rows items={remaining} /></article>
       </section>
       <section className="glassCard">
-        <p className="eyebrow">上線驗證</p>
-        <h2>前端使用的 RPC 已全部對齊 Staging，待角色正向測試。</h2>
-        <p>
-          Migration、函式簽章、匿名權限防護及資料邊界已完成驗證。目前 Staging
-          已以可回滾測試帳號完成首批會員、案件、企業與管理成功路徑；正式環境尚未套用。
-        </p>
-        <div className="statusGrid">
-          {rpcBlockers.map((item) => (
-            <div className="statusRow" key={item}>
-              <span>{item}</span>
-              <strong>Staging 已建立</strong>
-            </div>
-          ))}
-        </div>
-        <p>首批角色正向測試 7／7 通過且測試資料完整回滾；其餘管理審核鏈與正式環境變更核准完成前，不標記為正式可用。</p>
-        <p>資料庫型別已接入前端；後續函式、欄位或參數漂移會在建置階段直接報錯。</p>
-        <p>52 個 authenticated 高權限 endpoint 與前端實際使用的 52 個 RPC 完全一致；6 個內部或舊函式已撤銷外部執行權限。</p>
-        <p>前端資料異動全部經由已審核 RPC；anon 與 authenticated 對 public tables 的直接新增、修改及刪除權限已撤銷。</p>
-        <p>成果草稿、案例發布、ESG 核准、企業案件、Network 審核及企業標章等管理狀態轉換已完成 9／9 回滾式正向測試。</p>
-        <p>SSR session gateway 已覆蓋帳戶、後台、MY 1%、企業私有入口與會員需求頁；未登入請求會保留安全的站內返回路徑並導向登入。</p>
-        <p>Supabase SSR 已升級並鎖定版本；任何刷新 Auth Cookie 的回應會同步套用禁止快取標頭，避免 CDN 誤快取使用者 Session。公開且未寫入 Cookie 的頁面仍可正常快取。</p>
-        <p>登入 E2E 驗證器已涵蓋密碼登入、伺服器驗證使用者、Profile 所有權、私有頁面 Cookie 與登出導向；待放入可拋棄 Staging 帳號及可連線 preview URL 即可執行。</p>
-        <p>Production dependency audit 已降至 0 個已知漏洞；Next.js 15 維持原主版本，未以高風險的強制大版本升級處理。</p>
-        <p>公開首頁只保留彙總影響力統計；企業、ESG 與管理報表已撤銷匿名權限，無企業關係的登入者也無法列舉企業摘要。</p>
-        <p>Staging migration history 的 65／65 份原始 SQL 已依原始版本號完整封存，並以位元組數與 MD5 驗證；下一步只剩在隔離的空白資料庫實際 replay。</p>
+        <h2>新增需求：尚未全部實作</h2>
+        <p>已有共享所目錄、點數紀錄與兌換審核基礎；以下擴充必須完成實作及測試後，才能標示可用。</p>
+        <Rows items={additions} />
+      </section>
+      <section className="glassCard">
+        <h2>資料匯入與維護原則</h2>
+        <p>舊名單不直接視為有效會員。身份、聯絡方式、企業關係及歷史參與依來源核對；敏感個案資料不因匯入而公開。</p>
+        <p>共享等級、協會會籍、捐款貢獻徽章及可兌換點數分別管理。新增規則不會自動套用既有紀錄，必須明確定義生效方式。</p>
+        <p>容量與費用目前僅保存估算，尚未升級付費方案。資料庫與上傳檔案應分別規劃備份與還原驗證。</p>
+        <p><a href="/admin/rewards">管理現有共享所目錄與兌換申請 →</a></p>
       </section>
     </main>
   );
