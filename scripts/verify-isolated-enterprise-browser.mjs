@@ -223,6 +223,28 @@ try {
   await expect(membershipPage.locator(".marketWallet>strong")).toHaveText("42");
   await expect(membershipPage.locator(".marketWallet time")).toHaveAttribute("datetime",verifiedWallet.expires_on);
   console.log("PASS: confirmed admission → real point wallet → matching mobile identity card and market balances/deadlines");
+  const resetReason=`Synthetic full reset request ${randomUUID()}`;
+  await membershipPage.goto("http://127.0.0.1:3301/account/data-requests");
+  await membershipPage.getByLabel("申請項目").selectOption("reset");
+  await membershipPage.getByLabel("申請原因或補充說明＊").fill(resetReason);
+  await membershipPage.getByRole("button",{name:"繼續確認申請",exact:true}).click();
+  const resetDialog=membershipPage.getByRole("dialog");
+  await expect(resetDialog.getByRole("heading")).toContainText("第一次提醒");
+  await resetDialog.getByRole("checkbox").check();
+  await resetDialog.getByRole("button",{name:"繼續第二次確認"}).click();
+  await expect(resetDialog.getByRole("heading")).toContainText("第二次確認");
+  await resetDialog.getByRole("checkbox").check();
+  await resetDialog.getByRole("button",{name:"確認送出審核申請"}).click();
+  await expect(membershipPage.getByText("待審核",{exact:true})).toBeVisible();
+  await reviewPage.goto("http://127.0.0.1:3301/admin/members/data-requests");
+  const resetCard=reviewPage.locator("article").filter({hasText:resetReason});
+  await resetCard.getByRole("textbox",{name:"處理說明（會員可查看）＊"}).fill("Synthetic approval only; no reset executed");
+  await resetCard.getByRole("button",{name:"核准申請（尚未執行）",exact:true}).click();
+  await expect(resetCard.getByText("已核准，待處理",{exact:true})).toBeVisible();
+  await membershipPage.reload();
+  await expect(membershipPage.getByText("已核准，待處理",{exact:true})).toBeVisible();
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==42) throw new Error("Data request approval unexpectedly reset points");
+  console.log("PASS: real mobile double-confirmed full reset request → admin approval → member sees pending execution; balance remains unchanged");
 
 } catch (error) {
   for (const page of diagnosticPages) {
