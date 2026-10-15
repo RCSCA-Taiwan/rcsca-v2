@@ -17,6 +17,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  remove-obsolete-diagnostics:
+    # One-time removal of the pre-isolation report, whose snapshot included
+    # shared login input. No checkout or repository code runs with this token.
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 15
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Remove the obsolete shared-account failure report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --request DELETE \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts/11953077690")
+          case "$status" in
+            204|404) echo "Obsolete diagnostic report removed or already absent." ;;
+            *) echo "Diagnostic cleanup failed (HTTP $status)."; exit 1 ;;
+          esac
+
   application:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
