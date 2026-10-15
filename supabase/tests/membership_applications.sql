@@ -82,5 +82,20 @@ select set_config('request.jwt.claims',json_build_object('sub',current_setting('
 set local role authenticated;
 select public.admin_membership_review(current_setting('rcsca.rejected')::uuid,'rejected','Synthetic rejection',null,null,false);
 reset role;
+-- Confirm a real preexisting membership with explicit source evidence, without inventing dates.
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('rcsca.reviewer'),'role','authenticated')::text,true);
+set local role authenticated;
+select public.admin_membership_confirm_existing(current_setting('rcsca.referrer')::uuid,'Synthetic referrer',current_date,extract(year from now() at time zone 'Asia/Taipei')::int,null,'Synthetic historical record checked');
+reset role;
+insert into public.teams(name,is_active) values('Synthetic second team',true) returning set_config('rcsca.team2',id::text,true);
+do $$ begin
+  if not exists(select 1 from private.membership_register where user_id=current_setting('rcsca.referrer')::uuid and confirmation_note='Synthetic historical record checked') then raise exception 'confirmation_evidence_missing'; end if;
+  if (select count(*) from private.membership_register where user_id=current_setting('rcsca.applicant')::uuid)<>1 then raise exception 'renewal_rejection_changed_history'; end if;
+  -- The unique index prevents all legacy/new paths from racing into two active teams.
+  begin insert into public.team_members(team_id,user_id) values(current_setting('rcsca.team')::uuid,current_setting('rcsca.reviewer')::uuid);
+    insert into public.team_members(team_id,user_id) values(current_setting('rcsca.team2')::uuid,current_setting('rcsca.reviewer')::uuid);
+    raise exception 'two_active_teams_accepted';
+  exception when unique_violation then null; end;
+end $$;
 select 'PASS: membership submission, encrypted ID, access checks, duplicate guards, approval, team linkage, directory privacy, original date, needs-info and rejection';
 rollback;

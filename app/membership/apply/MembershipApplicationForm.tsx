@@ -40,7 +40,7 @@ export default function MembershipApplicationForm(){
         <label>申請類型＊<select value={kind} onChange={e=>setKind(e.target.value as typeof kind)}><option value="new">新會員加入</option><option value="renewal">舊會員續會</option></select></label>
         <label>申請會籍＊<select value={type} onChange={e=>setType(e.target.value as typeof type)}><option value="annual">一般會員</option><option value="lifetime">永久會員</option></select></label>
         <label>姓名＊<input required maxLength={100} autoComplete="name" value={name} onChange={e=>setName(e.target.value)}/></label>
-        <label>身分證字號＊<input required type="password" minLength={10} maxLength={10} autoComplete="off" value={identity} onChange={e=>setIdentity(e.target.value.toUpperCase())}/><small>目前接受台灣國民身分證。其他證件請聯絡協會，勿填入假資料。格式檢查不代表身分已驗證。</small></label>
+        <label>身分證字號＊<input required type="password" aria-label="身分證字號＊" minLength={10} maxLength={10} autoComplete="off" value={identity} onChange={e=>setIdentity(e.target.value.toUpperCase())}/><small>目前接受台灣國民身分證。其他證件請聯絡協會，勿填入假資料。格式檢查不代表身分已驗證。</small></label>
         <label>聯絡電話＊<input required type="tel" minLength={6} maxLength={30} autoComplete="tel" value={phone} onChange={e=>setPhone(e.target.value)}/></label>
         <label>信箱＊<input required type="email" maxLength={254} autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></label>
         <label className="membershipWide">通訊地址＊<input required minLength={3} maxLength={500} autoComplete="street-address" value={address} onChange={e=>setAddress(e.target.value)}/></label>
