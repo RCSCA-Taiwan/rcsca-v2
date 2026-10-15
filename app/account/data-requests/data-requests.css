@@ -1,0 +1,11 @@
+.dataRequestWorkspace {display:grid;gap:26px;max-width:960px}
+.dataRequestForm {max-width:680px;width:100%}
+.dataRequestForm fieldset {border:0;padding:0;display:grid;gap:18px;min-width:0}
+.dataRequestForm textarea {min-height:130px;width:100%;padding:12px;font:inherit;box-sizing:border-box}
+.dataRequestDanger {border-left:4px solid #8c3c30;padding:14px;background:#f5e8e2;color:#51271f;line-height:1.8}
+.dataRequestDialog {max-width:580px;width:calc(100% - 48px);max-height:85dvh;overflow:auto;border:1px solid #b7a88f;border-radius:20px;padding:24px;background:#faf6ee;color:#241f18;box-sizing:border-box}
+.dataRequestDialog::backdrop {background:rgba(0,0,0,.7)}
+.dataRequestDialog p {line-height:1.8}
+.dataRequestActions {display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:22px}
+.dataRequestActions button,.dataRequestWorkspace article button {padding:10px 14px;border-radius:10px;border:1px solid #aa9676;background:#211c15;color:#fff;cursor:pointer}
+.dataRequestActions button:disabled {opacity:.5;cursor:default}

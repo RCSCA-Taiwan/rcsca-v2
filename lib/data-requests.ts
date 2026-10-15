@@ -1,0 +1,5 @@
+export const requestKinds={edit:'修改個人資料',reset:'全部重置後重新申請',delete:'刪除帳號資料'} as const;
+export const requestStatuses={submitted:'待審核',needs_info:'待補件',approved:'已核准，待處理',processing:'處理中',completed:'已完成',rejected:'未通過',cancelled:'已撤回'} as const;
+export type DataRequest={id:string;user_id:string;request_kind:keyof typeof requestKinds;requested_changes:Record<string,string>;reason:string;reset_scope:string|null;status:keyof typeof requestStatuses;review_note:string|null;created_at:string;updated_at:string;display_name?:string|null};
+export const changeLabels:Record<string,string>={display_name:'姓名／顯示名稱',mobile:'手機',contact_email:'聯絡信箱',address:'通訊地址'};
+export function dataRequestError(e:unknown){const m=(e as {message?:string})?.message||'';return m.includes('existing_data_request_pending')?'已有進行中的申請，請先查看處理進度。':m.includes('two_confirmations_required')?'重置或刪除必須完成兩次確認。':m.includes('request_not_editable')?'這筆申請目前不能修改，請重新讀取狀態。':m.includes('cannot_review_own_request')?'不能審核自己的申請，請由其他管理員處理。':'操作未完成，請確認資料、登入狀態及權限後重試。';}
