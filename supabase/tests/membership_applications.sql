@@ -97,5 +97,14 @@ do $$ begin
     raise exception 'two_active_teams_accepted';
   exception when unique_violation then null; end;
 end $$;
+-- A specialist reviewer has no membership review or contact-list access.
+insert into public.admin_roles(user_id,role_key) values(current_setting('rcsca.referrer')::uuid,'enterprise_reviewer');
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('rcsca.referrer'),'role','authenticated')::text,true);
+set local role authenticated;
+do $$ begin
+  begin perform public.admin_membership_applications();raise exception 'specialist_read_membership_queue';exception when raise_exception then if sqlerrm<>'admin_required' then raise; end if;end;
+  begin perform public.admin_membership_review(current_setting('rcsca.rejected')::uuid,'approved','Synthetic specialist',current_date,extract(year from now() at time zone 'Asia/Taipei')::int,true);raise exception 'specialist_reviewed_membership';exception when raise_exception then if sqlerrm<>'admin_required' then raise; end if;end;
+end $$;
+reset role;
 select 'PASS: membership submission, encrypted ID, access checks, duplicate guards, approval, team linkage, directory privacy, original date, needs-info and rejection';
 rollback;
