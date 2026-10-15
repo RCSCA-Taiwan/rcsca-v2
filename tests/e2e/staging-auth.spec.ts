@@ -19,6 +19,7 @@ test("public pages hydrate without browser errors", async ({ page }) => {
   const errors = captureBrowserErrors(page);
   await page.goto("/");
   await expect(page).toHaveTitle(/RCSCA/);
+  await page.getByRole("button", { name: "進入 RCSCA", exact: true }).click();
   await expect(page.locator("main")).toBeVisible();
   await expect(page.locator("[data-nextjs-dialog]")).toHaveCount(0);
 

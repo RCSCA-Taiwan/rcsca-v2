@@ -5,7 +5,7 @@ import {useI18n} from './i18n';
 
 const OneMark=({className=''})=><span className={`oneMark ${className}`}><b>1</b><i>%</i></span>;
 
-export default function Home(){const {t}=useI18n();return <><BrandEntrance/><main>
+export default function Home(){const {t}=useI18n();return <BrandEntrance><main>
 <SiteHeader/>
 <section id="top" className="hero homeHero"><div className="heroInner"><div className="eyebrow">RCSCA · CYCLE OF GOODNESS × 1%</div><h1>{t('home.title').split('1%')[0]}<OneMark className="heroOne"/>{t('home.title').split('1%')[1]||''}</h1><p>{t('home.lead')}</p><div className="heroActions"><a className="primary" href="#gateway">{t('home.find')}</a><a className="textLink" href="/cycle-of-goodness">{t('home.what')}</a></div></div>
 <div className="livingCycle" aria-label="Cycle of Goodness"><div className="cycleGlow"></div><div className="cycleCenter"><span>RCSCA</span><small>Cycle of Goodness</small></div><span className="flowNode n1">{t('home.personNode')}</span><span className="flowNode n2">{t('home.careNode')}</span><span className="flowNode n3">{t('home.businessNode')}</span><span className="flowNode n4">{t('home.connectNode')}</span><div className="orbit o1"></div><div className="orbit o2"></div><div className="flowDot d1"></div><div className="flowDot d2"></div><div className="flowDot d3"></div><div className="cycleOne"><OneMark/></div><small className="cycleCaption">{t('home.cycleCaption')}</small></div></section>
@@ -24,4 +24,4 @@ export default function Home(){const {t}=useI18n();return <><BrandEntrance/><mai
 
 <section className="join"><div className="eyebrow">{t('home.joinEye')}</div><h2>{t('home.joinTitle')}</h2><p>{t('home.joinLead')}</p><div className="joinActions"><a className="primary light" href="/my-1percent">MY 1%</a><a className="outlineLight" href="/1percent-partner">1% PARTNER</a></div></section>
 
-</main></>}
+</main></BrandEntrance>}

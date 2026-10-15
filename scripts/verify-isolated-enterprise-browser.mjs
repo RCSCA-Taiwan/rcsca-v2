@@ -172,6 +172,9 @@ try {
   if (JSON.stringify(outcome) !== JSON.stringify({queue:1,asset:1,case_notifications:1,report_notifications:1}) || errors.length) throw new Error(`Browser outcome state mismatch: ${JSON.stringify(outcome)}; ${errors.join(";")}`);
   console.log("PASS: real mobile case intake, reviewer evaluation/completion, outcome drafts, edited ESG approval/evidence, hold/release, owner JSON export, one case/report notification");
   console.log("PASS: real browser sign-in, enterprise needs-info→approval/manager link, mobile sharing submission/correction/resubmission, admin private approval, owner sees approved result and one notification");
+  const membershipTeam = randomUUID(), membershipTeamName = `Membership source team ${randomUUID()}`;
+  sql(`insert into public.teams(id,name,leader_user_id,is_active) values('${membershipTeam}','${membershipTeamName}','${owner.id}',true);
+    insert into public.team_members(team_id,user_id,role) values('${membershipTeam}','${owner.id}','leader');`);
   const applicant = await user("membership-applicant"), membershipAdmin = await user("membership-admin");
   sql(`insert into public.admin_roles(user_id,role_key) values('${membershipAdmin.id}','admin');`);
   const membershipPage = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
@@ -184,6 +187,11 @@ try {
   await membershipPage.getByLabel("聯絡電話＊", {exact:true}).fill("0900000000");
   await membershipPage.getByLabel("信箱＊", {exact:true}).fill(applicant.email);
   await membershipPage.getByLabel("通訊地址＊", {exact:true}).fill("Synthetic address");
+  await expect(membershipPage.getByRole("heading",{name:"2027年年度會員",exact:true})).toBeVisible();
+  await membershipPage.getByLabel("介紹人或所屬企業",{exact:true}).fill(company);
+  await expect(membershipPage.getByLabel("介紹人小隊",{exact:true})).toHaveValue(membershipTeamName);
+  await expect(membershipPage.getByLabel("介紹人小隊",{exact:true})).toHaveJSProperty("readOnly",true);
+  await membershipPage.getByRole("checkbox", {name:/我同意核准後加入/}).check();
   await membershipPage.getByRole("checkbox", {name:/我同意協會/}).check();
   await membershipPage.getByRole("button", {name:"送出申請",exact:true}).click();
   await expect(membershipPage.getByText("待審核", {exact:true})).toBeVisible();
@@ -203,6 +211,8 @@ try {
   await expect(membershipPage.getByRole("heading",{name:applicantName,exact:true})).toBeVisible();
   await expect(membershipPage.getByText("一般會員",{exact:true})).toBeVisible();
   if((await membershipPage.locator(".membershipRoster").innerText()).includes(applicant.email)) throw new Error("Membership directory exposed contact information");
+  if(sql(`select count(*) from public.team_members where user_id='${applicant.id}' and team_id='${membershipTeam}' and left_at is null;`)!=="1") throw new Error("Typed enterprise source did not join its resolved team");
+  console.log("PASS: typed enterprise source auto-fills a read-only team, survives submission and approval, and joins the verified team");
   console.log("PASS: real mobile membership form → protected RPC/Vault → admin approval → activated membership and member-only directory; no contact leakage");
 
 } catch (error) {
