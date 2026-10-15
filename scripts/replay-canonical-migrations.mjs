@@ -61,6 +61,21 @@ try {
     fs.writeFileSync(path.join(replayMigrations, filename), exported.slice(separator + 2));
   }
 
+  const archivedNames = new Set(manifest.migrations.map((m) => m.name));
+  const archiveMax = manifest.migrations.reduce((max, m) => String(m.version) > max ? String(m.version) : max, "");
+  const additionalMigrations = fs.readdirSync(path.join(projectRoot, "supabase", "migrations"))
+    .filter((name) => /^\d{14}_.+\.sql$/.test(name))
+    // Superseded by the recovered production-history v1420 migration.
+    .filter((name) => name !== "20260919190414_live_network_matching.sql")
+    .filter((name) => !archivedNames.has(name.slice(15, -4)))
+    .sort();
+  for (const name of additionalMigrations) {
+    if (name.slice(0, 14) <= archiveMax) throw new Error("Migration predates archive: " + name);
+    fs.copyFileSync(path.join(projectRoot, "supabase", "migrations", name), path.join(replayMigrations, name));
+    console.log("Replay includes: " + name);
+  }
+  const replayCount = manifest.count + additionalMigrations.length;
+
   run("npx", [...cli, "start", "--workdir", replayRoot]);
   stackStarted = true;
   run("npx", [
@@ -81,7 +96,7 @@ try {
     "--workdir",
     replayRoot,
   ]);
-  console.log(`Canonical empty-database replay passed: ${manifest.count}/${manifest.count}`);
+  console.log(`Canonical empty-database replay passed: ${replayCount}/${replayCount}`);
   const config = fs.readFileSync(path.join(replayRoot, "supabase", "config.toml"), "utf8");
   const projectId = config.match(/^project_id\s*=\s*"([^"]+)"/m)?.[1];
   if (!projectId) throw new Error("Disposable replay project ID missing");

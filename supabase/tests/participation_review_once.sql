@@ -17,6 +17,13 @@ end $$;
 reset role;
 insert into public.admin_roles(user_id,role_key) values(current_setting('rcsca.test_member_id')::uuid,'activity_reviewer');
 set local role authenticated;
+do $$ begin
+ begin perform public.admin_verify_participation(current_setting('rcsca.test_part')::uuid,true); raise exception 'incomplete_activity_approved';
+ exception when raise_exception then if sqlerrm<>'activity_not_completed' then raise; end if; end;
+end $$;
+reset role;
+update public.activities set status='completed' where id=current_setting('rcsca.test_activity')::uuid;
+set local role authenticated;
 select public.admin_verify_participation(current_setting('rcsca.test_part')::uuid,true,'Synthetic first approval');
 do $$ begin
  begin perform public.admin_verify_participation(current_setting('rcsca.test_part')::uuid,true); raise exception 'duplicate_approval_allowed';
@@ -26,5 +33,5 @@ do $$ begin
  if (select count(*) from public.sharing_footprints where source_type='activity_participation' and source_id=current_setting('rcsca.test_part')::uuid)<>1 then raise exception 'wrong_footprint_count'; end if;
  if not exists(select 1 from public.activity_participations where id=current_setting('rcsca.test_part')::uuid and status='verified') then raise exception 'status_changed'; end if;
 end $$;
-select 'PASS: member denied, approval once, duplicate approval/reversal denied, one footprint; rolled back' as result;
+select 'PASS: member denied, incomplete activity denied, completed activity approval once, duplicate approval/reversal denied, one footprint; rolled back' as result;
 rollback;
