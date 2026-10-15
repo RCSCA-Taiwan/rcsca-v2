@@ -17,7 +17,7 @@ export default function SiteHeader(){
  const path=usePathname(); const {t}=useI18n();
  const active=(p:string)=>path===p||path.startsWith(p+'/');
  return <header className="nav"><div className="navInner">
-  <Link className="brandLockup" href="/" aria-label={t('system.home')}><span className="brandStack"><span className="brandRcsca">RCSCA</span><small>Cycle of Goodness</small></span><span className="brandCross">×</span><OneMark/></Link>
+  <a className="brandLockup" href="/?intro=replay" aria-label={t('system.home')}><span className="brandStack"><span className="brandRcsca">RCSCA</span><small>Cycle of Goodness</small></span><span className="brandCross">×</span><OneMark/></a>
   <nav className="desktopNav">
    <Link className={active('/my-1percent')?'navActive':''} href="/my-1percent"><span className="navEn">MY 1%</span><span className="navZh">{t('nav.my')}</span></Link>
    <Link className={active('/1percent-partner')?'navActive':''} href="/1percent-partner"><span className="navEn">1% PARTNER</span><span className="navZh">{t('nav.partner')}</span></Link>
