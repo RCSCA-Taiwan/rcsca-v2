@@ -18,14 +18,14 @@ test("public stories require approval and consent filters", async ({ page }) => 
 test("public stories distinguish a read failure from an empty list and can retry", async ({ page }) => {
   let fail = true;
   await page.route("**/rest/v1/cycle_stories?**", async route => {
-    await route.fulfill({ status: fail ? 503 : 200, contentType: "application/json",
+    await route.fulfill({ status: fail ? 403 : 200, contentType: "application/json",
       body: fail ? JSON.stringify({ message: "Synthetic unavailable service" }) : "[]" });
   });
   await page.goto("/cycle-of-goodness/cases");
-  await expect(page.getByRole("alert")).toContainText("公開案例讀取失敗");
+  await expect(page.locator('p[role="alert"]')).toContainText("公開案例讀取失敗");
   await expect(page.locator(".emptyData")).toHaveCount(0);
   fail = false;
   await page.getByRole("button", { name: "重新讀取", exact: true }).click();
   await expect(page.locator(".emptyData")).toContainText("目前尚無完成公開審核的真實案例");
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator('p[role="alert"]')).toHaveCount(0);
 });
