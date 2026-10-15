@@ -27,7 +27,7 @@ test('membership validation retains editable form and a successful submission ca
   await page.getByLabel('通訊地址＊',{exact:true}).fill('Synthetic address');
   await page.getByRole('checkbox',{name:/我同意協會/}).check();
   await page.getByRole('button',{name:'送出申請',exact:true}).click();
-  await expect(page.getByRole('alert')).toContainText('請確認身分證字號格式與檢查碼');
+  await expect(page.locator('.membershipWorkspace [role="alert"]')).toContainText('請確認身分證字號格式與檢查碼');
   await expect(page.getByLabel('姓名＊',{exact:true})).toBeEditable();
   await page.getByLabel('身分證字號＊',{exact:true}).fill('A123456789');
   await page.getByRole('button',{name:'送出申請',exact:true}).click();
