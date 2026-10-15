@@ -455,3 +455,13 @@ table{max-width:100%}
 .myPage .myIntro .eyebrow,.myPage .memberLayer .eyebrow{color:var(--gold2)}
 .myPage .memberDoor small{color:#d5b873;font-size:12px}
 .myPage .memberFeatureGrid span{color:#d5b873}
+
+.marketRedemptionDialog{position:fixed;inset:0;width:min(560px,calc(100% - 32px));max-height:85dvh;overflow:auto;border:1px solid #cfc5b4;border-radius:24px;padding:32px;background:#f8f5ee;color:#15130f;box-shadow:0 24px 90px #0005}
+.marketRedemptionDialog::backdrop{background:rgba(8,8,7,.68)}
+.marketRedemptionDialog h2{padding-right:30px;overflow-wrap:anywhere}
+.marketRedemptionDialog .modalClose{position:absolute;right:16px;top:12px;background:transparent;border:0;font-size:28px;cursor:pointer}
+.marketRedemptionDialog .modalPrimary{width:100%;min-height:46px}
+.marketRedemptionDialog p{color:#49443d;line-height:1.7}
+.redemptionBalance{display:grid;gap:8px;background:#eee6d8;border-radius:14px;padding:16px}
+.redemptionBalance>div{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.redemptionBalance dt{color:#514b43}.redemptionBalance dd{margin:0;font-weight:800;font-variant-numeric:tabular-nums}

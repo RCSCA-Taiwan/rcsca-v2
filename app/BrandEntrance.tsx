@@ -6,7 +6,8 @@ export default function BrandEntrance(){
   const [opening,setOpening]=useState(false);
   const [ready,setReady]=useState(false);
   useEffect(()=>{
-    try{ if(sessionStorage.getItem('rcsca-brand-entered-v20')) setVisible(false); }
+    const replay=new URLSearchParams(window.location.search).get('intro')==='replay';
+    try{ if(!replay&&sessionStorage.getItem('rcsca-brand-entered-v20')) setVisible(false); }
     catch{}
     const t=setTimeout(()=>setReady(true),1450);
     return()=>clearTimeout(t);

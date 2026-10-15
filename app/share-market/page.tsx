@@ -1,10 +1,144 @@
 'use client';
 import SiteHeader from '../SiteHeader';
-import {useEffect,useMemo,useState} from 'react';
-import {getSupabaseBrowserClient} from '../../lib/supabase-browser';
-import {useI18n} from '../i18n';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getSupabaseBrowserClient } from '../../lib/supabase-browser';
+import { useI18n } from '../i18n';
+import { marketCopy } from './marketCopy';
 
-type Category='all'|'daily'|'selected'|'rare'|'secret';
-type Reward={id:string;category:Exclude<Category,'all'>;title:string;description:string|null;point_cost:number;stock_remaining:number|null;stock_total:number|null;min_level:number|null;min_footprints:number};
-const labels:Record<string,string>={daily:'日常共享',selected:'精選共享',rare:'稀有共享',secret:'1% 專屬'};
-export default function ShareMarket(){const {t}=useI18n();const [cat,setCat]=useState<Category>('all'),[selected,setSelected]=useState<string|null>(null),[rewards,setRewards]=useState<Reward[]>([]),[points,setPoints]=useState(0),[level,setLevel]=useState(1),[footprints,setFootprints]=useState(0),[loading,setLoading]=useState(true),[msg,setMsg]=useState('');useEffect(()=>{(async()=>{try{const s=getSupabaseBrowserClient();const {data:rs}=await s.from('reward_catalog').select('id,category,title,description,point_cost,stock_remaining,stock_total,min_level,min_footprints').eq('status','approved').order('point_cost');setRewards((rs||[]) as Reward[]);const {data:{session}}=await s.auth.getSession();if(!session)return;const [{data:pts},{data:lv},{count}]=await Promise.all([s.from('point_transactions').select('points').eq('user_id',session.user.id),s.from('member_levels').select('level').eq('user_id',session.user.id).maybeSingle(),s.from('sharing_footprints').select('id',{count:'exact',head:true}).eq('user_id',session.user.id)]);setPoints((pts||[]).reduce((a:any,x:any)=>a+(Number(x.points)||0),0));setLevel(lv?.level||1);setFootprints(count||0)}finally{setLoading(false)}})()},[]);const list=useMemo(()=>rewards.filter(r=>cat==='all'||r.category===cat),[cat,rewards]);const item=rewards.find(r=>r.id===selected);function eligible(r:Reward){return points>=r.point_cost&&level>=(r.min_level||1)&&footprints>=r.min_footprints&&(r.stock_remaining===null||r.stock_remaining>0)}async function redeem(r:Reward){setMsg('');if(!eligible(r)){setMsg('目前尚未符合這項共享的兌換條件。');return;}try{const s=getSupabaseBrowserClient();const {data:{session}}=await s.auth.getSession();if(!session){setMsg('請先登入再保留兌換資格。');return;}const {error}=await s.rpc('reward_submit_redemption',{p_reward_id:r.id});if(error)throw error;setMsg('已送出兌換申請。核准與點數扣除會由受控流程完成。')}catch{setMsg('目前無法送出，請稍後再試。')}}return <main className="marketPage"><SiteHeader/><section className="marketHero"><div className="portalWrap"><div><div className="eyebrow">1% 共享所</div><h1>{t('market.title')}</h1><p>{t('market.lead')}</p></div><div className="marketWallet"><small>{t('market.points')}</small><strong>{points.toLocaleString()}</strong><span>Lv.{level} · {footprints} 筆已記錄共享足跡</span></div></div></section><section className="portalSection"><div className="portalWrap"><div className="marketRules"><span>共享點可以使用</span><span>XP 不因兌換扣除</span><span>金額不決定等級</span><span>兌換需經受控流程</span></div><div className="marketTabs">{[['all',t('market.all')],['daily',t('market.daily')],['selected',t('market.selected')],['rare',t('market.rare')],['secret',t('market.secret')]].map(x=><button key={x[0]} className={cat===x[0]?'active':''} onClick={()=>setCat(x[0] as Category)}>{x[1]}</button>)}</div>{loading?<div className="liveAccountLoading">{t('market.loading')}</div>:<div className="marketGrid">{list.length?list.map(r=><article key={r.id} className={`rewardCard ${r.category==='secret'?'secret':''}`}><small>{labels[r.category]}</small><h3>{r.title}</h3><p>{r.description||'由共享夥伴提供的核准回饋。'}</p><div className="rewardMeta"><b>{r.point_cost} 共享點</b><span>{r.stock_remaining===null?'名額依公告':`剩餘 ${r.stock_remaining}${r.stock_total!==null?` / ${r.stock_total}`:''}`}</span></div><button onClick={()=>setSelected(r.id)}>{eligible(r)?'查看兌換 →':'查看解鎖條件 →'}</button></article>):<article className="rewardCard"><small>目前沒有上架項目</small><h3>共享所等待新的 1%</h3><p>只有審核通過的會員回饋會出現在這裡。</p></article>}</div>}</div></section>{item&&<div className="marketModal" onClick={()=>setSelected(null)}><div onClick={e=>e.stopPropagation()}><button className="modalClose" onClick={()=>setSelected(null)}>×</button><small>{labels[item.category]}</small><h2>{item.title}</h2><p>{item.description}</p><div className="modalCost"><strong>{item.point_cost}</strong><span>共享點</span></div>{item.min_level&&<p className="micro">最低 Lv.{item.min_level}</p>}{item.min_footprints>0&&<p className="micro">需至少 {item.min_footprints} 筆共享足跡</p>}<button className="modalPrimary" disabled={!eligible(item)} onClick={()=>redeem(item)}>{eligible(item)?t('market.apply'):t('market.locked')}</button>{msg&&<p className="micro">{msg}</p>}</div></div>}</main>}
+type Category = 'all' | 'daily' | 'selected' | 'rare' | 'secret';
+type Reward = {
+  id: string; category: Exclude<Category, 'all'>; title: string; description: string | null;
+  point_cost: number; stock_remaining: number | null; stock_total: number | null;
+  min_level: number | null; min_footprints: number; starts_at: string | null; ends_at: string | null;
+};
+type Account = { signed: boolean; member: boolean; points: number; level: number; footprints: number; pending: string[] };
+const emptyAccount: Account = { signed: false, member: false, points: 0, level: 1, footprints: 0, pending: [] };
+export default function ShareMarket() {
+  const { t, locale } = useI18n();
+  const c = marketCopy[locale];
+  const [cat, setCat] = useState<Category>('all');
+  const [selected, setSelected] = useState<string | null>(null);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [account, setAccount] = useState<Account>(emptyAccount);
+  const [loading, setLoading] = useState(true);
+  const [readError, setReadError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<'sent' | 'failed' | 'membershipFailed' | null>(null);
+  const inFlight = useRef(false);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const categoryLabels = { daily: t('market.daily'), selected: t('market.selected'), rare: t('market.rare'), secret: t('market.secret') };
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true); setReadError(false);
+      try {
+        const s = getSupabaseBrowserClient();
+        const [catalog, session] = await Promise.all([
+          s.from('reward_catalog').select('id,category,title,description,point_cost,stock_remaining,stock_total,min_level,min_footprints,starts_at,ends_at').eq('status', 'approved').order('point_cost'),
+          s.auth.getSession(),
+        ]);
+        if (catalog.error) throw catalog.error;
+        if (session.error) throw session.error;
+        const user = session.data.session?.user;
+        let next = emptyAccount;
+        if (user) {
+          const [points, level, footprints, membership, pending] = await Promise.all([
+            s.from('point_transactions').select('points').eq('user_id', user.id),
+            s.from('member_levels').select('level').eq('user_id', user.id).maybeSingle(),
+            s.from('sharing_footprints').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+            s.from('memberships').select('status').eq('user_id', user.id).maybeSingle(),
+            s.from('reward_redemptions').select('reward_id').eq('user_id', user.id).in('status', ['submitted', 'under_review', 'approved']),
+          ]);
+          for (const result of [points, level, footprints, membership, pending]) if (result.error) throw result.error;
+          next = { signed: true, member: membership.data?.status === 'active',
+            points: (points.data || []).reduce((sum, row) => sum + row.points, 0),
+            level: level.data?.level || 1, footprints: footprints.count || 0,
+            pending: (pending.data || []).map(row => row.reward_id) };
+        }
+        if (!cancelled) { setRewards((catalog.data || []) as Reward[]); setAccount(next); }
+      } catch { if (!cancelled) setReadError(true); }
+      finally { if (!cancelled) setLoading(false); }
+    }
+    void load();
+    return () => { cancelled = true; };
+  }, [attempt]);
+  useEffect(() => { if (selected && dialog.current && !dialog.current.open) dialog.current.showModal(); }, [selected]);
+  const list = useMemo(() => rewards.filter(r => cat === 'all' || r.category === cat), [cat, rewards]);
+  const item = rewards.find(r => r.id === selected);
+  function eligible(r: Reward) {
+    const now = Date.now();
+    return !loading && !readError && account.signed && account.member && !account.pending.includes(r.id) &&
+      account.points >= r.point_cost && account.level >= (r.min_level || 1) &&
+      account.footprints >= r.min_footprints && (r.stock_remaining === null || r.stock_remaining > 0) &&
+      (!r.starts_at || new Date(r.starts_at).getTime() <= now) && (!r.ends_at || new Date(r.ends_at).getTime() > now);
+  }
+  async function redeem(r: Reward) {
+    if (inFlight.current || !eligible(r)) return;
+    inFlight.current = true; setBusy(true); setMessage(null);
+    try {
+      const s = getSupabaseBrowserClient();
+      const { error } = await s.rpc('reward_submit_redemption', { p_reward_id: r.id });
+      if (error) {
+        if (error.message.includes('active_membership_required')) {
+          setAccount(a => ({ ...a, member: false })); setMessage('membershipFailed'); return;
+        }
+        if (error.message.includes('existing_redemption_pending')) {
+          setAccount(a => ({ ...a, pending: [...a.pending, r.id] })); setMessage('failed'); return;
+        }
+        throw error;
+      }
+      setAccount(a => ({ ...a, pending: [...a.pending, r.id] }));
+      setMessage('sent');
+    } catch { setMessage('failed'); }
+    finally { inFlight.current = false; setBusy(false); }
+  }
+  function close() { if (!busy) { setSelected(null); setMessage(null); } }
+  const balance = loading || readError ? '—' : account.signed ? account.points.toLocaleString(locale) : c.signedOut;
+  return <main className="marketPage"><SiteHeader />
+    <section className="marketHero"><div className="portalWrap"><div>
+      <div className="eyebrow">1% 共享所</div><h1>{t('market.title')}</h1><p>{t('market.lead')}</p>
+      <a className="outlineLight" href="/sharing-rules">{c.rules} →</a>
+    </div><div className="marketWallet"><small>{t('market.points')}</small>
+      <strong aria-live="polite">{balance}</strong>
+      {!loading && !readError && account.signed && <span>Lv.{account.level} · {account.footprints} {c.footprints}</span>}
+    </div></div></section>
+    <section className="portalSection"><div className="portalWrap">
+      <p>{c.memberOnly} <a className="textRoute" href="/account/identity">{c.identity} →</a></p>
+      <div className="marketTabs">{(['all', 'daily', 'selected', 'rare', 'secret'] as Category[]).map(key =>
+        <button key={key} aria-pressed={cat === key} className={cat === key ? 'active' : ''} onClick={() => setCat(key)}>
+          {key === 'all' ? t('market.all') : categoryLabels[key]}
+        </button>)}</div>
+      {loading ? <div className="liveAccountLoading">{t('market.loading')}</div> :
+        readError ? <div role="alert" className="privacyCallout"><p>{c.readError}</p>
+          <button className="secondaryAction" onClick={() => setAttempt(a => a + 1)}>{c.retry}</button></div> :
+        <div className="marketGrid">{list.length ? list.map(r => <article key={r.id} className={'rewardCard ' + (r.category === 'secret' ? 'secret' : '')}>
+          <small>{categoryLabels[r.category]}</small><h3>{r.title}</h3><p>{r.description}</p>
+          <div className="rewardMeta"><b>{r.point_cost} {c.points}</b>
+            <span>{r.stock_remaining === null ? c.unlimited : c.available + ' ' + r.stock_remaining}</span></div>
+          <p className="micro">{r.ends_at ? c.ends + ' ' + new Date(r.ends_at).toLocaleDateString(locale) : c.noEnd}</p>
+          <button onClick={() => { setMessage(null); setSelected(r.id); }}>{c.preview} →</button>
+        </article>) : <p className="emptyData">{c.noItems}</p>}</div>}
+    </div></section>
+    {item && <dialog ref={dialog} className="marketRedemptionDialog" aria-labelledby="redemption-title" onCancel={e => { if (busy) e.preventDefault(); else close(); }}>
+      <button className="modalClose" aria-label={c.close} disabled={busy} onClick={close}>×</button>
+      <small>{categoryLabels[item.category]}</small><h2 id="redemption-title">{item.title}</h2><p>{item.description}</p>
+      <dl className="redemptionBalance">
+        <div><dt>{c.balance}</dt><dd>{balance}</dd></div>
+        <div><dt>{c.cost}</dt><dd>{item.point_cost.toLocaleString(locale)} {c.points}</dd></div>
+        <div><dt>{c.after}</dt><dd>{account.signed && !readError && account.points >= item.point_cost ?
+          (account.points - item.point_cost).toLocaleString(locale) : '—'}</dd></div>
+      </dl>
+      {!!item.min_level && <p>{c.minimum}: Lv.{item.min_level}</p>}
+      {item.min_footprints > 0 && <p>{c.footprints}: {item.min_footprints}</p>}
+      <p>{item.ends_at ? c.ends + ' ' + new Date(item.ends_at).toLocaleString(locale) : c.noEnd}</p>
+      <p className="micro">{c.review}</p>
+      {!account.member && <p>{c.memberOnly} <a className="textRoute" href="/account/identity">{c.identity} →</a></p>}
+      <button className="modalPrimary" disabled={busy || !eligible(item)} onClick={() => void redeem(item)}>
+        {busy ? c.sending : account.pending.includes(item.id) ? c.pending : eligible(item) ? c.apply : c.locked}
+      </button>
+      {message && <p role="status" aria-live="polite">{c[message]}</p>}
+      <p><a className="textRoute" href="/account/redemptions">{c.requests} →</a></p>
+    </dialog>}
+  </main>;
+}
