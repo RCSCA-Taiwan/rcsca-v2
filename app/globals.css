@@ -465,3 +465,26 @@ table{max-width:100%}
 .redemptionBalance{display:grid;gap:8px;background:#eee6d8;border-radius:14px;padding:16px}
 .redemptionBalance>div{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
 .redemptionBalance dt{color:#514b43}.redemptionBalance dd{margin:0;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* Membership: readable forms and roster cards on both mobile and desktop. */
+.membershipPage .flowHero h1{max-width:900px;font-size:clamp(32px,5vw,64px)}
+.membershipPage .portalSection,.membershipWorkspace{color:#211e19}
+.membershipWorkspace{display:grid;gap:28px;min-width:0;margin-bottom:48px}
+.membershipWorkspace p,.membershipWorkspace small{color:#534a3e;line-height:1.75}
+.membershipForm,.membershipCard{background:#faf7f0;border:1px solid #cfc5b4;border-radius:20px;padding:24px;min-width:0;overflow-wrap:anywhere}
+.membershipForm fieldset{border:0;padding:0;margin:0;min-width:0}
+.membershipForm legend{font-weight:700;padding:12px 0}
+.membershipFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.membershipFields label{display:grid;align-content:start;gap:9px;font-weight:600}
+.membershipFields input,.membershipFields select,.membershipFields textarea{width:100%;min-width:0;min-height:48px;background:#fffdfa;border:1px solid #908575;border-radius:10px;padding:12px;font:inherit;color:#211e19}
+.membershipFields textarea{min-height:100px;resize:vertical}.membershipFields small{font-weight:400}
+.membershipWide{grid-column:1/-1}.membershipCheck{display:flex;align-items:flex-start;gap:12px;margin:24px 0;line-height:1.7;flex-wrap:wrap}
+.membershipCheck input{width:20px;height:20px;flex-shrink:0;margin-top:4px;accent-color:#725726}
+.membershipCheck a{text-decoration:underline}.membershipWorkspace button{cursor:pointer}.membershipWorkspace button:disabled{opacity:.6;cursor:wait}
+.membershipWorkspace :focus-visible{outline:3px solid #87662c;outline-offset:3px}
+.membershipCardHead{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.membershipCardHead h3{margin:0}.membershipCardHead strong{background:#e9dfcc;color:#49391d;border-radius:30px;padding:6px 14px;font-size:14px}
+.membershipRoster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.membershipWorkspace dl{display:grid;gap:12px}.membershipWorkspace dl>div{display:flex;gap:20px;flex-wrap:wrap}.membershipWorkspace dt{color:#655b4c}.membershipWorkspace dd{margin:0}
+.membershipWorkspace .workflowNotice button,.membershipWorkspace .workflowNotice a{margin-left:16px}
+@media(max-width:640px){.membershipFields,.membershipRoster{grid-template-columns:1fr}.membershipForm,.membershipCard{padding:18px}.membershipCardHead .primaryFlow{width:100%;text-align:center}.membershipWorkspace .workflowNotice button,.membershipWorkspace .workflowNotice a{display:block;margin:12px 0}}

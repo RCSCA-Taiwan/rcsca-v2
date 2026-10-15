@@ -172,6 +172,39 @@ try {
   if (JSON.stringify(outcome) !== JSON.stringify({queue:1,asset:1,case_notifications:1,report_notifications:1}) || errors.length) throw new Error(`Browser outcome state mismatch: ${JSON.stringify(outcome)}; ${errors.join(";")}`);
   console.log("PASS: real mobile case intake, reviewer evaluation/completion, outcome drafts, edited ESG approval/evidence, hold/release, owner JSON export, one case/report notification");
   console.log("PASS: real browser sign-in, enterprise needs-info→approval/manager link, mobile sharing submission/correction/resubmission, admin private approval, owner sees approved result and one notification");
+  const applicant = await user("membership-applicant"), membershipAdmin = await user("membership-admin");
+  sql(`insert into public.admin_roles(user_id,role_key) values('${membershipAdmin.id}','admin');`);
+  const membershipPage = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  const reviewPage = await (await browser.newContext()).newPage();
+  diagnosticPages.push(membershipPage, reviewPage);
+  await login(membershipPage, applicant, "/membership/apply");
+  const applicantName = `Synthetic member ${randomUUID()}`;
+  await membershipPage.getByLabel("姓名＊", {exact:true}).fill(applicantName);
+  await membershipPage.getByLabel("身分證字號＊", {exact:true}).fill("A123456789");
+  await membershipPage.getByLabel("聯絡電話＊", {exact:true}).fill("0900000000");
+  await membershipPage.getByLabel("信箱＊", {exact:true}).fill(applicant.email);
+  await membershipPage.getByLabel("通訊地址＊", {exact:true}).fill("Synthetic address");
+  await membershipPage.getByRole("checkbox", {name:/我同意協會/}).check();
+  await membershipPage.getByRole("button", {name:"送出申請",exact:true}).click();
+  await expect(membershipPage.getByText("待審核", {exact:true})).toBeVisible();
+  if(sql(`select count(*) from public.memberships where user_id='${applicant.id}';`)!=="0") throw new Error("Pending application activated membership");
+  await login(reviewPage, membershipAdmin, "/admin/members");
+  const membershipCard = reviewPage.locator("article").filter({has:reviewPage.getByRole("heading", {name:applicantName,exact:true})});
+  await expect(reviewPage.locator(".liveAccountLoading")).toHaveCount(0);
+  await expect(reviewPage.getByText("目前帳號沒有會員管理權限，或資料讀取失敗。",{exact:true})).toHaveCount(0);
+  await membershipCard.getByRole("button",{name:"檢視及審核"}).click();
+  await reviewPage.getByRole("combobox",{name:"審核結果",exact:true}).selectOption("approved");
+  await reviewPage.getByLabel("正式入會日期＊",{exact:true}).fill(new Date().toISOString().slice(0,10));
+  await reviewPage.getByLabel("處理原因＊",{exact:true}).fill("Synthetic verified membership");
+  await reviewPage.getByRole("checkbox",{name:/已核對/}).check();
+  await reviewPage.getByRole("button",{name:"確認處理",exact:true}).click();
+  await expect(membershipCard.getByText("已核准",{exact:true})).toBeVisible();
+  await membershipPage.goto("http://127.0.0.1:3301/membership/directory");
+  await expect(membershipPage.getByRole("heading",{name:applicantName,exact:true})).toBeVisible();
+  await expect(membershipPage.getByText("一般會員",{exact:true})).toBeVisible();
+  if((await membershipPage.locator(".membershipRoster").innerText()).includes(applicant.email)) throw new Error("Membership directory exposed contact information");
+  console.log("PASS: real mobile membership form → protected RPC/Vault → admin approval → activated membership and member-only directory; no contact leakage");
+
 } catch (error) {
   for (const page of diagnosticPages) {
     if (!page.isClosed()) {

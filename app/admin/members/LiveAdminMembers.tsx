@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { getMembershipClient } from "../../../lib/membership-api";
 import { getSupabaseBrowserClient } from "../../../lib/supabase-browser";
+import { membershipError, taiwanYear, type Referrer } from "../../../lib/membership";
 import type { Database } from "../../../lib/database.types";
 type MembershipType = Database["public"]["Enums"]["membership_type"];
 type V = {
@@ -26,6 +28,10 @@ export default function LiveAdminMembers() {
     [loading, setLoading] = useState(true),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState("");
+  const [registerMember, setRegisterMember] = useState<M|null>(null);
+  const [registerName, setRegisterName] = useState(""), [registerSince, setRegisterSince] = useState(""),
+    [registerReferrer, setRegisterReferrer] = useState(""), [registerNote, setRegisterNote] = useState(""),
+    [referrers, setReferrers] = useState<Referrer[]>([]);
   async function load() {
     const s = getSupabaseBrowserClient();
     const {
@@ -40,7 +46,7 @@ export default function LiveAdminMembers() {
       s
         .from("identity_verifications")
         .select(
-          "id,user_id,verification_kind,status,created_at,profiles(display_name,email)",
+          "id,user_id,verification_kind,status,created_at,profiles!identity_verifications_user_id_fkey(display_name,email)",
         )
         .eq("status", "pending")
         .order("created_at"),
@@ -125,6 +131,29 @@ export default function LiveAdminMembers() {
     if (!error) await load();
     setBusy("");
   }
+  async function prepareRegister(m: M) {
+    if(busy) return;
+    setRegisterMember(null);setRegisterName(m.profiles?.display_name || "");
+    setRegisterSince(m.member_since || "");setRegisterReferrer("");setRegisterNote("");
+    try {
+      const {data,error}=await getMembershipClient().rpc("membership_referrers");
+      if(error) throw error;
+      setReferrers((data||[]) as unknown as Referrer[]);setRegisterMember(m);
+    } catch(e) { setNotice(membershipError(e)); }
+  }
+  async function confirmRegister(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy || !registerMember) return;
+    setBusy(registerMember.user_id);
+    try {
+      const {error} = await getMembershipClient().rpc("admin_membership_confirm_existing", {
+        p_user: registerMember.user_id, p_name: registerName, p_member_since: registerSince,
+        p_year: taiwanYear(), p_referrer: registerReferrer || null, p_note: registerNote
+      });
+      if(error) throw error;
+      setRegisterMember(null);setNotice("本年度名冊已確認；原會籍與歷史紀錄保留。");
+    } catch(e) { setNotice(membershipError(e)); } finally { setBusy(""); }
+  }
   if (loading)
     return <div className="liveAccountLoading">正在讀取會員工作區…</div>;
   return (
@@ -134,6 +163,17 @@ export default function LiveAdminMembers() {
           {notice}
         </div>
       )}
+      {registerMember && <form className="membershipForm" onSubmit={confirmRegister}>
+        <h2>確認 {taiwanYear()} 年度名冊</h2>
+        <p>核對原始資料後登錄；會員姓名與介紹人會顯示在限會員查看的名冊。</p>
+        <fieldset disabled={!!busy}><legend>既有會員資料確認</legend><div className="membershipFields">
+          <label>會員姓名＊<input required maxLength={100} value={registerName} onChange={e=>setRegisterName(e.target.value)}/></label>
+          <label>原入會日期＊<input required type="date" readOnly={!!registerMember.member_since} value={registerSince} onChange={e=>setRegisterSince(e.target.value)}/></label>
+          <label>已核對的介紹人<select value={registerReferrer} onChange={e=>setRegisterReferrer(e.target.value)}><option value="">未登錄／無介紹人</option>{referrers.filter(r=>r.id!==registerMember.user_id).map(r=><option value={r.id} key={r.id}>{r.name}</option>)}</select></label>
+          <label>核對依據＊<textarea required maxLength={1000} value={registerNote} onChange={e=>setRegisterNote(e.target.value)}/></label>
+        </div><label className="membershipCheck"><input required type="checkbox"/>我確認本年度會籍有效，並已核對會員資料及名冊使用目的。</label>
+        <div className="membershipCardHead"><button className="primaryFlow" disabled={!!busy}>確認列入名冊</button><button type="button" disabled={!!busy} onClick={()=>setRegisterMember(null)}>取消</button></div></fieldset>
+      </form>}
       <div className="sectionHead">
         <div>
           <div className="eyebrow">待處理</div>
@@ -206,9 +246,9 @@ export default function LiveAdminMembers() {
                 <b>{m.profiles?.display_name || m.profiles?.email || "會員"}</b>
                 <small>{m.status}</small>
               </span>
-              <span>RCSCA MEMBER</span>
+              <span>{m.membership_type === "lifetime" ? "永久會員" : "一般會員"}</span>
               <span>{m.member_since || "—"}</span>
-              <span>{m.member_number || "—"}</span>
+              <span>{m.member_number || "—"}{m.status === "active" && <button disabled={!!busy} onClick={() => prepareRegister(m)}>確認本年度名冊</button>}</span>
             </div>
           ))
         ) : (
