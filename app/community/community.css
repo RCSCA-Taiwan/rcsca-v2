@@ -1,0 +1,14 @@
+.communityBoard {display:grid;gap:22px}
+.communityComposer {max-width:760px;width:100%}
+.communityComposer fieldset {border:0;padding:0;display:grid;gap:16px;min-width:0}
+.communityComposer textarea,.communityActions textarea {min-height:110px;width:100%;font:inherit;padding:12px;box-sizing:border-box;border:1px solid #b5a68e;border-radius:10px;background:#fffdf8;color:#211c16}
+.communityImageGrid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.communityImageGrid img {width:100%;max-height:420px;object-fit:contain;background:#e8e1d6;border-radius:12px;display:block}
+.communityImageGrid figure {margin:0;min-width:0}
+.communityImageGrid button {margin-top:8px}
+.communityBody {white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85}
+.communityActions {display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-top:20px}
+.communityActions label {display:grid;gap:8px;flex:1 1 240px}
+.communityActions button {padding:11px 16px;border:1px solid #b09c7b;border-radius:12px;background:#241e16;color:#fff;cursor:pointer}
+.communityActions button:disabled {opacity:.5}
+@media(max-width:540px){.communityImageGrid {grid-template-columns:1fr}}

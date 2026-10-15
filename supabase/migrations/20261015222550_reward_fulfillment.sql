@@ -165,7 +165,7 @@ begin
   on conflict (recipient_user_id,kind,related_type,related_id) where related_id is not null
   do update set title=excluded.title,body=excluded.body,read_at=null,created_at=now();
   insert into public.audit_logs(actor_user_id,actor_role,action,subject_type,subject_id,note)
-  values(v_actor,'admin','reward_redemption_'||p_decision::text,'reward_redemption',v_redemption.id::text,p_note);
+  values(v_actor,case when private.is_admin(null) then 'admin' when v_actor=v_redemption.user_id then 'member' else 'reward_provider' end,'reward_redemption_'||p_decision::text,'reward_redemption',v_redemption.id::text,p_note);
 end;$function$;
 
 revoke all on function private.settle_reward_redemption(uuid,public.review_status,text) from public,anon,authenticated;

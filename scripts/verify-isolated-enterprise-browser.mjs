@@ -320,6 +320,66 @@ try {
   await expect(memberDelivery.getByText('已完成',{exact:true})).toBeVisible();
   if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==27) throw new Error('Fulfillment balance mismatch');
   console.log('PASS: admin creates fulfillment catalogs → mobile booking holds points → provider proposes slot → member accepts → service completion; delivery address → provider approval → shipment tracking → member receipt; exactly 15 points spent');
+  const postTitle=`Browser community ${randomUUID()}`;
+  await membershipPage.goto('http://127.0.0.1:3301/community');
+  await membershipPage.getByLabel('標題＊',{exact:true}).fill(postTitle);
+  await membershipPage.getByLabel('分享內容＊',{exact:true}).fill('Synthetic activity reflection, no personal information.');
+  await membershipPage.getByLabel('投稿圖片',{exact:true}).setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAIAAABvFaqvAAAAIklEQVR4nGPsKXBjoAZgooopowaNGjRq0KhBowaNGkQRAABFEQFybJFhWAAAAABJRU5ErkJggg==','base64')});
+  await expect(membershipPage.getByAltText('待上傳圖片 1',{exact:true})).toBeVisible();
+  await membershipPage.getByRole('checkbox').check();
+  await membershipPage.getByRole('button',{name:'送出投稿審核',exact:true}).click();
+  const ownPost=membershipPage.locator('article').filter({has:membershipPage.getByRole('heading',{name:postTitle,exact:true})});
+  await expect(ownPost.getByText('待審核',{exact:true})).toBeVisible();
+  const uploadedImagePath=sql(`select i.object_path from private.community_images i join private.community_posts p on p.id=i.post_id where p.title='${postTitle}';`);
+  if(sql(`select metadata->>'mimetype' from storage.objects where bucket_id='community-media' and name='${uploadedImagePath}';`)!=='image/jpeg')throw new Error('Original image was not re-encoded as JPEG');
+  const imageProbe=createClient(env.API_URL,publicKey,{auth:{persistSession:false}});
+  const probeLogin=await imageProbe.auth.signInWithPassword({email:member.email,password});
+  if(probeLogin.error)throw probeLogin.error;
+  const pendingImage=await imageProbe.storage.from('community-media').createSignedUrl(uploadedImagePath,60);
+  if(!pendingImage.error)throw new Error('Another user signed a pending image URL');
+
+  const viewerPage=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();
+  diagnosticPages.push(viewerPage);
+  await login(viewerPage,member,'/community');
+  await expect(viewerPage.getByRole('heading',{name:postTitle,exact:true})).toHaveCount(0);
+  await reviewPage.goto('http://127.0.0.1:3301/admin/community');
+  const adminPost=reviewPage.locator('article').filter({has:reviewPage.getByRole('heading',{name:postTitle,exact:true})});
+  await adminPost.getByLabel('審核說明＊',{exact:true}).fill('Synthetic publication consent and image checked');
+  await adminPost.getByRole('button',{name:'核准發布',exact:true}).click();
+  await viewerPage.reload();
+  const viewedPost=viewerPage.locator('article').filter({has:viewerPage.getByRole('heading',{name:postTitle,exact:true})});
+  const publishedImage=viewedPost.getByAltText(`${postTitle} 圖片 1`,{exact:true});
+  await expect(publishedImage).toBeVisible();
+  await expect.poll(()=>publishedImage.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
+  const imagePath=sql(`select i.object_path from private.community_images i join private.community_posts p on p.id=i.post_id where p.title='${postTitle}';`);
+  const anonymousImage=await fetch(`${env.API_URL}/storage/v1/object/public/community-media/${imagePath}`);
+  if(anonymousImage.status===200)throw new Error('Private community image is publicly readable');
+  await viewedPost.getByLabel('檢舉原因',{exact:true}).fill('Synthetic report for moderation');
+  await viewedPost.getByRole('button',{name:'檢舉內容',exact:true}).click();
+  await reviewPage.reload();
+  await expect(adminPost).toContainText('Synthetic report for moderation');
+  await adminPost.getByLabel('審核說明＊',{exact:true}).fill('Synthetic moderation takedown');
+  await adminPost.getByRole('button',{name:'下架內容與圖片',exact:true}).click();
+  await viewerPage.reload();
+  await expect(viewerPage.getByRole('heading',{name:postTitle,exact:true})).toHaveCount(0);
+  const hiddenImage=await imageProbe.storage.from('community-media').createSignedUrl(uploadedImagePath,60);
+  if(!hiddenImage.error)throw new Error('Another user signed a hidden image URL');
+  await reviewPage.goto('http://127.0.0.1:3301/admin/contributions');
+  await reviewPage.getByLabel('捐款人登入信箱',{exact:true}).fill(applicant.email);
+  await reviewPage.getByLabel('核實金額（新台幣元）',{exact:true}).fill('1000');
+  await reviewPage.getByLabel('實際入帳日期',{exact:true}).fill(new Date().toISOString().slice(0,10));
+  const donationReference=`Synthetic-${randomUUID()}`;
+  await reviewPage.getByLabel('唯一入帳／收據編號',{exact:true}).fill(donationReference);
+  await reviewPage.getByLabel('核實依據（僅管理員查看）',{exact:true}).fill('Synthetic receipt in disposable test stack only');
+  await reviewPage.getByRole('checkbox',{name:/我已核對協會實際入帳/}).check();
+  await reviewPage.getByRole('button',{name:'登錄核實紀錄',exact:true}).click();
+  await expect(reviewPage.locator("body")).toContainText(donationReference);
+  await membershipPage.goto('http://127.0.0.1:3301/account/contributions');
+  await expect(membershipPage.locator("body")).toContainText('已核實累計：新台幣 1,000 元');
+  await expect(membershipPage.locator("body")).toContainText('徽章名稱與門檻尚待協會核定');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==27)throw new Error('Community or donation unexpectedly changed points');
+  console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; verified donation stays private and grants no unconfigured badge, points or XP');
+
 
 
 } catch (error) {

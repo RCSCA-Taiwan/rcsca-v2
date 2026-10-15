@@ -1,0 +1,5 @@
+'use client';
+import {useEffect,useState} from 'react';
+import Link from 'next/link';
+import {getDonationsClient,type DonationSummary} from '../lib/donations-api';
+export default function DonationBadges(){const[data,setData]=useState<DonationSummary|null>(null),[failed,setFailed]=useState(false);useEffect(()=>{let active=true;void(async()=>{const s=getDonationsClient();const u=await s.auth.getUser();if(!u.data.user)return;const r=await s.rpc('donation_contribution_self');if(!active)return;if(r.error)setFailed(true);else setData(r.data as unknown as DonationSummary);})();return()=>{active=false;};},[]);return <section className="privacyCallout"><h2>捐款貢獻徽章</h2>{failed?<p>目前無法確認貢獻徽章。</p>:!data?<p>正在讀取自己的徽章…</p>:!data.rules_active?<p>徽章名稱與門檻尚待協會核定，未啟用前不會發放。</p>:data.badges.length?<div className="memberFeatureGrid">{data.badges.map(b=><p key={b.period}><strong>{b.label}</strong> · {b.period==='annual'?`${b.year} 年度`:'累計貢獻'}</p>)}</div>:<p>尚未達到目前已啟用的徽章門檻。</p>}<p>貢獻徽章與會員身份、共享等級、XP 及可兌換積分分開計算。</p><Link href="/account/contributions">查看自己的核實紀錄 →</Link></section>;}

@@ -123,7 +123,7 @@ export default function LiveRewardCatalog() {
         <span>{rows.length} 項</span>
       </div>
       <form className="partnerComposerGrid" onSubmit={save}>
-        <label>履約方式<select value={form.fulfillment_type} onChange={e=>setForm({...form,fulfillment_type:e.target.value})}><option value="code">兌換憑證（既有流程）</option><option value="service">服務預約</option><option value="delivery">商品配送</option></select></label>
+        <label>履約方式<select aria-label="履約方式" value={form.fulfillment_type} onChange={e=>setForm({...form,fulfillment_type:e.target.value})}><option value="code">兌換憑證（既有流程）</option><option value="service">服務預約</option><option value="delivery">商品配送</option></select></label>
         {form.fulfillment_type!=='code'&&<label>負責夥伴的登入信箱<input required type="email" value={form.provider_email} onChange={e=>setForm({...form,provider_email:e.target.value})}/></label>}
         {form.fulfillment_type==='service'&&<label>預約暫時保留上限（小時）<input type="number" min="1" max="168" required value={form.booking_hold_hours} onChange={e=>setForm({...form,booking_hold_hours:e.target.value})}/></label>}
         {form.fulfillment_type==='delivery'&&<><label>運費負擔方式<select value={form.shipping_policy} onChange={e=>setForm({...form,shipping_policy:e.target.value})}><option value="free">免運費</option><option value="recipient_pays">收件人負擔運費</option><option value="included_points">運費已包含於所需點數</option></select></label><label>配送與運費說明<input required maxLength={500} value={form.shipping_note} onChange={e=>setForm({...form,shipping_note:e.target.value})}/></label></>}
@@ -195,6 +195,7 @@ export default function LiveRewardCatalog() {
         <label>
           狀態
           <select
+            aria-label="狀態"
             value={form.status}
             onChange={(e) => setForm({ ...form, status: e.target.value })}
           >

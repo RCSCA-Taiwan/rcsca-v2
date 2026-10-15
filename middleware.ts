@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const protectedPrefixes = [
   "/account",
+  "/community",
   "/membership/apply",
   "/membership/directory",
   "/admin",
