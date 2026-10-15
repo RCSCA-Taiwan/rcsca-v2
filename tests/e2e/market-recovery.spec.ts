@@ -14,10 +14,10 @@ async function login(page: Page) {
 
 test('market read failures can retry and never present unknown balance as zero', async ({ page }) => {
   let fail = true;
-  await page.route('**/rest/v1/reward_catalog?**', route => route.fulfill({ status:fail ? 503 : 200,
+  await page.route('**/rest/v1/reward_catalog?**', route => route.fulfill({ status:fail ? 403 : 200,
     contentType:'application/json', body:fail ? JSON.stringify({message:'Synthetic unavailable'}) : JSON.stringify([reward]) }));
   await page.goto('/share-market');
-  await expect(page.getByRole('alert')).toContainText('讀取失敗');
+  await expect(page.locator('.privacyCallout[role="alert"]')).toContainText('讀取失敗');
   await expect(page.locator('.marketWallet strong')).toHaveText('—');
   fail = false;
   await page.getByRole('button', {name:'重新讀取',exact:true}).click();
