@@ -39,7 +39,9 @@ async function login(page, person, next) {
   await expect(page).toHaveURL(`http://127.0.0.1:3301${next}`, { timeout: 30000 });
 }
 try {
-  const owner = await user("enterprise"), admin = await user("reviewer");
+  const owner = await user("enterprise"), admin = await user("reviewer"), member = await user("member");
+  sql(`insert into public.memberships(user_id,membership_type,status) values('${member.id}','annual','active')
+    on conflict(user_id) do update set membership_type='annual',status='active';`);
   sql(`insert into public.admin_roles(user_id,role_key) values('${admin.id}','enterprise_reviewer'),('${admin.id}','outcome_reviewer');
     insert into public.enterprise_applications(requester_user_id,company_name,tax_id,contact_name,contact_email)
     values('${owner.id}','${company}','${randomUUID()}','Replay contact','${owner.email}');`);
@@ -54,6 +56,17 @@ try {
     if (Date.now() > deadline || server.exitCode !== null) throw new Error("Isolated Next.js server did not become ready");
     await new Promise((r) => setTimeout(r,500));
   }
+  const testEnv = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, RCSCA_E2E_BASE_URL: "http://127.0.0.1:3301",
+    RCSCA_E2E_EMAIL: member.email, RCSCA_E2E_PASSWORD: password };
+  for (const script of ["verify:browser", "verify:auth-e2e"]) {
+    await new Promise((resolve, reject) => {
+      const child = spawn("npm", ["run", script], { env: testEnv, stdio: "inherit" });
+      child.on("error", reject);
+      child.on("exit", code => code === 0 ? resolve() : reject(new Error(`${script} failed in disposable stack (${code})`)));
+    });
+  }
+  console.log("PASS: desktop/mobile formal-member sign-in/out, account read-error recovery, SSR cookie authorization and admin denial against disposable users");
   browser = await chromium.launch();
   const adminPage = await (await browser.newContext()).newPage();
   const ownerPage = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();

@@ -3029,6 +3029,15 @@ export type Database = {
         Args: { p_asset_id: string; p_note?: string; p_ready: boolean }
         Returns: undefined
       }
+      admin_save_cycle_story_draft: {
+        Args: {
+          p_expected_updated_at: string
+          p_story_id: string
+          p_summary: string
+          p_title: string
+        }
+        Returns: string
+      }
       admin_publish_cycle_story: {
         Args: {
           p_anonymized: boolean
