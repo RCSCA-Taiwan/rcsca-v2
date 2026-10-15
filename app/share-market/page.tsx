@@ -1,5 +1,9 @@
 'use client';
 import SiteHeader from '../SiteHeader';
+import FulfillmentFields,{type FulfillmentDraft} from './FulfillmentFields';
+import {getFulfillmentClient} from '../../lib/reward-fulfillment-api';
+import {fulfillmentError,shippingLabels} from '../../lib/reward-fulfillment';
+import '../fulfillment.css';
 import PointsExpiry from '../PointsExpiry';
 import type {PointsWallet} from '../../lib/points';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -9,6 +13,7 @@ import { marketCopy } from './marketCopy';
 
 type Category = 'all' | 'daily' | 'selected' | 'rare' | 'secret';
 type Reward = {
+  fulfillment_type?:string;shipping_policy?:string;shipping_note?:string|null;booking_hold_hours?:number;
   id: string; category: Exclude<Category, 'all'>; title: string; description: string | null;
   point_cost: number; stock_remaining: number | null; stock_total: number | null;
   min_level: number | null; min_footprints: number; starts_at: string | null; ends_at: string | null;
@@ -27,6 +32,8 @@ export default function ShareMarket() {
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<'sent' | 'failed' | 'membershipFailed' | null>(null);
+  const [draft,setDraft]=useState<FulfillmentDraft>({slot:'',details:{destination_type:'home'},consent:false});
+  const [fulfillmentNotice,setFulfillmentNotice]=useState('');
   const inFlight = useRef(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const categoryLabels = { daily: t('market.daily'), selected: t('market.selected'), rare: t('market.rare'), secret: t('market.secret') };
@@ -37,7 +44,7 @@ export default function ShareMarket() {
       try {
         const s = getSupabaseBrowserClient();
         const [catalog, session] = await Promise.all([
-          s.from('reward_catalog').select('id,category,title,description,point_cost,stock_remaining,stock_total,min_level,min_footprints,starts_at,ends_at').eq('status', 'approved').order('point_cost'),
+          s.from('reward_catalog').select('id,category,title,description,point_cost,stock_remaining,stock_total,min_level,min_footprints,starts_at,ends_at,fulfillment_type,shipping_policy,shipping_note,booking_hold_hours').eq('status', 'approved').order('point_cost'),
           s.auth.getSession(),
         ]);
         if (catalog.error) throw catalog.error;
@@ -50,13 +57,13 @@ export default function ShareMarket() {
             s.from('member_levels').select('level').eq('user_id', user.id).maybeSingle(),
             s.from('sharing_footprints').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
             s.from('memberships').select('status').eq('user_id', user.id).maybeSingle(),
-            s.from('reward_redemptions').select('reward_id,status,points_expires_at').eq('user_id', user.id).in('status', ['submitted', 'under_review', 'approved']),
+            s.from('reward_redemptions').select('reward_id,status,points_expires_at,reservation_until').eq('user_id', user.id).in('status', ['submitted', 'under_review', 'approved']),
           ]);
           for (const result of [points, level, footprints, membership, pending]) if (result.error) throw result.error;
           next = { signed: true, member: membership.data?.status === 'active',
             points: (points.data as unknown as PointsWallet).balance, wallet: points.data as unknown as PointsWallet,
             level: level.data?.level || 1, footprints: footprints.count || 0,
-            pending: (pending.data || []).filter(row => row.status==='approved'||!row.points_expires_at||new Date(row.points_expires_at).getTime()>Date.now()).map(row => row.reward_id) };
+            pending: (pending.data || []).filter(row => row.status==='approved'||((!row.points_expires_at||new Date(row.points_expires_at).getTime()>Date.now())&&(!row.reservation_until||new Date(row.reservation_until).getTime()>Date.now()))).map(row => row.reward_id) };
         }
         if (!cancelled) { setRewards((catalog.data || []) as Reward[]); setAccount(next); }
       } catch { if (!cancelled) setReadError(true); }
@@ -77,10 +84,10 @@ export default function ShareMarket() {
   }
   async function redeem(r: Reward) {
     if (inFlight.current || !eligible(r)) return;
-    inFlight.current = true; setBusy(true); setMessage(null);
+    inFlight.current = true; setBusy(true); setMessage(null);setFulfillmentNotice('');
     try {
       const s = getSupabaseBrowserClient();
-      const { error } = await s.rpc('reward_submit_redemption', { p_reward_id: r.id });
+      const { error } = r.fulfillment_type&&r.fulfillment_type!=='code'?await getFulfillmentClient().rpc('reward_submit_fulfillment',{p_reward:r.id,p_slot:draft.slot||null,p_details:draft.details,p_consent:draft.consent}):await s.rpc('reward_submit_redemption', { p_reward_id: r.id });
       if (error) {
         if (error.message.includes('active_membership_required')) {
           setAccount(a => ({ ...a, member: false })); setMessage('membershipFailed'); return;
@@ -88,10 +95,12 @@ export default function ShareMarket() {
         if (error.message.includes('existing_redemption_pending')) {
           setAccount(a => ({ ...a, pending: [...a.pending, r.id] })); setMessage('failed'); return;
         }
+        if(r.fulfillment_type&&r.fulfillment_type!=='code'){setFulfillmentNotice(fulfillmentError(error));return;}
         throw error;
       }
       setAccount(a => ({ ...a, pending: [...a.pending, r.id] }));
       setMessage('sent');
+      if(r.fulfillment_type==='service'){const w=await s.rpc('point_wallet_self');if(!w.error&&w.data)setAccount(a=>({...a,points:(w.data as unknown as PointsWallet).balance,wallet:w.data as unknown as PointsWallet}));}
     } catch { setMessage('failed'); }
     finally { inFlight.current = false; setBusy(false); }
   }
@@ -120,7 +129,7 @@ export default function ShareMarket() {
           <div className="rewardMeta"><b>{r.point_cost} {c.points}</b>
             <span>{r.stock_remaining === null ? c.unlimited : c.available + ' ' + r.stock_remaining}</span></div>
           <p className="micro">{r.ends_at ? c.ends + ' ' + new Date(r.ends_at).toLocaleDateString(locale) : c.noEnd}</p>
-          <button onClick={() => { setMessage(null); setSelected(r.id); }}>{c.preview} →</button>
+          <button onClick={() => { setMessage(null);setFulfillmentNotice('');setDraft({slot:'',details:{destination_type:'home'},consent:false}); setSelected(r.id); }}>{c.preview} →</button>
         </article>) : <p className="emptyData">{c.noItems}</p>}</div>}
     </div></section>
     {item && <dialog ref={dialog} className="marketRedemptionDialog" aria-labelledby="redemption-title" onCancel={e => { if (busy) e.preventDefault(); else close(); }}>
@@ -135,12 +144,13 @@ export default function ShareMarket() {
       {!!item.min_level && <p>{c.minimum}: Lv.{item.min_level}</p>}
       {item.min_footprints > 0 && <p>{c.footprints}: {item.min_footprints}</p>}
       <p>{item.ends_at ? c.ends + ' ' + new Date(item.ends_at).toLocaleString(locale) : c.noEnd}</p>
-      <p className="micro">{c.review}</p>
+      {item.fulfillment_type&&item.fulfillment_type!=='code'?<FulfillmentFields reward={item} value={draft} onChange={setDraft}/>:<p className="micro">{c.review}</p>}
+      {fulfillmentNotice&&<p role="alert">{fulfillmentNotice}</p>}
       {!account.member && <p>{c.memberOnly} <a className="textRoute" href="/account/identity">{c.identity} →</a></p>}
-      <button className="modalPrimary" disabled={busy || !eligible(item)} onClick={() => void redeem(item)}>
+      <button className="modalPrimary" disabled={busy || !eligible(item)||(!!item.fulfillment_type&&item.fulfillment_type!=='code'&&(!draft.consent||!draft.details.contact_name?.trim()||(draft.details.phone?.trim().length||0)<6||(item.fulfillment_type==='service'?!draft.slot:(!draft.details.address?.trim()||((draft.details.destination_type||'home')==='home'&&!/^[0-9]{3}([0-9]{2,3})?$/.test(draft.details.postal_code||''))))))} onClick={() => void redeem(item)}>
         {busy ? c.sending : account.pending.includes(item.id) ? c.pending : eligible(item) ? c.apply : c.locked}
       </button>
-      {message && <p role="status" aria-live="polite">{c[message]}</p>}
+      {message && <p role="status" aria-live="polite">{message==='sent'&&item.fulfillment_type&&item.fulfillment_type!=='code'?'申請已送出，尚未扣點。服務預約會暫時保留點數與名額，夥伴確認後才扣點。':c[message]}</p>}
       <p><a className="textRoute" href="/account/redemptions">{c.requests} →</a></p>
     </dialog>}
   </main>;

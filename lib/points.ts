@@ -1,5 +1,7 @@
 export type PointsWallet = {
   balance: number;
+  reserved_points?:number;
+  ledger_balance?:number;
   status: 'active_cycle' | 'admission_pending' | 'before_membership';
   member_since: string | null;
   cycle_start: string | null;

@@ -1924,6 +1924,11 @@ export type Database = {
       }
       reward_catalog: {
         Row: {
+          fulfillment_type: string
+          provider_user_id: string | null
+          shipping_policy: string
+          shipping_note: string | null
+          booking_hold_hours: number
           category: string
           created_at: string
           description: string | null
@@ -1941,6 +1946,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          fulfillment_type?: string
+          provider_user_id?: string | null
+          shipping_policy?: string
+          shipping_note?: string | null
+          booking_hold_hours?: number
           category: string
           created_at?: string
           description?: string | null
@@ -1958,6 +1968,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          fulfillment_type?: string
+          provider_user_id?: string | null
+          shipping_policy?: string
+          shipping_note?: string | null
+          booking_hold_hours?: number
           category?: string
           created_at?: string
           description?: string | null
@@ -2014,6 +2029,8 @@ export type Database = {
       }
       reward_redemptions: {
         Row: {
+          fulfillment_type: string
+          reservation_until: string | null
           created_at: string
           expires_at: string | null
           id: string
@@ -2026,6 +2043,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          fulfillment_type?: string
+          reservation_until?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -2038,6 +2057,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          fulfillment_type?: string
+          reservation_until?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string

@@ -23,6 +23,7 @@ export default function PointsExpiry({wallet,showBalance=false,onRetry}:{wallet:
   if (!wallet) return <div className="pointsExpiry" role="alert"><p>{c.failed}</p>{onRetry&&<button onClick={onRetry}>{c.retry}</button>}</div>;
   return <div className={`pointsExpiry ${wallet.days_left!==null&&wallet.days_left<=30?'isSoon':''}`}>
     {showBalance&&<div className="pointsAvailable"><span>{c.available}</span><strong>{wallet.balance.toLocaleString(locale)}</strong></div>}
+    {!!wallet.reserved_points&&<p>另有 {wallet.reserved_points.toLocaleString(locale)} 點暫時保留於待確認預約，未扣除；上方為扣除保留後的可用餘額。</p>}
     {wallet.expires_on ? <><p>{c.expiry} <time dateTime={wallet.expires_on}>{wallet.expires_on.replaceAll('-','/')}</time>（台灣時間）</p><p>{c.remaining} <b>{wallet.days_left}</b> {c.days}</p>{wallet.days_left!==null&&wallet.days_left<=30&&wallet.balance>0&&<p role="status">{c.soon}</p>}<small>{c.rule}</small></> : <p>{wallet.status==='before_membership'?c.before:c.pending}</p>}
   </div>;
 }

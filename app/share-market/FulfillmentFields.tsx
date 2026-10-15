@@ -1,0 +1,15 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {getFulfillmentClient} from '../../lib/reward-fulfillment-api';
+import {shippingLabels,slotTime,type RewardSlot} from '../../lib/reward-fulfillment';
+export type FulfillmentDraft={slot:string;details:Record<string,string>;consent:boolean};
+export default function FulfillmentFields({reward,value,onChange}:{reward:{id:string;fulfillment_type?:string;shipping_policy?:string;shipping_note?:string|null;booking_hold_hours?:number};value:FulfillmentDraft;onChange:(v:FulfillmentDraft)=>void}){
+ const[slots,setSlots]=useState<RewardSlot[]>([]),[loading,setLoading]=useState(false),[failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0);
+ useEffect(()=>{let active=true;if(reward.fulfillment_type!=='service')return;setLoading(true);setFailed(false);void(async()=>{try{const r=await getFulfillmentClient().rpc('reward_available_slots',{p_reward:reward.id});if(r.error)throw r.error;if(active)setSlots(r.data as unknown as RewardSlot[]);}catch{if(active)setFailed(true);}finally{if(active)setLoading(false);}})();return()=>{active=false;};},[reward.id,reward.fulfillment_type,attempt]);
+ const field=(key:string,text:string,type='text',maxLength=100)=><label>{text}<input required type={type} maxLength={maxLength} value={value.details[key]||''} onChange={e=>onChange({...value,details:{...value.details,[key]:e.target.value}})}/></label>;
+ return <fieldset className="fulfillmentFields"><legend>{reward.fulfillment_type==='service'?'預約資料':'配送資料'}</legend>
+ {reward.fulfillment_type==='service'?<><p>送出後暫時保留點數與名額，最長 {reward.booking_hold_hours||24} 小時；服務開始或積分到期時會提前結束。夥伴確認後才扣點，逾時或撤回會釋出保留。</p>{loading?<p role="status">正在讀取可預約時段…</p>:failed?<p role="alert">無法讀取時段。<button type="button" onClick={()=>setAttempt(x=>x+1)}>重新讀取時段</button></p>:<label>希望預約時段＊<select value={value.slot} onChange={e=>onChange({...value,slot:e.target.value})}><option value="">請選擇時段（台灣時間）</option>{slots.map(s=><option key={s.id} value={s.id} disabled={s.remaining<=0}>{slotTime(s.starts_at)} ～ {slotTime(s.ends_at)} · 剩餘 {s.remaining} 位</option>)}</select></label>}{!loading&&!failed&&!slots.length&&<p>目前沒有可預約時段，請稍後再查看。</p>}</>:<><p><strong>{shippingLabels[reward.shipping_policy||'free']}</strong>：{reward.shipping_note}</p><p>本頁不收取金錢；若需另付運費，依上述方式由提供者與你確認。</p><label>收件方式＊<select value={value.details.destination_type||'home'} onChange={e=>onChange({...value,details:{...value.details,destination_type:e.target.value}})}><option value="home">地址配送</option><option value="store">門市取件</option></select></label>{(value.details.destination_type||'home')==='home'&&field('postal_code','郵遞區號＊','text',6)}{field('address',(value.details.destination_type||'home')==='store'?'取件門市名稱、代碼及地址＊':'收件地址＊','text',500)}</>}
+ {field('contact_name',reward.fulfillment_type==='service'?'聯絡姓名＊':'收件人姓名＊')}{field('phone','聯絡電話＊','tel',30)}
+ <label className="membershipCheck"><input type="checkbox" checked={value.consent} onChange={e=>onChange({...value,consent:e.target.checked})}/>我同意協會及本次提供者為預約聯繫、配送與問題處理使用這些聯絡資料。</label>
+ </fieldset>;
+}

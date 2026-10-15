@@ -22,6 +22,7 @@ export default function LiveAdminRewards() {
       .select(
         "id,point_cost,status,created_at,points_expires_at,redemption_code,profiles(display_name,email),reward_catalog(title,stock_remaining)",
       )
+      .eq("fulfillment_type","code")
       .in("status", ["submitted", "approved"])
       .order("created_at", { ascending: true });
     if (error) setNotice("目前帳號沒有共享所核銷權限。");
