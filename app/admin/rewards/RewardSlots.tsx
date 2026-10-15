@@ -1,0 +1,11 @@
+'use client';
+import {useEffect,useState,type FormEvent} from 'react';
+import {getFulfillmentClient} from '../../../lib/reward-fulfillment-api';
+import {fulfillmentError,slotTime,type RewardSlot} from '../../../lib/reward-fulfillment';
+type Row={id:string;title:string;fulfillment_type:string;slots:RewardSlot[]};
+export default function RewardSlots(){const[rows,setRows]=useState<Row[]>([]),[reward,setReward]=useState(''),[starts,setStarts]=useState(''),[ends,setEnds]=useState(''),[capacity,setCapacity]=useState(1),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
+ async function load(){const r=await getFulfillmentClient().rpc('admin_reward_fulfillment_catalog');if(!r.error)setRows((r.data as unknown as Row[]).filter(x=>x.fulfillment_type==='service'));}
+ useEffect(()=>{void load();},[]);
+ async function save(e:FormEvent){e.preventDefault();if(busy)return;setBusy(true);try{const r=await getFulfillmentClient().rpc('admin_reward_slot_add',{p_reward:reward,p_starts:new Date(starts+':00+08:00').toISOString(),p_ends:new Date(ends+':00+08:00').toISOString(),p_capacity:capacity});if(r.error)throw r.error;setNotice('服務時段已新增。');setStarts('');setEnds('');await load();}catch(e){setNotice(fulfillmentError(e));}finally{setBusy(false);}}
+ return <section className="panel"><h2>服務預約時段</h2><p>先建立並儲存「服務預約」項目，再新增可供預約的時段；時間以台灣時間計算。</p><button onClick={()=>void load()}>重新讀取服務項目</button><form className="partnerComposerGrid" onSubmit={save}><label>服務項目<select required value={reward} onChange={e=>setReward(e.target.value)}><option value="">請選擇</option>{rows.map(r=><option key={r.id} value={r.id}>{r.title}</option>)}</select></label><label>開始時間（台灣）<input type="datetime-local" required value={starts} onChange={e=>setStarts(e.target.value)}/></label><label>結束時間（台灣）<input type="datetime-local" required value={ends} onChange={e=>setEnds(e.target.value)}/></label><label>名額<input type="number" min="1" max="100" required value={capacity} onChange={e=>setCapacity(Number(e.target.value))}/></label><button disabled={busy}>{busy?'儲存中…':'新增預約時段'}</button></form>{notice&&<p role="status">{notice}</p>}{rows.find(r=>r.id===reward)?.slots?.map(s=><p key={s.id}>{slotTime(s.starts_at)} ～ {slotTime(s.ends_at)} · 目前剩餘 {s.remaining} 位</p>)}</section>;
+}

@@ -51,7 +51,7 @@ export default function DataReadiness() {
         <p>舊名單不直接視為有效會員。身份、聯絡方式、企業關係及歷史參與依來源核對；敏感個案資料不因匯入而公開。</p>
         <p>共享等級、協會會籍、捐款貢獻徽章及可兌換點數分別管理。新增規則不會自動套用既有紀錄，必須明確定義生效方式。</p>
         <p>容量與費用目前僅保存估算，尚未升級付費方案。資料庫與上傳檔案應分別規劃備份與還原驗證。</p>
-        <p><a href="/admin/rewards">管理現有共享所目錄與兌換申請 →</a></p>
+        <p><a href="/admin/contributions">捐款核實與徽章規則 →</a>　<a href="/admin/community">交流圖片審核 →</a>　<a href="/admin/rewards">管理現有共享所目錄與兌換申請 →</a></p>
       </section>
     </main>
   );

@@ -1,7 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import {getFulfillmentClient} from "../../../lib/reward-fulfillment-api";
+import {fulfillmentError} from "../../../lib/reward-fulfillment";
+import RewardSlots from "./RewardSlots";
 import { getSupabaseBrowserClient } from "../../../lib/supabase-browser";
 type R = {
+  fulfillment_type:string;provider_email:string|null;shipping_policy:string;shipping_note:string|null;booking_hold_hours:number;
   id: string;
   category: string;
   title: string;
@@ -16,6 +20,7 @@ type R = {
   ends_at: string | null;
 };
 const blank = {
+  fulfillment_type:"code",provider_email:"",shipping_policy:"free",shipping_note:"",booking_hold_hours:24,
   category: "daily",
   title: "",
   description: "",
@@ -34,13 +39,9 @@ export default function LiveRewardCatalog() {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
   async function load() {
-    const s = getSupabaseBrowserClient();
-    const { data, error } = await s
-      .from("reward_catalog")
-      .select("*")
-      .order("updated_at", { ascending: false });
+    const {data,error}=await getFulfillmentClient().rpc('admin_reward_fulfillment_catalog');
     if (error) setNotice("目前帳號沒有共享所目錄管理權限。");
-    else setRows((data || []) as R[]);
+    else setRows((data || []) as unknown as R[]);
   }
   useEffect(() => {
     load();
@@ -48,6 +49,7 @@ export default function LiveRewardCatalog() {
   function edit(r: R) {
     setEditing(r.id);
     setForm({
+      fulfillment_type:r.fulfillment_type,provider_email:r.provider_email||"",shipping_policy:r.shipping_policy,shipping_note:r.shipping_note||"",booking_hold_hours:r.booking_hold_hours,
       category: r.category,
       title: r.title,
       description: r.description || "",
@@ -56,8 +58,8 @@ export default function LiveRewardCatalog() {
       min_level: r.min_level || 1,
       min_footprints: r.min_footprints,
       status: r.status,
-      starts_at: r.starts_at ? r.starts_at.slice(0, 16) : "",
-      ends_at: r.ends_at ? r.ends_at.slice(0, 16) : "",
+      starts_at: r.starts_at ? new Date(new Date(r.starts_at).getTime()+8*3600000).toISOString().slice(0,16) : "",
+      ends_at: r.ends_at ? new Date(new Date(r.ends_at).getTime()+8*3600000).toISOString().slice(0,16) : "",
     });
   }
   async function save(e: any) {
@@ -98,25 +100,13 @@ export default function LiveRewardCatalog() {
     if (!window.confirm(`確定要${action}${state}嗎？`)) return;
     setBusy(true);
     setNotice("正在儲存共享回饋目錄。");
-    const s = getSupabaseBrowserClient();
-    const { error } = await s.rpc("admin_upsert_reward_catalog", {
-      p_reward_id: editing || (null as unknown as string),
-      p_category: form.category,
-      p_title: form.title,
-      p_description: form.description,
-      p_point_cost: pointCost,
-      p_stock_total: stockTotal ?? (null as unknown as number),
-      p_min_level: minLevel,
-      p_min_footprints: minFootprints,
-      p_status: form.status,
-      p_starts_at: form.starts_at
-        ? new Date(form.starts_at).toISOString()
-        : undefined,
-      p_ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : undefined,
+    const {error}=await getFulfillmentClient().rpc('admin_upsert_reward_with_fulfillment',{
+      p_catalog:{id:editing,category:form.category,title:form.title,description:form.description,point_cost:pointCost,stock_total:stockTotal,min_level:minLevel,min_footprints:minFootprints,status:form.status,starts_at:form.starts_at?new Date(form.starts_at+':00+08:00').toISOString():null,ends_at:form.ends_at?new Date(form.ends_at+':00+08:00').toISOString():null},
+      p_settings:{mode:form.fulfillment_type,provider_email:form.provider_email,shipping_policy:form.shipping_policy,shipping_note:form.shipping_note,hold_hours:Number(form.booking_hold_hours)}
     });
     setNotice(
       error
-        ? "儲存未完成，請確認目錄管理權限、必填欄位與數值設定。"
+        ? fulfillmentError(error)
         : "共享回饋目錄已更新。",
     );
     setBusy(false);
@@ -133,6 +123,11 @@ export default function LiveRewardCatalog() {
         <span>{rows.length} 項</span>
       </div>
       <form className="partnerComposerGrid" onSubmit={save}>
+        <label>履約方式<select aria-label="履約方式" value={form.fulfillment_type} onChange={e=>setForm({...form,fulfillment_type:e.target.value})}><option value="code">兌換憑證（既有流程）</option><option value="service">服務預約</option><option value="delivery">商品配送</option></select></label>
+        {form.fulfillment_type!=='code'&&<label>負責夥伴的登入信箱<input required type="email" value={form.provider_email} onChange={e=>setForm({...form,provider_email:e.target.value})}/></label>}
+        {form.fulfillment_type==='service'&&<label>預約暫時保留上限（小時）<input type="number" min="1" max="168" required value={form.booking_hold_hours} onChange={e=>setForm({...form,booking_hold_hours:e.target.value})}/></label>}
+        {form.fulfillment_type==='delivery'&&<><label>運費負擔方式<select value={form.shipping_policy} onChange={e=>setForm({...form,shipping_policy:e.target.value})}><option value="free">免運費</option><option value="recipient_pays">收件人負擔運費</option><option value="included_points">運費已包含於所需點數</option></select></label><label>配送與運費說明<input required maxLength={500} value={form.shipping_note} onChange={e=>setForm({...form,shipping_note:e.target.value})}/></label></>}
+
         <label>
           分類
           <select
@@ -200,6 +195,7 @@ export default function LiveRewardCatalog() {
         <label>
           狀態
           <select
+            aria-label="狀態"
             value={form.status}
             onChange={(e) => setForm({ ...form, status: e.target.value })}
           >
@@ -274,6 +270,7 @@ export default function LiveRewardCatalog() {
           </article>
         ))}
       </div>
+      <RewardSlots/>
     </section>
   );
 }
