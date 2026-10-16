@@ -13,6 +13,7 @@ const protectedPrefixes = [
   "/1percent-network/matches",
   "/1percent-partner/apply",
   "/1percent-partner/dashboard",
+  "/1percent-partner/offers",
   "/1percent-partner/impact",
   "/1percent-partner/requests",
   "/1percent-partner/team",

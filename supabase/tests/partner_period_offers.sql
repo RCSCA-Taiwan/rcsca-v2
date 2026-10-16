@@ -1,0 +1,87 @@
+begin;
+select set_config('offer.owner',gen_random_uuid()::text,true),set_config('offer.viewer',gen_random_uuid()::text,true),set_config('offer.other',gen_random_uuid()::text,true),set_config('offer.reviewer',gen_random_uuid()::text,true),set_config('offer.enterprise',gen_random_uuid()::text,true),set_config('offer.other_enterprise',gen_random_uuid()::text,true),set_config('offer.id',gen_random_uuid()::text,true),set_config('offer.request',gen_random_uuid()::text,true);
+insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) select current_setting(setting)::uuid,current_setting(setting)||'@example.invalid',now(),'{}' from unnest(array['offer.owner','offer.viewer','offer.other','offer.reviewer']) setting;
+insert into public.enterprises(id,tax_id,legal_name,status) values(current_setting('offer.enterprise')::uuid,current_setting('offer.enterprise'),'Synthetic periodic partner','approved'),(current_setting('offer.other_enterprise')::uuid,current_setting('offer.other_enterprise'),'Other periodic partner','approved');
+insert into public.enterprise_users(enterprise_id,user_id,role) values(current_setting('offer.enterprise')::uuid,current_setting('offer.owner')::uuid,'manager'),(current_setting('offer.enterprise')::uuid,current_setting('offer.viewer')::uuid,'viewer'),(current_setting('offer.other_enterprise')::uuid,current_setting('offer.other')::uuid,'manager');
+insert into public.admin_roles(user_id,role_key) values(current_setting('offer.reviewer')::uuid,'admin'),(current_setting('offer.owner')::uuid,'admin');
+select set_config('offer.image',current_setting('offer.owner')||'/'||gen_random_uuid()||'.jpg',true);
+insert into storage.objects(bucket_id,name,metadata) values('partner-offer-media',current_setting('offer.image'),'{"mimetype":"image/jpeg","size":100}');
+select set_config('offer.details',jsonb_build_object('title','Synthetic monthly product','description','Only a synthetic offer','period','Synthetic period','quantity',5,'starts_at',now()-interval '1 hour','ends_at',now()+interval '30 days','mode','delivery','terms','Synthetic conditions','shipping_policy','free','shipping_note','Synthetic free delivery','images',jsonb_build_array(current_setting('offer.image')))::text,true);
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.viewer'),'role','authenticated')::text,true);
+set local role authenticated;
+do $$begin
+ if has_table_privilege('authenticated','private.partner_period_offers','SELECT') then raise exception 'private_offer_table_exposed';end if;
+ begin perform public.partner_offer_save(current_setting('offer.id')::uuid,current_setting('offer.enterprise')::uuid,current_setting('offer.details')::jsonb,true,0,current_setting('offer.request')::uuid);raise exception 'viewer_write_allowed';exception when raise_exception then if sqlerrm<>'enterprise_editor_required' then raise;end if;end;
+ if public.partner_offer_list(current_setting('offer.enterprise')::uuid,false)<>'[]'::jsonb then raise exception 'unexpected_offer';end if;
+end$$;
+reset role;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.owner'),'role','authenticated')::text,true);
+set local role authenticated;
+select public.partner_offer_save(current_setting('offer.id')::uuid,current_setting('offer.enterprise')::uuid,current_setting('offer.details')::jsonb,true,0,current_setting('offer.request')::uuid);
+select public.partner_offer_save(current_setting('offer.id')::uuid,current_setting('offer.enterprise')::uuid,current_setting('offer.details')::jsonb,true,0,current_setting('offer.request')::uuid);
+do $$begin
+ if jsonb_array_length(public.partner_offer_list(current_setting('offer.enterprise')::uuid,false))<>1 then raise exception 'retry_duplicated';end if;
+ begin perform public.partner_offer_save(current_setting('offer.id')::uuid,current_setting('offer.enterprise')::uuid,current_setting('offer.details')::jsonb||'{"title":"Changed"}',true,1,current_setting('offer.request')::uuid);raise exception 'request_collision_allowed';exception when raise_exception then if sqlerrm<>'request_conflict' then raise;end if;end;
+ begin perform public.admin_partner_offer_review(current_setting('offer.id')::uuid,'approve','',4,1);raise exception 'self_approval_allowed';exception when raise_exception then if sqlerrm<>'independent_reviewer_required' then raise;end if;end;
+end$$;
+reset role;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.other'),'role','authenticated')::text,true);
+set local role authenticated;
+do $$begin
+ begin perform public.partner_offer_list(current_setting('offer.enterprise')::uuid,false);raise exception 'other_enterprise_read_allowed';exception when raise_exception then if sqlerrm<>'enterprise_required' then raise;end if;end;
+ begin perform public.partner_offer_save(current_setting('offer.id')::uuid,current_setting('offer.other_enterprise')::uuid,current_setting('offer.details')::jsonb||'{"images":[]}',true,1,gen_random_uuid());raise exception 'other_enterprise_edit_allowed';exception when raise_exception then if sqlerrm<>'offer_not_owned' then raise;end if;end;
+ begin perform public.partner_offer_save(gen_random_uuid(),current_setting('offer.other_enterprise')::uuid,current_setting('offer.details')::jsonb,true,0,gen_random_uuid());raise exception 'other_image_reuse_allowed';exception when raise_exception then if sqlerrm<>'image_not_owned_or_uploaded' then raise;end if;end;
+end$$;
+reset role;
+set local role anon;
+do $$begin if public.public_partner_offer_media()::text like '%'||current_setting('offer.id')||'%' or private.partner_offer_image_readable(current_setting('offer.image')) then raise exception 'pending_image_published';end if;end$$;
+reset role;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.reviewer'),'role','authenticated')::text,true);
+set local role authenticated;
+select public.admin_partner_offer_review(current_setting('offer.id')::uuid,'needs_info','Clarify conditions',null,1);
+reset role;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.owner'),'role','authenticated')::text,true);
+set local role authenticated;
+select public.partner_offer_save(current_setting('offer.id')::uuid,current_setting('offer.enterprise')::uuid,current_setting('offer.details')::jsonb,true,2,gen_random_uuid());
+reset role;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.reviewer'),'role','authenticated')::text,true);
+set local role authenticated;
+select set_config('offer.reward',public.admin_partner_offer_review(current_setting('offer.id')::uuid,'approve','Approved synthetic image and content',4,3)::text,true);
+do $$begin
+ begin perform public.admin_partner_offer_review(current_setting('offer.id')::uuid,'approve','',4,3);raise exception 'double_approval_allowed';exception when raise_exception then if sqlerrm<>'offer_changed_reload' then raise;end if;end;
+ begin perform public.admin_upsert_reward_catalog(current_setting('offer.reward')::uuid,'daily','Overwrite old product','changed',4,5,1,0,'approved',now()-interval '1 hour',now()+interval '30 days');raise exception 'approved_version_overwritten';exception when raise_exception then if sqlerrm<>'period_item_immutable_create_next_period' then raise;end if;end;
+end$$;
+reset role;
+do $$begin
+ if not exists(select 1 from public.reward_catalog where id=current_setting('offer.reward')::uuid and point_cost=4 and stock_remaining=5 and fulfillment_type='delivery' and provider_user_id=current_setting('offer.owner')::uuid) then raise exception 'catalog_not_created';end if;
+end$$;
+select set_config('request.jwt.claims','{"role":"anon"}',true);
+set local role anon;
+do $$declare d jsonb:=public.public_partner_offer_media();begin
+ if not private.partner_offer_image_readable(current_setting('offer.image')) or d::text not like '%'||current_setting('offer.reward')||'%' then raise exception 'approved_media_missing';end if;
+ if d::text like '%@example.invalid%' then raise exception 'public_provider_email_leaked';end if;
+end$$;
+reset role;
+select set_config('offer.next',gen_random_uuid()::text,true);
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.owner'),'role','authenticated')::text,true);
+set local role authenticated;
+select public.partner_offer_save(current_setting('offer.next')::uuid,current_setting('offer.enterprise')::uuid,current_setting('offer.details')::jsonb||jsonb_build_object('title','Next period service','period','Next period','images','[]'::jsonb,'quantity',2,'mode','service','service_starts_at',now()+interval '2 days','service_ends_at',now()+interval '2 days 1 hour'),true,0,gen_random_uuid());
+select public.partner_offer_request_action(current_setting('offer.id')::uuid,'withdraw',4);
+reset role;
+insert into public.reward_redemptions(reward_id,user_id,point_cost,status) values(current_setting('offer.reward')::uuid,:'member_id',4,'submitted');
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('offer.reviewer'),'role','authenticated')::text,true);
+set local role authenticated;
+select public.admin_partner_offer_review(current_setting('offer.id')::uuid,'withdraw','Stop new redemptions',null,5);
+select set_config('offer.next_reward',public.admin_partner_offer_review(current_setting('offer.next')::uuid,'approve','Service checked',7,1)::text,true);
+reset role;
+do $$begin
+ if not exists(select 1 from public.reward_redemptions where reward_id=current_setting('offer.reward')::uuid and status='submitted') then raise exception 'withdraw_changed_order';end if;
+ if (select title from public.reward_catalog where id=current_setting('offer.reward')::uuid)<>'Synthetic monthly product' then raise exception 'new_period_changed_old_title';end if;
+ if (select count(*) from private.reward_slots where reward_id=current_setting('offer.next_reward')::uuid)<>1 then raise exception 'service_slot_missing';end if;
+end$$;
+select set_config('request.jwt.claims','{"role":"anon"}',true);
+set local role anon;
+do $$begin if private.partner_offer_image_readable(current_setting('offer.image')) then raise exception 'withdrawn_image_public';end if;end$$;
+reset role;
+select 'PASS: periodic offer role/image boundaries, idempotent retry, independent review, correction/approval, immutable catalog, next-period service slot, public media privacy, withdrawal preserves orders; rolled back';
+rollback;

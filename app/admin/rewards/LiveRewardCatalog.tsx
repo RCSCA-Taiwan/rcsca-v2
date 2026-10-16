@@ -45,6 +45,9 @@ export default function LiveRewardCatalog() {
   }
   useEffect(() => {
     load();
+    const refresh=()=>{void load();};
+    window.addEventListener('partner-offer-reviewed',refresh);
+    return()=>window.removeEventListener('partner-offer-reviewed',refresh);
   }, []);
   function edit(r: R) {
     setEditing(r.id);
@@ -117,7 +120,7 @@ export default function LiveRewardCatalog() {
     }
   }
   return (
-    <section className="panel">
+    <section className="panel" id="reward-catalog">
       <div className="section-head">
         <h2>共享回饋目錄</h2>
         <span>{rows.length} 項</span>

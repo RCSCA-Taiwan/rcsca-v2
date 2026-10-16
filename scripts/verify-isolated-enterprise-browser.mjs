@@ -552,6 +552,70 @@ try {
 
 
 
+  const periodicTitle=`Browser monthly supply ${randomUUID()}`;
+  const periodStart=new Date(Date.now()-3600000+8*3600000).toISOString().slice(0,16);
+  const periodEnd=new Date(Date.now()+30*86400000+8*3600000).toISOString().slice(0,16);
+  await ownerPage.goto('http://127.0.0.1:3301/1percent-partner/offers');
+  await ownerPage.getByLabel('項目名稱＊',{exact:true}).fill(periodicTitle);
+  await ownerPage.getByLabel('期別名稱＊',{exact:true}).fill('Synthetic current period');
+  await ownerPage.getByLabel('本期份數＊',{exact:true}).fill('5');
+  await ownerPage.getByLabel('開放兌換時間＊',{exact:true}).fill(periodStart);
+  await ownerPage.getByLabel('兌換截止時間＊',{exact:true}).fill(periodEnd);
+  await ownerPage.getByLabel('產品／服務說明＊',{exact:true}).fill('Synthetic monthly product with reviewed image.');
+  await ownerPage.getByLabel('適用對象、服務地區與使用條件＊',{exact:true}).fill('Synthetic eligibility and usage conditions.');
+  await ownerPage.getByLabel('配送與運費說明＊',{exact:true}).fill('Synthetic free delivery.');
+  await ownerPage.locator('input[type=file]').setInputFiles({name:'periodic.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAIAAABvFaqvAAAAIklEQVR4nGPsKXBjoAZgooopowaNGjRq0KhBowaNGkQRAABFEQFybJFhWAAAAABJRU5ErkJggg==','base64')});
+  await expect(ownerPage.getByRole('status').filter({hasText:'圖片已上傳'})).toBeVisible();
+  await ownerPage.getByRole('button',{name:'儲存草稿',exact:true}).click();
+  const periodicRow=ownerPage.locator('article').filter({has:ownerPage.getByRole('heading',{name:periodicTitle,exact:true})});
+  await expect(periodicRow).toContainText('草稿');
+  await periodicRow.getByRole('button',{name:'繼續編輯／補件',exact:true}).click();
+  await ownerPage.getByRole('button',{name:'送交協會審核',exact:true}).click();
+  await expect(periodicRow).toContainText('待審核');
+  const periodicId=sql(`select id from private.partner_period_offers where details->>'title'='${periodicTitle}';`);
+  const periodicPath=sql(`select details->'images'->>0 from private.partner_period_offers where id='${periodicId}';`);
+  const publicOfferClient=createClient(env.API_URL,publicKey,{auth:{persistSession:false}});
+  if(!(await publicOfferClient.storage.from('partner-offer-media').createSignedUrl(periodicPath,60)).error)throw new Error('Unreviewed product image readable anonymously');
+  await reviewPage.goto('http://127.0.0.1:3301/admin/rewards');
+  const reviewOffer=reviewPage.locator('#partner-offer-review article').filter({has:reviewPage.getByRole('heading',{name:periodicTitle,exact:true})});
+  await expect(reviewOffer.locator('img')).toBeVisible();
+  await reviewOffer.getByLabel('審核說明（補件、拒絕、下架時必填）',{exact:true}).fill('Clarify synthetic terms.');
+  await reviewOffer.getByRole('button',{name:'要求補件',exact:true}).click();
+  await expect(reviewOffer).toHaveCount(0);
+  await ownerPage.reload();
+  await expect(periodicRow).toContainText('待補資料');
+  await periodicRow.getByRole('button',{name:'繼續編輯／補件',exact:true}).click();
+  await ownerPage.getByLabel('適用對象、服務地區與使用條件＊',{exact:true}).fill('Corrected synthetic eligibility and conditions.');
+  await ownerPage.getByRole('button',{name:'送交協會審核',exact:true}).click();
+  await expect(periodicRow).toContainText('待審核');
+  await reviewPage.getByRole('button',{name:'重新讀取待審供應',exact:true}).click();
+  await reviewOffer.getByLabel('核定兌換點數＊',{exact:true}).fill('6');
+  await reviewOffer.getByRole('checkbox').check();
+  await reviewOffer.getByRole('button',{name:'核准本期供應並上架',exact:true}).click();
+  await expect(reviewOffer).toHaveCount(0);
+  const periodicReward=sql(`select reward_id from private.partner_period_offers where id='${periodicId}' and state='approved';`);
+  if(!periodicReward)throw new Error('Periodic offer did not publish a reward');
+  const publicMarket=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();diagnosticPages.push(publicMarket);
+  await publicMarket.goto('http://127.0.0.1:3301/share-market');
+  const publicCard=publicMarket.locator('.rewardCard').filter({has:publicMarket.getByRole('heading',{name:periodicTitle,exact:true})});
+  await expect(publicCard).toContainText('6 共享點');await expect(publicCard).toContainText('剩餘份數 5');
+  await expect(publicCard.locator('img')).toBeVisible();
+  await expect.poll(()=>publicCard.locator('img').evaluate(img=>img.naturalWidth)).toBeGreaterThan(0);
+  if(await publicMarket.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Periodic market overflows mobile');
+  await ownerPage.reload();
+  await periodicRow.getByRole('button',{name:'複製為下一期',exact:true}).click();
+  await expect(ownerPage.getByLabel('期別名稱＊',{exact:true})).toHaveValue('');
+  await expect(ownerPage.getByLabel('項目名稱＊',{exact:true})).toHaveValue(periodicTitle);
+  await periodicRow.getByRole('button',{name:'申請下架',exact:true}).click();
+  await expect(periodicRow).toContainText('下架審核中');
+  await reviewPage.getByRole('button',{name:'重新讀取待審供應',exact:true}).click();
+  await reviewOffer.getByLabel('審核說明（補件、拒絕、下架時必填）',{exact:true}).fill('Synthetic period closed.');
+  await reviewOffer.getByRole('button',{name:'核准下架',exact:true}).click();
+  await expect(reviewOffer).toHaveCount(0);
+  await publicMarket.reload();await expect(publicCard).toHaveCount(0);
+  if(!(await publicOfferClient.storage.from('partner-offer-media').createSignedUrl(periodicPath,60)).error)throw new Error('Withdrawn product image permits new anonymous signed links');
+  console.log('PASS: mobile periodic product → real compressed private image upload → saved draft → correction/resubmission → independent points approval → anonymous image/text/stock card → next-period copy → withdrawal and image access revoked');
+
 } catch (error) {
   for (const page of diagnosticPages) {
     if (!page.isClosed()) {

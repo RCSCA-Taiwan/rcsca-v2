@@ -1,6 +1,7 @@
 import type { Locale } from '../i18n';
 export const marketCopy: Record<Locale, Record<string, string>> = {
   'zh-Hant': {
+    closed:'已截止',notStarted:'尚未開始',soldOut:'已額滿',open:'開放兌換中',units:'剩餘份數',
     readError:'共享目錄或帳號資料讀取失敗，暫時無法確認兌換資格。', retry:'重新讀取',
     signedOut:'登入查看點數', memberOnly:'兌換限有效協會會員；註冊帳號仍可累積共享點。',
     identity:'查看身份與會籍', rules:'積分與貢獻規則', noItems:'目前沒有符合分類的上架項目。',
@@ -14,6 +15,7 @@ export const marketCopy: Record<Locale, Record<string, string>> = {
     membershipFailed:'目前沒有有效會籍或會籍已變更，請先確認會員資格。',
   },
   en: {
+    closed:'Closed',notStarted:'Not started',soldOut:'Fully claimed',open:'Open for redemption',units:'Units remaining',
     readError:'Unable to read the catalog or account. Redemption eligibility is unconfirmed.', retry:'Retry',
     signedOut:'Sign in to view points', memberOnly:'Redemption requires active association membership. Registered users may earn points.',
     identity:'Identity and membership', rules:'Points and contribution rules', noItems:'No listed items in this category.',
@@ -26,6 +28,7 @@ export const marketCopy: Record<Locale, Record<string, string>> = {
     membershipFailed:'Active membership is missing or has changed. Check your membership.',
   },
   ja: {
+    closed:'受付終了',notStarted:'受付開始前',soldOut:'満枠',open:'交換受付中',units:'残り数量',
     readError:'カタログまたはアカウントを読み込めず、交換資格を確認できません。', retry:'再読み込み',
     signedOut:'ログインしてポイントを確認', memberOnly:'交換には有効な協会会員資格が必要です。登録者はポイントを貯められます。',
     identity:'会員資格を確認', rules:'ポイントと貢献のルール', noItems:'この分類に公開中の項目はありません。',
@@ -38,6 +41,7 @@ export const marketCopy: Record<Locale, Record<string, string>> = {
     membershipFailed:'有効な会員資格がないか、変更されています。会員資格をご確認ください。',
   },
   ko: {
+    closed:'마감',notStarted:'시작 전',soldOut:'소진',open:'교환 가능',units:'남은 수량',
     readError:'목록 또는 계정 정보를 읽지 못해 교환 자격을 확인할 수 없습니다.', retry:'다시 읽기',
     signedOut:'로그인하여 포인트 확인', memberOnly:'교환하려면 유효한 협회 회원 자격이 필요합니다. 가입자는 포인트를 적립할 수 있습니다.',
     identity:'회원 자격 확인', rules:'포인트 및 기여 규칙', noItems:'이 분류에 등록된 항목이 없습니다.',
