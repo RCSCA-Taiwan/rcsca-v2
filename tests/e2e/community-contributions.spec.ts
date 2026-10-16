@@ -19,10 +19,10 @@ test('community draft validates consent and unsupported image types before uploa
  await page.getByLabel('分享內容＊',{exact:true}).fill('Synthetic text');
  await expect(page.getByRole('button',{name:'送出投稿審核',exact:true})).toBeDisabled();
  await page.getByLabel('投稿圖片',{exact:true}).setInputFiles({name:'rejected.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>')});
- await expect(page.getByRole('status')).toContainText('JPG、PNG 或 WebP');
+ await expect(page.locator('.communityBoard > .workflowNotice[role="status"]')).toContainText('JPG、PNG 或 WebP');
  expect(submitted).toBe(0);
  await page.getByRole('checkbox').check();
  await page.getByRole('button',{name:'送出投稿審核',exact:true}).click();
  await expect.poll(()=>submitted).toBe(1);
- await expect(page.getByRole('status')).toContainText('主題已送審');
+ await expect(page.locator('.communityBoard > .workflowNotice[role="status"]')).toContainText('主題已送審');
 });

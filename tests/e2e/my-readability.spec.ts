@@ -10,7 +10,7 @@ test("MY 1% identity and dark sections keep readable text contrast", async ({ pa
   await page.getByRole("button", { name: "登入", exact: true }).click();
   await expect(page).toHaveURL(/\/my-1percent$/);
   await expect(page.locator(".identitySection h2")).toBeVisible();
-  await expect(page.locator(".journeyStatus strong").first()).toHaveText("RCSCA MEMBER");
+  await expect(page.locator(".journeyStatus strong").first()).toHaveText("RCSCA會員");
 
   const probes = [
     [".identitySection h2", ".identitySection"],
@@ -40,6 +40,18 @@ test("MY 1% identity and dark sections keep readable text contrast", async ({ pa
     }, surface);
     expect(ratios.length, selector).toBeGreaterThan(0);
     for (const ratio of ratios) expect(ratio, selector).toBeGreaterThanOrEqual(4.5);
+  }
+  // A generic .myPage p rule previously overrode dark-card foregrounds.
+  // Check every text element against both ends of each actual CSS gradient.
+  for (const tone of ['bronze','blackgold']) {
+    const ratios=await page.locator(`.levelTrack .${tone}`).evaluate(card=>{
+      function lum(color:string){const channels=color.match(/[\d.]+/g)!.slice(0,3).map(Number).map(v=>{const n=v/255;return n<=.04045?n/12.92:((n+.055)/1.055)**2.4;});return channels[0]*.2126+channels[1]*.7152+channels[2]*.0722;}
+      const stops=getComputedStyle(card).backgroundImage.match(/rgba?\([^)]+\)/g)||[];
+      if(stops.length<2)throw Error('Expected explicit gradient stops');
+      return Array.from(card.querySelectorAll('span,h3,p,b')).flatMap(node=>stops.map(stop=>{const a=lum(getComputedStyle(node).color),b=lum(stop);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);}));
+    });
+    expect(ratios.length,tone).toBeGreaterThan(0);
+    for(const ratio of ratios)expect(ratio,tone).toBeGreaterThanOrEqual(7);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 });

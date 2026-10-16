@@ -79,7 +79,7 @@ test("verified formal member completes sign-in and sign-out", async ({ page }) =
   await page.getByRole("button", { name: "登入", exact: true }).click();
 
   await expect(page).toHaveURL(/\/account$/);
-  await expect(page.getByText("RCSCA MEMBER", { exact: true })).toBeVisible();
+  await expect(page.getByText("RCSCA會員", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "安全登出" })).toBeVisible();
   await expect.poll(() => errors).toEqual([]);
 
@@ -109,10 +109,10 @@ test("account never presents an unreadable point balance as zero and can retry",
   await expect(page.locator(".liveIdentity")).toHaveCount(0);
   rejectPoints = false;
   await page.getByRole("button", {name:"重新讀取",exact:true}).click();
-  await expect(page.getByText("RCSCA MEMBER", {exact:true})).toBeVisible();
+  await expect(page.getByText("RCSCA會員", {exact:true})).toBeVisible();
   await expect(page.locator('.liveAccountGuest[role="alert"]')).toHaveCount(0);
   await page.reload();
-  await expect(page.getByText("RCSCA MEMBER", {exact:true})).toBeVisible();
+  await expect(page.getByText("RCSCA會員", {exact:true})).toBeVisible();
   await page.getByRole("button", {name:"安全登出"}).click();
   await expect(page).toHaveURL(/\/$/);
 });

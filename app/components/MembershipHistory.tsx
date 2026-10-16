@@ -1,0 +1,7 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {getSupabaseBrowserClient} from '../../lib/supabase-browser';
+import {membershipTenure} from '../../lib/membership-tenure.mjs';
+import FriendlyIcon from './FriendlyIcon';
+type History={membership_type:string;member_since:string|null;status:string};
+export default function MembershipHistory(){const[row,setRow]=useState<History|null>(null),[failed,setFailed]=useState(false),[attempt,setAttempt]=useState(0);useEffect(()=>{let active=true;void(async()=>{setFailed(false);const s=getSupabaseBrowserClient();const u=await s.auth.getUser();if(!u.data.user)return;const r=await s.from('memberships').select('membership_type,member_since,status').eq('user_id',u.data.user.id).maybeSingle();if(active){setFailed(!!r.error);setRow(r.data as History|null);}})();return()=>{active=false;};},[attempt]);const age=membershipTenure(row?.member_since||null);return failed?<div className="privacyCallout" role="alert">無法讀取協會會籍年資。<button onClick={()=>setAttempt(v=>v+1)}>重新讀取會籍</button></div>:row?<section className="privacyCallout" aria-label="協會會員身份與年資"><h2><FriendlyIcon name="calendar"/> 我的協會會籍</h2><dl><dt>會員身份</dt><dd>{row.membership_type==='lifetime'?'永久會員':row.membership_type==='annual'?'一般會員':'會員身份待核對'}</dd><dt>原始入會日期</dt><dd>{row.member_since||'待協會確認'}</dd><dt>入會至今年資</dt><dd>{age?.label||'原始日期待確認'}</dd><dt>目前會籍狀態</dt><dd>{row.status==='active'?'有效':'待續會或狀態待核對'}</dd></dl><p>年資從協會原始入會日計算，續會沿用原日期，與網站註冊時間分開。僅有入會年份時不自行補日期；停復會的認列年資另依核定紀錄。</p><a href="/membership/apply">我是既有會員／辦理續會與資料核對 →</a></section>:null;}

@@ -1,6 +1,7 @@
 'use client';
 import FriendlyIcon,{type IconName} from '../components/FriendlyIcon';
 import SiteHeader from '../SiteHeader';
+import MembershipHistory from '../components/MembershipHistory';
 import Link from 'next/link';
 import LiveAccount from './LiveAccount';
 import LiveCycleSummary from './LiveCycleSummary';
@@ -25,4 +26,4 @@ const copy:Record<Locale,string[][]>={
  ]
 };
 
-export default function Account(){const {t,locale}=useI18n();const cards=copy[locale];return <main className="accountPage"><SiteHeader/><section className="accountHero"><div className="portalWrap"><div className="eyebrow">{t('account.eyebrow')}</div><h1>{t('account.title')}</h1><p>{t('account.lead')}</p></div></section><section className="portalSection"><div className="portalWrap"><LiveAccount/><LiveCycleSummary/><div className="privacyCallout accountQuickLinks"><strong>常用功能，直接前往</strong><p><Link href="/guide">全部功能指南 →</Link>　<Link href="/account/redemptions">兌換／預約／配送與取消 →</Link>　<Link href="/membership/apply">入會／續會申請 →</Link>　<Link href="/membership/directory">年度會員名冊 →</Link>　<Link href="/account/contributions">我的捐款貢獻紀錄 →</Link>　<Link href="/community">每日積分任務與互動論壇 →</Link>　<Link href="/account/fulfillment">共享所履約工作台 →</Link>　<Link href="/account/data-requests">資料修改／全部重置／刪除申請 →</Link></p></div><div className="accountGrid">{cardBase.map(([href,title],i)=><Link href={href} key={href}><FriendlyIcon name={cardIcons[i]}/><small>{cards[i][0]}</small><h3>{title==='MY 1%'?'MY 1%':t(title)}</h3><p>{cards[i][1]}</p><span>{cards[i][2]}</span></Link>)}</div></div></section></main>}
+export default function Account(){const {t,locale}=useI18n();const cards=copy[locale];return <main className="accountPage"><SiteHeader/><section className="accountHero"><div className="portalWrap"><div className="eyebrow">{t('account.eyebrow')}</div><h1>{t('account.title')}</h1><p>{t('account.lead')}</p></div></section><section className="portalSection"><div className="portalWrap"><LiveAccount/><MembershipHistory/><LiveCycleSummary/><div className="privacyCallout accountQuickLinks"><strong>常用功能，直接前往</strong><p><Link href="/guide">全部功能指南 →</Link>　<Link href="/account/redemptions">兌換／預約／配送與取消 →</Link>　<Link href="/membership/apply">入會／續會申請 →</Link>　<Link href="/membership/directory">年度會員名冊 →</Link>　<Link href="/account/contributions">我的捐款貢獻紀錄 →</Link>　<Link href="/community">每日積分任務與互動論壇 →</Link>　<Link href="/account/fulfillment">共享所履約工作台 →</Link>　<Link href="/account/data-requests">資料修改／全部重置／刪除申請 →</Link></p></div><div className="accountGrid">{cardBase.map(([href,title],i)=><Link href={href} key={href}><FriendlyIcon name={cardIcons[i]}/><small>{cards[i][0]}</small><h3>{title==='MY 1%'?'MY 1%':t(title)}</h3><p>{cards[i][1]}</p><span>{cards[i][2]}</span></Link>)}</div></div></section></main>}

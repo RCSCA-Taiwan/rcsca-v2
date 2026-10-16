@@ -1,6 +1,5 @@
 'use client';
 import Link from 'next/link';
-import MemberHistoryPanel from './MemberHistory';
 import PointsExpiry from '../PointsExpiry';
 import type {PointsWallet} from '../../lib/points';
 import type { Session } from '@supabase/supabase-js';
@@ -58,7 +57,7 @@ export default function LiveAccount(){
     });
     return()=>{alive=false;listener.subscription.unsubscribe();};
   },[locale,refresh]);
-  const identity=useMemo(()=>!data.signedIn?c.visitor:data.membership?'RCSCA MEMBER':c.partner,[data,locale]);
+  const identity=useMemo(()=>!data.signedIn?c.visitor:data.membership?'RCSCA會員':c.partner,[data,locale]);
   const levelNames=c.levels;
   async function logout(){await getSupabaseBrowserClient().auth.signOut();window.location.href='/';}
   if(loading)return <div className="liveAccountLoading">{c.loading}</div>;
@@ -66,7 +65,6 @@ export default function LiveAccount(){
   if(!data.signedIn)return <section className="liveAccountGuest"><div><small>{c.identity}</small><strong>{c.visitor}</strong><p>{c.guestLead}</p></div><Link href="/login">{c.login}</Link></section>;
   return <>
     <section className="liveIdentity"><div><small>{c.identity}</small><strong>{identity}</strong><span>{data.displayName}</span></div><div><small>{c.level}</small><strong>Lv.{data.level} · {levelNames[data.level]||levelNames[1]}</strong><span>{data.xp.toLocaleString(locale)} XP</span></div><div><small>{c.footprints}</small><strong>{data.footprints.toLocaleString(locale)}</strong><span>{c.database}</span></div><div><small>{c.points}</small><strong>{data.points.toLocaleString(locale)}</strong><span>{c.available}</span></div></section>
-    <MemberHistoryPanel key={data.userId}/>
     <PointsExpiry wallet={data.wallet||null} onRetry={()=>setRefresh(x=>x+1)}/><section className="liveContext"><div><small>{c.team}</small><strong>{data.team||c.notJoined}</strong></div><div><small>{c.enterprise}</small><strong>{data.enterprise||c.none}</strong></div><button onClick={logout}>{c.logout}</button></section>
   </>;
 }
