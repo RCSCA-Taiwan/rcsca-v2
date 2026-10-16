@@ -55,6 +55,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run verify:backup-tools
       - run: npm run verify
       - name: Install browser dependencies
         timeout-minutes: 5

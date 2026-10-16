@@ -380,6 +380,33 @@ try {
   if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==27)throw new Error('Community or donation unexpectedly changed points');
   console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; verified donation stays private and grants no unconfigured badge, points or XP');
 
+  // Seed one unused, already-paid code to exercise cancellation independently.
+  const cancelReward=randomUUID(),cancelOrder=randomUUID(),cancelTitle=`Browser cancellation ${randomUUID()}`;
+  sql(`insert into public.reward_catalog(id,title,category,point_cost,stock_total,stock_remaining,status) values('${cancelReward}','${cancelTitle}','daily',7,2,1,'approved');
+    insert into public.reward_redemptions(id,reward_id,user_id,point_cost,status,redemption_code,points_expires_at) values('${cancelOrder}','${cancelReward}','${applicant.id}',7,'approved','SYNTHETIC-CANCEL',now()+interval '1 day');
+    insert into public.point_transactions(user_id,tx_type,points,source_type,source_id) values('${applicant.id}','spend',-7,'reward_redemption','${cancelOrder}');`);
+  await membershipPage.goto('http://127.0.0.1:3301/account/redemptions');
+  const cancelSection=membershipPage.getByRole('region',{name:'兌換取消與退點',exact:true});
+  const cancelCard=cancelSection.locator('article').filter({has:membershipPage.getByRole('heading',{name:`取消申請：${cancelTitle}`,exact:true})});
+  await cancelCard.getByLabel('取消原因＊',{exact:true}).fill('Synthetic unused code cancellation');
+  await cancelCard.getByRole('button',{name:'送出取消申請',exact:true}).click();
+  await expect(cancelCard).toContainText('取消審核中');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==20)throw new Error('Cancellation credited before review');
+  await reviewPage.goto('http://127.0.0.1:3301/admin/rewards');
+  const reviewCancel=reviewPage.getByRole('region',{name:'兌換取消與退點',exact:true}).locator('article').filter({hasText:cancelOrder});
+  await expect(reviewCancel.getByRole('button',{name:'核准取消並退點',exact:true})).toBeDisabled();
+  await reviewCancel.getByLabel('審核說明＊',{exact:true}).fill('Synthetic unused code verified');
+  await reviewCancel.getByRole('checkbox').check();
+  await reviewCancel.getByRole('button',{name:'核准取消並退點',exact:true}).click();
+  await expect(reviewCancel).toContainText('取消已核准');
+  await membershipPage.reload();
+  await expect(cancelCard).toContainText('已記錄退回 7 點');
+  await expect(membershipPage.getByText('SYNTHETIC-CANCEL',{exact:true})).toHaveCount(0);
+  if(await membershipPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Cancellation UI overflows mobile viewport');
+  const cancellation=JSON.parse(sql(`select json_build_object('balance',private.member_points_wallet('${applicant.id}')->>'balance','refunds',(select count(*) from public.point_transactions where source_type='reward_refund' and source_id='${cancelOrder}'),'stock',(select stock_remaining from public.reward_catalog where id='${cancelReward}'));`));
+  if(cancellation.balance!=='27'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
+  console.log('PASS: mobile cancellation request → independent admin confirms review → one original-expiry refund → invalidated code → stock restored; no mobile overflow');
+
 
 
 } catch (error) {
