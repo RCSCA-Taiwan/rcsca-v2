@@ -11,6 +11,7 @@ import './registration.css';
 export default function RegisterPage() {
   const {locale} = useI18n();
   const c = registrationCopy[locale];
+  const [ready, setReady] = useState(false);
   const [enterprise, setEnterprise] = useState(false);
   const [next, setNext] = useState('/my-1percent');
   const [invite, setInvite] = useState('');
@@ -22,6 +23,7 @@ export default function RegisterPage() {
     setEnterprise(query.get('type') === 'enterprise');
     setNext(safeInternalPath(query.get('next'), '/my-1percent'));
     setInvite(query.get('invite') || '');
+    setReady(true);
   }, []);
   const destination = enterprise ? '/1percent-partner/apply' : next;
   const loginQuery = new URLSearchParams({next: destination});
@@ -29,7 +31,7 @@ export default function RegisterPage() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (sending.current) return;
+    if (!ready || sending.current) return;
     sending.current = true;
     setStatus('sending');
     try {
@@ -53,13 +55,13 @@ export default function RegisterPage() {
     <div className="eyebrow">RCSCA · {c.register}</div>
     <h1>{c.title}</h1>
     <div className="authModeSwitch" role="group" aria-label={c.register}>
-      <button type="button" aria-pressed={!enterprise} className={!enterprise?'active':''} disabled={status==='sending'} onClick={()=>{setEnterprise(false);setStatus('idle')}}>{c.personal}</button>
-      <button type="button" aria-pressed={enterprise} className={enterprise?'active':''} disabled={status==='sending'} onClick={()=>{setEnterprise(true);setStatus('idle')}}>{c.enterprise}</button>
+      <button type="button" aria-pressed={!enterprise} className={!enterprise?'active':''} disabled={!ready||status==='sending'} onClick={()=>{setEnterprise(false);setStatus('idle')}}>{c.personal}</button>
+      <button type="button" aria-pressed={enterprise} className={enterprise?'active':''} disabled={!ready||status==='sending'} onClick={()=>{setEnterprise(true);setStatus('idle')}}>{c.enterprise}</button>
     </div>
     <p>{enterprise ? c.enterpriseLead : c.personalLead}</p>
     <form onSubmit={submit} className="authForm">
-      <label>{c.email}<input type="email" autoComplete="email" required maxLength={254} value={email} disabled={status==='sending'} onChange={event=>{setEmail(event.target.value);setStatus('idle')}} placeholder="name@example.com"/></label>
-      <button disabled={status==='sending'||status==='sent'}>{status==='sending'?c.sending:c.send}</button>
+      <label>{c.email}<input type="email" autoComplete="email" required maxLength={254} value={email} disabled={!ready||status==='sending'} onChange={event=>{setEmail(event.target.value);setStatus('idle')}} placeholder="name@example.com"/></label>
+      <button disabled={!ready||status==='sending'||status==='sent'}>{status==='sending'?c.sending:c.send}</button>
     </form>
     {(status==='sent'||status==='error')&&<p className={`authMessage ${status}`} role={status==='error'?'alert':'status'}>{status==='sent'?c.sent:c.failed}</p>}
     <p className="authAssist">{c.existing} <a href={`/login?${loginQuery}`}>{c.signin} →</a></p>

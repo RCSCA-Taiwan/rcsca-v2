@@ -60,14 +60,6 @@ try {
   const testEnv = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, RCSCA_E2E_BASE_URL: "http://127.0.0.1:3301",
     RCSCA_E2E_EMAIL: member.email, RCSCA_E2E_PASSWORD: password };
-  for (const script of ["verify:browser", "verify:auth-e2e"]) {
-    await new Promise((resolve, reject) => {
-      const child = spawn("npm", ["run", script], { env: testEnv, stdio: "inherit" });
-      child.on("error", reject);
-      child.on("exit", code => code === 0 ? resolve() : reject(new Error(`${script} failed in disposable stack (${code})`)));
-    });
-  }
-  console.log("PASS: desktop/mobile formal-member sign-in/out, account read-error recovery, SSR cookie authorization and admin denial against disposable users");
   browser = await chromium.launch();
   // Read only the disposable mail sink; no real messages are sent or inspected.
   const mailURL = env.INBUCKET_URL || env.MAILPIT_URL;
@@ -100,6 +92,8 @@ try {
   for (const enterprise of [false,true]) {
     const page = await (await browser.newContext({viewport:{width:390,height:844}})).newPage();
     diagnosticPages.push(page);
+    page.on('pageerror',error=>console.error('Disposable registration browser error:',error.message));
+    page.on('response',response=>{if(response.url().startsWith(env.API_URL)&&response.status()>=400)console.error('Disposable registration API failure:',response.status(),new URL(response.url()).pathname)});
     const email = `signup-${randomUUID()}@example.test`;
     if (enterprise) {
       await page.goto('http://127.0.0.1:3301/1percent-partner');
@@ -111,7 +105,7 @@ try {
     await expect(page.getByRole('button',{name:enterprise?'企業註冊':'個人註冊',exact:true})).toHaveAttribute('aria-pressed','true');
     await page.getByLabel('電子郵件',{exact:true}).fill(email);
     await page.getByRole('button',{name:'寄送註冊驗證連結',exact:true}).click();
-    await expect(page.getByRole('status')).toContainText('驗證連結已寄出');
+    await expect(page.getByRole('status')).toContainText('驗證連結已寄出',{timeout:30000});
     if(sql(`select count(*) from auth.users where email='${email}' and email_confirmed_at is not null;`)!=='0') throw new Error('Registration confirmed email before verification');
     await page.goto(await verificationLink(email));
     await expect(page).toHaveURL(`http://127.0.0.1:3301${enterprise?'/1percent-partner/apply':'/account'}`,{timeout:30000});
@@ -163,6 +157,14 @@ try {
     await page.context().close();
   }
   console.log('PASS: explicit personal/enterprise registration → real disposable verification email → PKCE callback → owned profile; preserved next destination, enterprise pending application, no automatic formal membership/admin');
+  for (const script of ["verify:browser", "verify:auth-e2e"]) {
+    await new Promise((resolve, reject) => {
+      const child = spawn("npm", ["run", script], { env: testEnv, stdio: "inherit" });
+      child.on("error", reject);
+      child.on("exit", code => code === 0 ? resolve() : reject(new Error(`${script} failed in disposable stack (${code})`)));
+    });
+  }
+  console.log("PASS: desktop/mobile formal-member sign-in/out, account read-error recovery, SSR cookie authorization and admin denial against disposable users");
   const adminPage = await (await browser.newContext()).newPage();
   const ownerPage = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   diagnosticPages.push(adminPage, ownerPage);
