@@ -517,6 +517,37 @@ try {
   if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==29)throw new Error('Topic approval must add exactly two points; donation must add none');
   console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; topic approval grants two points, mobile replies grant one point only once, daily topic quota holds; verified donation stays private and grants no unconfigured badge, points or XP');
 
+  // Natural-name pledge → saved draft → checked account match → real contribution.
+  await reviewPage.goto('http://127.0.0.1:3301/admin/contributions');
+  const donationBatch=reviewPage.locator('#donation-batch');
+  const batchActivity=`Browser subscription ${randomUUID()}`;
+  await donationBatch.getByLabel('活動名稱＊',{exact:true}).fill(batchActivity);
+  await donationBatch.getByLabel('貼上認購名單／活動明細＊',{exact:true}).fill('林○○先生認購2單位');
+  await expect(donationBatch).toContainText('認購合計 2,000 元');
+  await donationBatch.getByRole('button',{name:'先儲存認購名單（尚未收款）',exact:true}).click();
+  await expect(donationBatch.getByRole('status')).toContainText('尚未累積捐款貢獻');
+  if(sql(`select sum(amount) from private.donation_records where user_id='${applicant.id}' and status='verified';`)!=='1000')throw new Error('Pledge credited before payment');
+  await reviewPage.reload();
+  await donationBatch.getByRole('button',{name:'繼續核對此認購名單',exact:true}).click();
+  await expect(donationBatch.getByLabel('貼上認購名單／活動明細＊',{exact:true})).toHaveValue('林○○先生認購2單位');
+  await donationBatch.getByRole('checkbox').first().check();
+  await donationBatch.getByLabel('實際入帳日期',{exact:true}).fill(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()));
+  await donationBatch.getByLabel('收款核實依據（僅管理員可見）',{exact:true}).fill('Synthetic actual bank receipt verification');
+  await donationBatch.getByRole('button',{name:'預覽配對與檢查重複',exact:true}).click();
+  await expect(donationBatch).toContainText('可入帳 0／1 筆');
+  await expect(donationBatch.getByRole('button',{name:'確認整批核實入帳',exact:true})).toBeDisabled();
+  await donationBatch.getByLabel('核對帳號信箱（需要時填寫）',{exact:true}).fill(applicant.email);
+  await donationBatch.getByRole('button',{name:'預覽配對與檢查重複',exact:true}).click();
+  await expect(donationBatch).toContainText('可入帳 1／1 筆');
+  await donationBatch.getByRole('checkbox').last().check();
+  await donationBatch.getByRole('button',{name:'確認整批核實入帳',exact:true}).click();
+  await expect(reviewPage.getByRole('status')).toContainText('已確認此批 1 筆、實收 2,000 元');
+  if(sql(`select sum(amount) from private.donation_records where user_id='${applicant.id}' and status='verified';`)!=='3000')throw new Error('Natural import contribution mismatch');
+  await membershipPage.goto('http://127.0.0.1:3301/account/contributions');
+  await expect(membershipPage.locator('body')).toContainText('已核實累計：新台幣 3,000 元');
+  await expect(membershipPage.locator('body')).toContainText(batchActivity);
+  console.log('PASS: natural subscription names → private unpaid draft → reload → masked name blocked → email-confirmed match → actual received contribution exactly once');
+
   // Seed one unused, already-paid code to exercise cancellation independently.
   const cancelReward=randomUUID(),cancelOrder=randomUUID(),cancelTitle=`Browser cancellation ${randomUUID()}`;
   sql(`insert into public.reward_catalog(id,title,category,point_cost,stock_total,stock_remaining,status) values('${cancelReward}','${cancelTitle}','daily',7,2,1,'approved');
