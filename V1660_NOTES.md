@@ -37,3 +37,11 @@
 - Approval creates one organization mapping per selected category, independently of a contact’s personal network profiles. Only explicitly consented public introductions, name, region and website enter the public directory after approval; registration contacts, addresses and private contribution conditions are excluded. Inactive organizations disappear from public results.
 - Network overview now supports every category via group/filter controls, without the previous eight-category cutoff. The public directory combines existing approved personal nodes and approved consenting organization nodes under an invoker view.
 - Anonymous network reads are separated from owner/admin policies so public visitors need no execute permission on administrative role helpers.
+
+## 清楚入口與溫暖圖示
+
+- 新增公開 `/guide`：依使用目的分類、即時關鍵字搜尋、找不到時可清除篩選；列出註冊、關懷、會員、積分、兌換／預約／配送與取消、合作夥伴及管理入口。入口不改變既有權限。
+- 導覽列與頁尾可直接找到功能指南；內頁顯示目前位置，個人中心增加常用操作入口。手機選單支援 Escape 關閉並回復焦點。
+- 統一圓潤 SVG 圖示，使用米白、暖金、低飽和綠與陶土色，首頁／個人中心／合作夥伴增加依內容辨識的圖示；指南加入陪伴主題的 CSS 插畫。圖示維持裝飾用途並保留文字。
+- 合作夥伴補件表單的服務內容增加明確可存取名稱，避免已填入文字影響讀屏與操作測試的欄位辨識。
+- 正式 Auth 返回網址仍待具管理登入的工作階段修正；目前瀏覽器未登入，不能把註冊正式上線視為已完成。

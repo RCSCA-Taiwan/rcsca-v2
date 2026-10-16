@@ -1,4 +1,5 @@
 import './globals.css';
+import './friendly-ui.css';
 import type { Metadata } from 'next';
 import SiteFooter from './SiteFooter';
 import {I18nProvider} from './i18n';
