@@ -1,3 +1,4 @@
+import {memberCSVTemplate} from '../lib/member-import.mjs';
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -59,6 +60,121 @@ try {
   const testEnv = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, RCSCA_E2E_BASE_URL: "http://127.0.0.1:3301",
     RCSCA_E2E_EMAIL: member.email, RCSCA_E2E_PASSWORD: password };
+  browser = await chromium.launch();
+  // Read only the disposable mail sink; no real messages are sent or inspected.
+  const mailURL = env.INBUCKET_URL || env.MAILPIT_URL;
+  if (!mailURL || !/^http:\/\/(127\.0\.0\.1|localhost):/.test(mailURL)) throw new Error('Disposable mail sink required');
+  async function verificationLink(email) {
+    let link;
+    await expect.poll(async () => {
+      for (const legacy of [false,true]) {
+        try {
+          const mailbox = email.split('@')[0];
+          const listPath = legacy ? `/api/v1/mailbox/${mailbox}` : '/api/v1/messages';
+          const response = await fetch(new URL(listPath,mailURL));
+          if (!response.ok) continue;
+          const listing = await response.json();
+          const messages = legacy ? listing : listing.messages;
+          const message = messages?.find(item => legacy || item.To?.some(to => to.Address === email));
+          if (!message) continue;
+          const detailPath = legacy ? `/api/v1/mailbox/${mailbox}/${message.id}` : `/api/v1/message/${message.ID}`;
+          const detail = await (await fetch(new URL(detailPath,mailURL))).json();
+          const html = legacy ? detail.body?.html : detail.HTML;
+          const links = [...(html || '').matchAll(/href=["']([^"']+)["']/g)];
+          link = links.map(match=>match[1].replaceAll('&amp;','&')).find(value=>value.includes('/auth/v1/verify'));
+          if (link && new URL(link).origin === new URL(env.API_URL).origin) return true;
+        } catch { /* Mail delivery may still be pending. */ }
+      }
+      return false;
+    },{timeout:30000,message:'Disposable registration verification email received'}).toBe(true);
+    return link;
+  }
+  for (const enterprise of [false,true]) {
+    const page = await (await browser.newContext({viewport:{width:390,height:844}})).newPage();
+    diagnosticPages.push(page);
+    page.on('pageerror',error=>console.error('Disposable registration browser error:',error.message));
+    page.on('response',response=>{if(response.url().startsWith(env.API_URL)&&response.status()>=400)console.error('Disposable registration API failure:',response.status(),new URL(response.url()).pathname)});
+    const email = `signup-${randomUUID()}@example.test`;
+    if (enterprise) {
+      await page.goto('http://127.0.0.1:3301/1percent-partner');
+      await page.getByRole('link',{name:'企業/團體/店家 共享合作夥伴註冊 →',exact:true}).click();
+    } else {
+      await page.goto('http://127.0.0.1:3301/login?next=%2Faccount');
+      await page.getByRole('link',{name:'個人註冊 →',exact:true}).click();
+    }
+    await expect(page.getByRole('button',{name:enterprise?'企業/團體/店家 共享合作夥伴註冊':'個人註冊',exact:true})).toHaveAttribute('aria-pressed','true');
+    await page.getByLabel('電子郵件',{exact:true}).fill(email);
+    await page.getByRole('button',{name:'寄送註冊驗證連結',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('驗證連結已寄出',{timeout:30000});
+    if(sql(`select count(*) from auth.users where email='${email}' and email_confirmed_at is not null;`)!=='0') throw new Error('Registration confirmed email before verification');
+    await page.goto(await verificationLink(email));
+    await expect(page).toHaveURL(`http://127.0.0.1:3301${enterprise?'/1percent-partner/apply':'/account'}`,{timeout:30000});
+    const id = sql(`select id from auth.users where email='${email}' and email_confirmed_at is not null;`);
+    if (!id || sql(`select count(*) from public.profiles where id='${id}';`)!=='1') throw new Error('Verified registration profile missing');
+    if(sql(`select (select count(*) from public.memberships where user_id='${id}' and status='active')+(select count(*) from public.admin_roles where user_id='${id}');`)!=='0') throw new Error('Registration unexpectedly granted membership or admin');
+    if (enterprise) {
+      const signupCompany=`Signup enterprise ${randomUUID()}`;
+      for(const [label,value] of Object.entries({'企業/團體/店家名稱＊':signupCompany,'統一編號＊':'12345678','所在縣市＊':'臺北市','企業/團體/店家地址＊':'Synthetic registration address','網站（選填）':'https://example.test'})) await page.getByLabel(label,{exact:true}).fill(value);
+      await page.getByLabel('主要產業大類＊',{exact:true}).selectOption('events');
+      await page.getByLabel('主要產業細項＊',{exact:true}).selectOption('events.planning');
+      await page.getByLabel('其他專業／服務',{exact:true}).selectOption('design.video');
+      await page.getByRole('button',{name:'新增專業',exact:true}).click();
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      for(const [label,value] of Object.entries({'窗口姓名＊':'Synthetic signup contact','窗口職稱＊':'專案經理','聯絡 Email＊':email,'公司電話＊':'02-20000000','分機（選填）':'123','手機＊':'0900000000'})) await page.getByLabel(label,{exact:true}).fill(value);
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await page.getByLabel('提供類型＊',{exact:true}).selectOption('both');
+      await page.getByLabel('1% 產品／服務內容＊',{exact:true}).fill('Synthetic product and event service; once per month; Taipei; discuss scheduling.');
+      await page.getByRole('checkbox',{name:/我同意審核通過後/}).check();
+      await page.getByLabel('共享專業網絡公開介紹＊',{exact:true}).fill('Synthetic public event and video service.');
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await expect(page.getByRole('button',{name:'確認並送出共享合作夥伴註冊',exact:true})).toBeDisabled();
+      await page.getByRole('checkbox',{name:'我已核對單位、聯絡窗口與 1% 內容，確認資料正確。',exact:true}).check();
+      await page.getByRole('button',{name:'確認並送出共享合作夥伴註冊',exact:true}).click();
+      await expect(page.getByRole('status')).toContainText('共享合作夥伴註冊資料已送出');
+      if(sql(`select count(*) from public.enterprise_applications where requester_user_id='${id}' and status='submitted' and industry_code='events.planning' and professional_codes=array['design.video'] and address='Synthetic registration address' and phone_extension='123' and contribution_kind='both';`)!=='1') throw new Error('Signup did not save complete pending enterprise registration');
+      await page.reload();
+      await expect(page.getByText('共享合作夥伴申請進度：已送出',{exact:true})).toBeVisible();
+      await expect(page.getByText(signupCompany,{exact:true})).toBeVisible();
+      const signupApp=sql(`select id from public.enterprise_applications where requester_user_id='${id}';`);
+      const registrationReviewer=await (await browser.newContext()).newPage();diagnosticPages.push(registrationReviewer);
+      registrationReviewer.on('dialog',dialog=>dialog.accept());
+      await login(registrationReviewer,admin,'/admin/partners');
+      const registrationCard=registrationReviewer.locator('article').filter({has:registrationReviewer.getByRole('heading',{name:signupCompany,exact:true})});
+      await expect(registrationCard).toContainText('Synthetic registration address');
+      await expect(registrationCard).toContainText('專案經理');
+      await expect(registrationCard).toContainText('分機 123');
+      await expect(registrationCard).toContainText('Synthetic product and event service');
+      await registrationCard.getByPlaceholder('審核說明／需補資料').fill('Synthetic additional detail required');
+      await registrationCard.getByRole('button',{name:'請補資料',exact:true}).click();
+      await expect(registrationReviewer.getByText('申請狀態已更新並通知申請人。',{exact:true})).toBeVisible();
+      await page.reload();
+      await expect(page.getByText('Synthetic additional detail required',{exact:true})).toBeVisible();
+      for(let step=0;step<2;step++) await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await page.getByLabel('1% 產品／服務內容＊',{exact:true}).fill('Synthetic corrected product and service description.');
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await page.getByRole('checkbox',{name:'我已核對單位、聯絡窗口與 1% 內容，確認資料正確。',exact:true}).check();
+      await page.getByRole('button',{name:'確認並送出共享合作夥伴註冊',exact:true}).click();
+      await expect(page.getByRole('status')).toContainText('共享合作夥伴註冊資料已送出');
+      if(sql(`select count(*) from public.enterprise_applications where requester_user_id='${id}' and id='${signupApp}' and status='submitted' and contribution_description='Synthetic corrected product and service description.';`)!=='1') throw new Error('Correction did not reuse original registration');
+      await registrationReviewer.reload();
+      await registrationCard.getByPlaceholder('審核說明／需補資料').fill('Verified classified partner and consented public introduction.');
+      await registrationCard.getByRole('button',{name:'核准企業身份',exact:true}).click();
+      await expect(registrationReviewer.getByText('企業已核准，申請帳號已連結企業身份。',{exact:true})).toBeVisible();
+      await page.goto('http://127.0.0.1:3301/1percent-network/directory');
+      await page.getByRole('textbox',{name:'搜尋名稱、產業、地區或服務',exact:true}).fill(signupCompany);
+      await page.getByRole('combobox').selectOption('events.planning');
+      await expect(page.getByRole('heading',{name:signupCompany,exact:true})).toBeVisible();
+      await expect(page.getByText('Synthetic public event and video service.',{exact:true})).toBeVisible();
+      if((await page.locator('.portalGrid').innerText()).includes('Synthetic registration address')) throw new Error('Private registration address leaked into network');
+      await page.getByRole('combobox').selectOption('design.video');
+      await expect(page.getByRole('heading',{name:signupCompany,exact:true})).toBeVisible();
+      await registrationReviewer.context().close();
+
+    }
+    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)) throw new Error('Registration flow overflows mobile viewport');
+    await page.context().close();
+  }
+  console.log('PASS: explicit personal/enterprise registration → real disposable verification email → PKCE callback → owned profile; preserved next destination, enterprise pending application, no automatic formal membership/admin');
   for (const script of ["verify:browser", "verify:auth-e2e"]) {
     await new Promise((resolve, reject) => {
       const child = spawn("npm", ["run", script], { env: testEnv, stdio: "inherit" });
@@ -67,7 +183,6 @@ try {
     });
   }
   console.log("PASS: desktop/mobile formal-member sign-in/out, account read-error recovery, SSR cookie authorization and admin denial against disposable users");
-  browser = await chromium.launch();
   const adminPage = await (await browser.newContext()).newPage();
   const ownerPage = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   diagnosticPages.push(adminPage, ownerPage);
@@ -407,12 +522,41 @@ try {
   if(cancellation.balance!=='27'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
   console.log('PASS: mobile cancellation request → independent admin confirms review → one original-expiry refund → invalidated code → stock restored; no mobile overflow');
 
+  const importMember=await user('roster-import');
+  sql(`insert into public.memberships(user_id,membership_type,member_since,status) values('${importMember.id}','annual','2018-01-01','active');`);
+  const importPage=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();diagnosticPages.push(importPage);
+  importPage.on('dialog',dialog=>dialog.accept());
+  await login(importPage,membershipAdmin,'/admin/members/import');
+  await expect(importPage.getByRole('button',{name:'下載空白 CSV 範本',exact:true})).toBeVisible();
+  const csv=memberCSVTemplate()+`${importMember.email},Synthetic roster member,一般會員,2018-01-01,\r\n`;
+  await importPage.getByLabel('選擇 CSV UTF-8 檔案（上限 128 KB）',{exact:true}).setInputFiles({name:'synthetic-roster.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  await importPage.getByRole('button',{name:'預覽檢查',exact:true}).click();
+  await expect(importPage.getByRole('heading',{name:'預覽結果：1／1 筆可登錄',exact:true})).toBeVisible();
+  await expect(importPage.getByRole('button',{name:'確認登錄年度名冊',exact:true})).toBeDisabled();
+  if(sql(`select count(*) from private.membership_register where user_id='${importMember.id}';`)!=='0')throw new Error('Import preview wrote to roster');
+  await importPage.getByLabel('核對依據＊',{exact:true}).fill('Synthetic verified roster source');
+  await importPage.getByRole('checkbox',{name:/我已逐筆核對/}).check();
+  await importPage.getByRole('button',{name:'確認登錄年度名冊',exact:true}).click();
+  await expect(importPage.getByRole('status')).toContainText('已完成 1 筆年度名冊登錄');
+  if(sql(`select count(*) from private.membership_register where user_id='${importMember.id}' and member_since='2018-01-01';`)!=='1')throw new Error('Imported roster date/count incorrect');
+  await importPage.getByRole('button',{name:'清除本批資料',exact:true}).click();
+  await importPage.getByLabel('選擇 CSV UTF-8 檔案（上限 128 KB）',{exact:true}).setInputFiles({name:'synthetic-roster.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  await importPage.getByRole('button',{name:'預覽檢查',exact:true}).click();
+  await expect(importPage.getByText('本年度名冊已登錄',{exact:true})).toBeVisible();
+  await expect(importPage.getByRole('button',{name:'確認登錄年度名冊',exact:true})).toBeDisabled();
+  if(await importPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Roster import overflows mobile viewport');
+  await membershipPage.goto('http://127.0.0.1:3301/admin/members/import');
+  await expect(membershipPage.getByRole('alert').filter({hasText:'目前無法使用名冊匯入'})).toBeVisible();
+  await expect(membershipPage.locator('input[type=file]')).toHaveCount(0);
+  console.log('PASS: mobile CSV selection → server preview without writes → evidence/confirmation → one roster entry with original date → repeated import blocked; ordinary member denied and no mobile overflow');
+
 
 
 } catch (error) {
   for (const page of diagnosticPages) {
     if (!page.isClosed()) {
       console.error(`Isolated browser failure at ${new URL(page.url()).pathname}: ${await page.locator("body").innerText().catch(()=>"Page unavailable")}`);
+      console.error("Invalid form controls:",await page.locator("input,select,textarea").evaluateAll(controls=>controls.filter(control=>!control.validity.valid).map(control=>({name:control.name,label:control.getAttribute("aria-label"),message:control.validationMessage}))).catch(()=>[]));
     }
   }
   throw error;

@@ -1,4 +1,7 @@
 'use client';
+import NetworkTaxonomySelect from '../../components/NetworkTaxonomySelect';
+import {getNetworkClient} from '../../../lib/network-api';
+import {networkCategoryLabel,networkCategoryCode} from '../../../lib/network-taxonomy';
 import SiteHeader from '../../SiteHeader';
 import {useEffect,useState} from 'react';
 import {getSupabaseBrowserClient} from '../../../lib/supabase-browser';
@@ -11,7 +14,6 @@ const pageCopy:Record<Locale,Record<string,string>>={
  'ko':{eye:'1% Network · 전문 공유 네트워크 참여',hero:'아직 비어 있는 곳에 당신의 전문성을 더하세요.',lead:'독점 자리나 업종 자리를 판매하지 않습니다. 직접 선택한 전문 정보만 공개되며 개인 연락처는 매칭 절차 안에서만 다룹니다.',step1:'01 · 전문 분야 선택',industry:'주요 업종／전문 분야',step2:'02 · 공개 가능 정보',name:'브랜드／이름',region:'지역',website:'웹사이트 또는 SNS(선택)',description:'제공할 수 있는 전문성이나 서비스를 한 문장으로 설명',publicLevel:'어디까지 공개되나요?',publicLead:'일반 방문자는 직접 입력한 이름, 업종, 지역, 소개와 웹사이트만 볼 수 있습니다. 전화번호, 이메일과 회원 정보는 1% Network에 직접 표시되지 않습니다.',matching:'실제 매칭이 필요할 때',matchingLead:'요청 요약이 가능한 노드에 먼저 전달되고 양측이 동의할 때만 필요한 연락처를 교환합니다.',sending:'제출 중…',submit:'참여 신청 제출 →',mine:'나의 Network 신청',nodes:'제출한 전문 노드',private:'승인 전에는 공개 목록에 표시되지 않습니다.'}
 };
 
-const fields=['室內設計','餐飲','法律','旅宿','交通運輸','寵物服務','醫療照護','教育','水電工程','保險','會計','汽車','其他'];
 const statusLabel:Record<string,string>={submitted:'待審核',under_review:'審核中',needs_info:'待補資料',approved:'已公開',rejected:'未通過',cancelled:'已取消'};
 
 export default function JoinNetwork(){
@@ -23,16 +25,16 @@ export default function JoinNetwork(){
   async function load(){
     try{const s=getSupabaseBrowserClient();const {data:{session}}=await s.auth.getSession();if(!session)return;const {data}=await s.from('network_profiles').select('id,category,display_name,region,website_url,public_description,status,public_visible').eq('user_id',session.user.id).order('updated_at',{ascending:false});setExisting(data||[])}catch{}
   }
-  useEffect(()=>{load()},[]);
+  useEffect(()=>{load();const value=new URLSearchParams(window.location.search).get('category');if(value)setCategory(networkCategoryCode(value))},[]);
 
   async function submit(){
     setMessage('');
     if(!category||!form.display_name||!form.region||!form.public_description){setMessage('請先選擇專業，並填寫名稱、地區與公開說明。');return;}
     setBusy(true);
     try{
-      const s=getSupabaseBrowserClient(); const {data:{session}}=await s.auth.getSession();
+      const s=getNetworkClient(); const {data:{session}}=await s.auth.getSession();
       if(!session){setMessage('請先登入，再送出加入申請。');setBusy(false);return;}
-      const {error}=await s.rpc('network_submit_profile',{p_category:category,p_display_name:form.display_name,p_region:form.region,p_website_url:form.website_url,p_public_description:form.public_description});
+      const {error}=await s.rpc('network_submit_categorized_profile',{p_category:category,p_display_name:form.display_name,p_region:form.region,p_website_url:form.website_url,p_public_description:form.public_description});
       if(error){if(error.message.includes('profile_locked_after_approval')){setMessage('這個專業節點已經核准公開；若要修改或下架，請由 RCSCA 協助處理。');setBusy(false);return;}throw error;}
       setMessage('已送出加入申請。RCSCA 核准後，才會出現在公開 1% Network。');
       await load();
@@ -53,10 +55,10 @@ export default function JoinNetwork(){
 
   return <main className="flowPage"><SiteHeader/>
     <section className="flowHero"><div className="portalWrap"><div className="eyebrow">{c.eye}</div><h1>{c.hero}</h1><p>{c.lead}</p></div></section>
-    <section className="portalSection"><div className="portalWrap joinNetworkGrid"><div><small>{c.step1}</small><h2>{c.industry}</h2><div className="needPills">{fields.map(x=><button type="button" key={x} className={category===x?'active':''} onClick={()=>setCategory(x)}>{x}</button>)}</div><small className="blockLabel">{c.step2}</small><div className="briefFields"><input placeholder={c.name} value={form.display_name} onChange={e=>setForm({...form,display_name:e.target.value})}/><input placeholder={c.region} value={form.region} onChange={e=>setForm({...form,region:e.target.value})}/><input placeholder={c.website} value={form.website_url} onChange={e=>setForm({...form,website_url:e.target.value})}/><textarea placeholder={c.description} value={form.public_description} onChange={e=>setForm({...form,public_description:e.target.value})}/></div></div>
+    <section className="portalSection"><div className="portalWrap joinNetworkGrid"><div><small>{c.step1}</small><h2>{c.industry}</h2><NetworkTaxonomySelect value={category} onChange={setCategory} disabled={busy}/><small className="blockLabel">{c.step2}</small><div className="briefFields"><input placeholder={c.name} value={form.display_name} onChange={e=>setForm({...form,display_name:e.target.value})}/><input placeholder={c.region} value={form.region} onChange={e=>setForm({...form,region:e.target.value})}/><input placeholder={c.website} value={form.website_url} onChange={e=>setForm({...form,website_url:e.target.value})}/><textarea placeholder={c.description} value={form.public_description} onChange={e=>setForm({...form,public_description:e.target.value})}/></div></div>
       <aside className="networkJoinAside"><b>{c.publicLevel}</b><p>{c.publicLead}</p><b>{c.matching}</b><p>{c.matchingLead}</p><button disabled={busy} onClick={submit}>{busy?c.sending:c.submit}</button>{message&&<p className="formNote">{message}</p>}</aside>
     </div></section>
-    {existing.length>0&&<section className="portalSection compactSection"><div className="portalWrap"><div className="sectionHead"><div><div className="eyebrow">{c.mine}</div><h2>{c.nodes}</h2></div><p>{c.private}</p></div><div className="portalGrid three">{existing.map(x=><article key={x.id}><small>{statusLabel[x.status]||x.status}</small><h3>{x.category}</h3><p>{x.display_name}{x.region?` · ${x.region}`:''}</p>{['submitted','under_review','needs_info','rejected'].includes(x.status)&&<button className="secondaryAction" onClick={()=>cancel(x.id)}>取消申請</button>}{x.status==='approved'&&<div className="shareInlineActions"><button className="secondaryAction" onClick={()=>setEditing({...x})}>申請修改</button><button className="secondaryAction" onClick={()=>requestApprovedChange(x,'unpublish')}>申請下架</button></div>}</article>)}</div></div></section>}
+    {existing.length>0&&<section className="portalSection compactSection"><div className="portalWrap"><div className="sectionHead"><div><div className="eyebrow">{c.mine}</div><h2>{c.nodes}</h2></div><p>{c.private}</p></div><div className="portalGrid three">{existing.map(x=><article key={x.id}><small>{statusLabel[x.status]||x.status}</small><h3>{networkCategoryLabel(x.category)}</h3><p>{x.display_name}{x.region?` · ${x.region}`:''}</p>{['submitted','under_review','needs_info','rejected'].includes(x.status)&&<button className="secondaryAction" onClick={()=>cancel(x.id)}>取消申請</button>}{x.status==='approved'&&<div className="shareInlineActions"><button className="secondaryAction" onClick={()=>setEditing({...x})}>申請修改</button><button className="secondaryAction" onClick={()=>requestApprovedChange(x,'unpublish')}>申請下架</button></div>}</article>)}</div></div></section>}
 
     {editing&&<div className="marketModal" onClick={()=>setEditing(null)}><div onClick={e=>e.stopPropagation()}><button className="modalClose" onClick={()=>setEditing(null)}>×</button><small>已核准公開資料 · 變更需重新審核</small><h2>申請修改 Network 節點</h2><div className="briefFields"><input value={editing.display_name||''} onChange={e=>setEditing({...editing,display_name:e.target.value})}/><input value={editing.region||''} onChange={e=>setEditing({...editing,region:e.target.value})}/><input value={editing.website_url||''} onChange={e=>setEditing({...editing,website_url:e.target.value})}/><textarea value={editing.public_description||''} onChange={e=>setEditing({...editing,public_description:e.target.value})}/></div><button className="modalPrimary" onClick={()=>requestApprovedChange(editing,'update')}>送出變更審核</button><p className="micro">送審期間，現在已核准的公開版本不會被直接覆寫。</p></div></div>}
   </main>

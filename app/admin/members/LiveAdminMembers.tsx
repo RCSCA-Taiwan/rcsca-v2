@@ -101,11 +101,17 @@ export default function LiveAdminMembers() {
   }
   async function membership(userId: string) {
     if (busy) return;
-    const rawType = window.prompt("會籍類型：annual 或 lifetime", "annual");
+    const existing=members.find(m=>m.user_id===userId);
+    const rawType = window.prompt("會籍類型：一般會員 或 永久會員", existing?.membership_type==="lifetime"?"永久會員":"一般會員");
     if (rawType === null) return;
-    const type = rawType.trim() as MembershipType;
-    if (!["annual", "lifetime"].includes(type)) return;
-    const rawNumber = window.prompt("會員編號（可留空）", "");
+    const type = ({"一般會員":"annual","永久會員":"lifetime"} as const)[rawType.trim() as "一般會員"|"永久會員"] as MembershipType;
+    if (!["annual", "lifetime"].includes(type)) {setNotice("請選擇一般會員或永久會員。");return;}
+    const originalDate=window.prompt("原始入會日期（YYYY-MM-DD；續會保留原日期）",existing?.member_since||"");
+    if(originalDate===null)return;
+    const evidence=window.prompt("已核對的會籍資料依據（必填）","");
+    if(evidence===null)return;
+    if(!originalDate.trim()||!evidence.trim()){setNotice("請提供原始入會日期及核對依據。");return;}
+    const rawNumber = window.prompt("會員編號（可留空）", existing?.member_number||"");
     if (rawNumber === null) return;
     if (
       !window.confirm(
@@ -120,13 +126,13 @@ export default function LiveAdminMembers() {
     const { error } = await s.rpc("admin_set_membership", {
       p_user_id: userId,
       p_membership_type: type,
-      p_member_since: new Date().toISOString().slice(0, 10),
+      p_member_since: originalDate.trim(),
       p_member_number: number,
       p_status: "active",
-      p_note: "後台會員身份更新",
+      p_note: evidence.trim(),
     });
     setNotice(
-      error ? "會籍更新失敗，請確認權限與會員資料。" : "正式會員身份已更新。",
+      error ? membershipError(error) : "正式會員身份已更新。",
     );
     if (!error) await load();
     setBusy("");

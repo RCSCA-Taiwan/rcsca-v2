@@ -1,32 +1,13 @@
-'use client';
+"use client";
+import {useEffect,useRef} from 'react';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import LanguageSwitcher from './LanguageSwitcher';
 import {useI18n} from './i18n';
+import {registrationCopy} from '../lib/registration-copy';
+import FriendlyIcon,{type IconName} from './components/FriendlyIcon';
+import PageTrail from './components/PageTrail';
 const OneMark=()=> <span className="oneMark brandOne"><b>1</b><i>%</i></span>;
-const NavLinks=({mobile=false}:{mobile?:boolean})=> {const {t}=useI18n();return <>
- <Link href="/my-1percent"><span className="navEn">MY 1%</span><span className="navZh">{t('nav.my')}</span></Link>
- <Link href="/1percent-partner"><span className="navEn">1% PARTNER</span><span className="navZh">{t('nav.partner')}</span></Link>
- <Link href="/care-actions"><span className="navEn">CARE</span><span className="navZh">{t('nav.care')}</span></Link>
- <Link href="/1percent-network"><span className="navEn">1% NETWORK</span><span className="navZh">{t('nav.network')}</span></Link>
- <Link href="/cycle-of-goodness"><span className="navEn">CYCLE</span><span className="navZh">{t('nav.cycle')}</span></Link>
- {!mobile&&<LanguageSwitcher/>}
- <Link className="navAccount" href="/account"><span className="navZh">{t('nav.account')}</span></Link>
-</>};
-export default function SiteHeader(){
- const path=usePathname(); const {t}=useI18n();
- const active=(p:string)=>path===p||path.startsWith(p+'/');
- return <header className="nav"><div className="navInner">
-  <a className="brandLockup" href="/?intro=replay" aria-label={t('system.home')}><span className="brandStack"><span className="brandRcsca">RCSCA</span><small>Cycle of Goodness</small></span><span className="brandCross">×</span><OneMark/></a>
-  <nav className="desktopNav">
-   <Link className={active('/my-1percent')?'navActive':''} href="/my-1percent"><span className="navEn">MY 1%</span><span className="navZh">{t('nav.my')}</span></Link>
-   <Link className={active('/1percent-partner')?'navActive':''} href="/1percent-partner"><span className="navEn">1% PARTNER</span><span className="navZh">{t('nav.partner')}</span></Link>
-   <Link className={active('/care-actions')?'navActive':''} href="/care-actions"><span className="navEn">CARE</span><span className="navZh">{t('nav.care')}</span></Link>
-   <Link className={active('/1percent-network')?'navActive':''} href="/1percent-network"><span className="navEn">1% NETWORK</span><span className="navZh">{t('nav.network')}</span></Link>
-   <Link className={active('/cycle-of-goodness')?'navActive':''} href="/cycle-of-goodness"><span className="navEn">CYCLE</span><span className="navZh">{t('nav.cycle')}</span></Link>
-   <LanguageSwitcher/>
-   <Link className="navAccount" href="/account"><span className="navZh">{t('nav.account')}</span></Link>
-  </nav>
-  <details className="mobileMenu"><summary aria-label={t('nav.go')}><span></span><span></span><span></span></summary><div className="mobileMenuPanel"><div className="mobileMenuHead"><b>{t('nav.go')}</b><small>RCSCA · Cycle of Goodness</small></div><NavLinks mobile/><div className="mobileLang"><span>{t('nav.language')}</span><LanguageSwitcher/></div></div></details>
- </div></header>
-}
+const routes:[string,string,string,IconName][]=[['/my-1percent','MY 1%','nav.my','people'],['/1percent-partner','1% PARTNER','nav.partner','shop'],['/care-actions','CARE','nav.care','heart'],['/1percent-network','1% NETWORK','nav.network','network'],['/cycle-of-goodness','CYCLE','nav.cycle','sprout']];
+function NavLinks(){const {t,locale}=useI18n();const path=usePathname();return <>{routes.map(([href,en,key,icon])=><Link href={href} key={href} className={path===href||path.startsWith(href+'/')?'navActive':''} aria-current={path===href?'page':undefined}><FriendlyIcon name={icon}/><span className="navEn">{en}</span><span className="navZh">{t(key)}</span></Link>)}<Link href="/guide" aria-current={path==='/guide'?'page':undefined}><FriendlyIcon name="search"/><span className="navZh">{locale==='zh-Hant'?'功能指南':locale==='ja'?'機能ガイド':locale==='ko'?'기능 안내':'Find a feature'}</span></Link><Link href="/register"><FriendlyIcon name="sprout"/><span className="navZh">{registrationCopy[locale].register}</span></Link><Link className="navAccount" href="/account"><FriendlyIcon name="people"/><span className="navZh">{t('nav.account')}</span></Link></>}
+export default function SiteHeader(){const path=usePathname();const {t}=useI18n();const menu=useRef<HTMLDetailsElement>(null);useEffect(()=>{if(menu.current)menu.current.open=false},[path]);return <><header className="nav"><div className="navInner"><a className="brandLockup" href="/?intro=replay" aria-label={t('system.home')}><span className="brandStack"><span className="brandRcsca">RCSCA</span><small>Cycle of Goodness</small></span><span className="brandCross">×</span><OneMark/></a><nav className="desktopNav" aria-label={t('nav.go')}><NavLinks/><LanguageSwitcher/></nav><details className="mobileMenu" ref={menu} onKeyDown={e=>{if(e.key==='Escape'&&menu.current){menu.current.open=false;menu.current.querySelector('summary')?.focus()}}}><summary aria-label={t('nav.go')}><span/><span/><span/></summary><div className="mobileMenuPanel"><div className="mobileMenuHead"><b>{t('nav.go')}</b><small>RCSCA · Cycle of Goodness</small></div><nav aria-label={t('nav.go')}><NavLinks/></nav><div className="mobileLang"><span>{t('nav.language')}</span><LanguageSwitcher/></div></div></details></div></header><PageTrail/></>}

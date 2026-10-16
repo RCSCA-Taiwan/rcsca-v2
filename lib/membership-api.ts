@@ -4,6 +4,8 @@ import { getSupabaseBrowserClient } from './supabase-browser';
 
 type MembershipDatabase = Omit<Database, 'public'> & {public: Omit<Database['public'],'Functions'> & {Functions: Database['public']['Functions'] & {
 
+      admin_membership_import_preview: { Args: {p_rows:Json;p_year:number}; Returns:Json }
+      admin_membership_import_commit: { Args: {p_rows:Json;p_year:number;p_fingerprint:string;p_batch:string;p_note:string;p_confirmed:boolean}; Returns:Json }
       membership_source_preview: { Args: {p_text:string}; Returns: Json }
       membership_submit_with_source: { Args: {p_kind:string;p_type:"annual"|"lifetime";p_name:string;p_identity:string;p_phone:string;p_email:string;p_address:string;p_source_text:string;p_join_team:boolean;p_consent:boolean}; Returns:string }
       membership_referrers: { Args: Record<PropertyKey, never>; Returns: Json }

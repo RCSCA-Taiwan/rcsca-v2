@@ -1,0 +1,2 @@
+import FriendlyIcon from './FriendlyIcon';
+export default function WelcomeGarden(){return <div className="welcomeGarden" aria-hidden="true"><span className="gardenSun"/><span className="gardenStar one">✦</span><span className="gardenStar two">✧</span><div className="gardenPeople"><i/><i/><i/></div><div className="gardenHouse"><FriendlyIcon name="heart"/></div><span className="gardenLeaf"><FriendlyIcon name="sprout"/></span><span className="gardenGround"/></div>}

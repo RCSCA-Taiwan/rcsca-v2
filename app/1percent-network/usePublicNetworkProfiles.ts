@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getSupabaseBrowserClient } from "../../lib/supabase-browser";
+import {getNetworkClient} from "../../lib/network-api";
 
 export type PublicNetworkProfile = {
   id: string;
@@ -25,10 +25,10 @@ export function usePublicNetworkProfiles() {
     setFailed(false);
     async function load() {
       try {
-        const client = getSupabaseBrowserClient();
-        const { data, error } = await client.from("network_profiles")
+        const client = getNetworkClient();
+        const { data, error } = await client.from("public_network_directory")
           .select("id,category,display_name,region,public_description,website_url")
-          .eq("status", "approved").eq("public_visible", true).order("category");
+          .order("category");
         if (error) throw error;
         if (active) setRows((data || []) as PublicNetworkProfile[]);
       } catch {
