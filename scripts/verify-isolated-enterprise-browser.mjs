@@ -506,7 +506,7 @@ try {
   await manualDonation.getByLabel('捐款人登入信箱',{exact:true}).fill(applicant.email);
   await manualDonation.getByLabel('核實金額（新台幣元）',{exact:true}).fill('1000');
   await manualDonation.getByLabel('實際入帳日期',{exact:true}).fill(new Date().toISOString().slice(0,10));
-  const donationReference=`Synthetic-${randomUUID()}`;
+  const donationReference=`Synthetic-${randomUUID()}`.toUpperCase();
   await manualDonation.getByLabel('唯一入帳／收據編號',{exact:true}).fill(donationReference);
   await manualDonation.getByLabel('核實依據（僅管理員查看）',{exact:true}).fill('Synthetic receipt in disposable test stack only');
   await manualDonation.getByRole('checkbox',{name:/我已核對協會實際入帳/}).check();
