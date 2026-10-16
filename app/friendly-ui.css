@@ -8,3 +8,5 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,s
 @media(prefers-reduced-motion:reduce){.guideCard,.accountGrid a{transition:none}.guideCard:hover,.accountGrid a:hover{transform:none}}
 
 .careTwoDoors a:not(.bigTextLink)>.friendlyIcon{margin-bottom:8px}.dashCard>.friendlyIcon{margin-bottom:14px}.dashCard>.friendlyIcon+small{display:block}.careTwoDoors a:first-child>.friendlyIcon{color:#55674d;background:#e6eadc}.careTwoDoors a:nth-child(2)>.friendlyIcon{color:#8b6554;background:#eee0d4}
+
+.routeGuideIntro .routeGuideAll::after{content:none}
