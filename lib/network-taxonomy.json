@@ -1,0 +1,838 @@
+[
+  {
+    "code": "events",
+    "label": "活動、公關與展演",
+    "children": [
+      {
+        "code": "events.planning",
+        "label": "活動企劃執行"
+      },
+      {
+        "code": "events.pr",
+        "label": "公關傳播"
+      },
+      {
+        "code": "events.exhibitions",
+        "label": "展覽與會議"
+      },
+      {
+        "code": "events.stage",
+        "label": "舞台燈光音響"
+      },
+      {
+        "code": "events.hosting",
+        "label": "主持與表演"
+      },
+      {
+        "code": "events.photo",
+        "label": "活動攝影錄影"
+      },
+      {
+        "code": "events.equipment",
+        "label": "活動設備租賃"
+      },
+      {
+        "code": "events.tickets",
+        "label": "票務與報名服務"
+      }
+    ]
+  },
+  {
+    "code": "design",
+    "label": "設計、品牌與影像",
+    "children": [
+      {
+        "code": "design.branding",
+        "label": "品牌識別設計"
+      },
+      {
+        "code": "design.graphic",
+        "label": "平面與包裝設計"
+      },
+      {
+        "code": "design.interiors",
+        "label": "室內設計"
+      },
+      {
+        "code": "design.architecture",
+        "label": "建築設計"
+      },
+      {
+        "code": "design.product",
+        "label": "產品與工業設計"
+      },
+      {
+        "code": "design.video",
+        "label": "影像製作與剪輯"
+      },
+      {
+        "code": "design.animation",
+        "label": "動畫與插畫"
+      },
+      {
+        "code": "design.web",
+        "label": "網站與介面設計"
+      }
+    ]
+  },
+  {
+    "code": "construction",
+    "label": "營建、工程與居家修繕",
+    "children": [
+      {
+        "code": "construction.building",
+        "label": "營造與土木"
+      },
+      {
+        "code": "construction.renovation",
+        "label": "裝修工程"
+      },
+      {
+        "code": "construction.electrical",
+        "label": "水電工程"
+      },
+      {
+        "code": "construction.aircon",
+        "label": "空調冷凍"
+      },
+      {
+        "code": "construction.woodwork",
+        "label": "木作與系統櫃"
+      },
+      {
+        "code": "construction.metal",
+        "label": "鐵鋁門窗與金屬工程"
+      },
+      {
+        "code": "construction.waterproof",
+        "label": "防水與抓漏"
+      },
+      {
+        "code": "construction.inspection",
+        "label": "驗屋與建物檢測"
+      }
+    ]
+  },
+  {
+    "code": "food",
+    "label": "餐飲、食品與飲品",
+    "children": [
+      {
+        "code": "food.restaurant",
+        "label": "餐廳與餐館"
+      },
+      {
+        "code": "food.catering",
+        "label": "外燴與團膳"
+      },
+      {
+        "code": "food.bakery",
+        "label": "烘焙與甜點"
+      },
+      {
+        "code": "food.coffee",
+        "label": "咖啡與茶飲"
+      },
+      {
+        "code": "food.processing",
+        "label": "食品加工製造"
+      },
+      {
+        "code": "food.ingredients",
+        "label": "食材批發與供應"
+      },
+      {
+        "code": "food.nutrition",
+        "label": "特殊飲食與餐食配送"
+      },
+      {
+        "code": "food.equipment",
+        "label": "餐飲設備與器具"
+      }
+    ]
+  },
+  {
+    "code": "health",
+    "label": "醫療、健康與照護",
+    "children": [
+      {
+        "code": "health.medical",
+        "label": "診所與醫療服務"
+      },
+      {
+        "code": "health.dental",
+        "label": "牙科與口腔照護"
+      },
+      {
+        "code": "health.rehab",
+        "label": "復健與物理治療"
+      },
+      {
+        "code": "health.pharmacy",
+        "label": "藥局與藥品服務"
+      },
+      {
+        "code": "health.nursing",
+        "label": "居家護理與長照"
+      },
+      {
+        "code": "health.mental",
+        "label": "心理諮商與支持"
+      },
+      {
+        "code": "health.nutrition",
+        "label": "營養與健康管理"
+      },
+      {
+        "code": "health.equipment",
+        "label": "醫療輔具與耗材"
+      }
+    ]
+  },
+  {
+    "code": "education",
+    "label": "教育、培訓與親子",
+    "children": [
+      {
+        "code": "education.early",
+        "label": "幼兒教育與親子服務"
+      },
+      {
+        "code": "education.tutoring",
+        "label": "課業輔導與補習"
+      },
+      {
+        "code": "education.language",
+        "label": "語言教學"
+      },
+      {
+        "code": "education.vocational",
+        "label": "職業技能培訓"
+      },
+      {
+        "code": "education.arts",
+        "label": "藝文與音樂教學"
+      },
+      {
+        "code": "education.corporate",
+        "label": "企業培訓與講師"
+      },
+      {
+        "code": "education.special",
+        "label": "特殊教育與早療"
+      },
+      {
+        "code": "education.materials",
+        "label": "教材教具與教育科技"
+      }
+    ]
+  },
+  {
+    "code": "legal",
+    "label": "法律、財稅與顧問",
+    "children": [
+      {
+        "code": "legal.law",
+        "label": "法律諮詢與訴訟"
+      },
+      {
+        "code": "legal.accounting",
+        "label": "記帳與會計"
+      },
+      {
+        "code": "legal.tax",
+        "label": "稅務申報與諮詢"
+      },
+      {
+        "code": "legal.finance",
+        "label": "財務規劃與管理"
+      },
+      {
+        "code": "legal.insurance",
+        "label": "保險規劃與服務"
+      },
+      {
+        "code": "legal.management",
+        "label": "企業經營顧問"
+      },
+      {
+        "code": "legal.ip",
+        "label": "智慧財產與商標"
+      },
+      {
+        "code": "legal.notary",
+        "label": "地政士與公證服務"
+      }
+    ]
+  },
+  {
+    "code": "technology",
+    "label": "資訊、數位與通訊",
+    "children": [
+      {
+        "code": "technology.software",
+        "label": "軟體與系統開發"
+      },
+      {
+        "code": "technology.ecommerce",
+        "label": "電商系統與營運"
+      },
+      {
+        "code": "technology.it",
+        "label": "資訊設備與維護"
+      },
+      {
+        "code": "technology.security",
+        "label": "資訊安全"
+      },
+      {
+        "code": "technology.data",
+        "label": "AI 與資料分析"
+      },
+      {
+        "code": "technology.cloud",
+        "label": "雲端與網路建置"
+      },
+      {
+        "code": "technology.telecom",
+        "label": "通訊與弱電系統"
+      },
+      {
+        "code": "technology.repair",
+        "label": "手機與電腦維修"
+      }
+    ]
+  },
+  {
+    "code": "marketing",
+    "label": "行銷、媒體與印刷",
+    "children": [
+      {
+        "code": "marketing.digital",
+        "label": "數位廣告與社群行銷"
+      },
+      {
+        "code": "marketing.content",
+        "label": "內容企劃與文案"
+      },
+      {
+        "code": "marketing.media",
+        "label": "媒體與新聞服務"
+      },
+      {
+        "code": "marketing.printing",
+        "label": "印刷與輸出"
+      },
+      {
+        "code": "marketing.signage",
+        "label": "招牌與廣告工程"
+      },
+      {
+        "code": "marketing.gifts",
+        "label": "禮贈品與客製商品"
+      },
+      {
+        "code": "marketing.research",
+        "label": "市場調查與研究"
+      },
+      {
+        "code": "marketing.translation",
+        "label": "翻譯與口譯"
+      }
+    ]
+  },
+  {
+    "code": "transport",
+    "label": "交通、物流與倉儲",
+    "children": [
+      {
+        "code": "transport.passenger",
+        "label": "接送與客運服務"
+      },
+      {
+        "code": "transport.freight",
+        "label": "貨運與宅配"
+      },
+      {
+        "code": "transport.moving",
+        "label": "搬家與搬運"
+      },
+      {
+        "code": "transport.coldchain",
+        "label": "冷鏈與特殊物流"
+      },
+      {
+        "code": "transport.storage",
+        "label": "倉儲與理貨"
+      },
+      {
+        "code": "transport.rental",
+        "label": "車輛租賃"
+      },
+      {
+        "code": "transport.accessible",
+        "label": "無障礙交通服務"
+      },
+      {
+        "code": "transport.trade",
+        "label": "報關與進出口服務"
+      }
+    ]
+  },
+  {
+    "code": "travel",
+    "label": "旅遊、住宿與休閒",
+    "children": [
+      {
+        "code": "travel.hotel",
+        "label": "飯店與旅館"
+      },
+      {
+        "code": "travel.homestay",
+        "label": "民宿與特色住宿"
+      },
+      {
+        "code": "travel.agency",
+        "label": "旅行社與行程規劃"
+      },
+      {
+        "code": "travel.guide",
+        "label": "導覽與地方體驗"
+      },
+      {
+        "code": "travel.venue",
+        "label": "場地與空間租借"
+      },
+      {
+        "code": "travel.camping",
+        "label": "露營與戶外體驗"
+      },
+      {
+        "code": "travel.attractions",
+        "label": "景點與休閒設施"
+      },
+      {
+        "code": "travel.booking",
+        "label": "旅遊票券與訂房服務"
+      }
+    ]
+  },
+  {
+    "code": "retail",
+    "label": "零售、通路與生活用品",
+    "children": [
+      {
+        "code": "retail.daily",
+        "label": "日用品與清潔用品"
+      },
+      {
+        "code": "retail.apparel",
+        "label": "服飾鞋包與配件"
+      },
+      {
+        "code": "retail.home",
+        "label": "家具家飾與寢具"
+      },
+      {
+        "code": "retail.electronics",
+        "label": "家電與電子商品"
+      },
+      {
+        "code": "retail.baby",
+        "label": "母嬰與兒童用品"
+      },
+      {
+        "code": "retail.stationery",
+        "label": "文具書籍與玩具"
+      },
+      {
+        "code": "retail.wholesale",
+        "label": "批發與通路經銷"
+      },
+      {
+        "code": "retail.secondhand",
+        "label": "二手商品與循環商店"
+      }
+    ]
+  },
+  {
+    "code": "manufacturing",
+    "label": "製造、材料與設備",
+    "children": [
+      {
+        "code": "manufacturing.metal",
+        "label": "金屬加工與五金"
+      },
+      {
+        "code": "manufacturing.plastic",
+        "label": "塑橡膠與包材"
+      },
+      {
+        "code": "manufacturing.textile",
+        "label": "紡織成衣與布料"
+      },
+      {
+        "code": "manufacturing.machinery",
+        "label": "機械設備與維修"
+      },
+      {
+        "code": "manufacturing.electronics",
+        "label": "電子零組件"
+      },
+      {
+        "code": "manufacturing.wood",
+        "label": "木竹紙製品"
+      },
+      {
+        "code": "manufacturing.chemical",
+        "label": "化工與清潔產品製造"
+      },
+      {
+        "code": "manufacturing.custom",
+        "label": "客製加工與打樣"
+      }
+    ]
+  },
+  {
+    "code": "agriculture",
+    "label": "農林漁牧與園藝",
+    "children": [
+      {
+        "code": "agriculture.produce",
+        "label": "蔬果與農產品"
+      },
+      {
+        "code": "agriculture.livestock",
+        "label": "畜產與乳品"
+      },
+      {
+        "code": "agriculture.fishery",
+        "label": "水產與漁業"
+      },
+      {
+        "code": "agriculture.flowers",
+        "label": "花藝與花卉"
+      },
+      {
+        "code": "agriculture.landscape",
+        "label": "園藝景觀與維護"
+      },
+      {
+        "code": "agriculture.organic",
+        "label": "有機與友善農業"
+      },
+      {
+        "code": "agriculture.processing",
+        "label": "農產加工與伴手禮"
+      },
+      {
+        "code": "agriculture.equipment",
+        "label": "農業資材與設備"
+      }
+    ]
+  },
+  {
+    "code": "environment",
+    "label": "環境、清潔與永續",
+    "children": [
+      {
+        "code": "environment.cleaning",
+        "label": "居家與商業清潔"
+      },
+      {
+        "code": "environment.waste",
+        "label": "廢棄物清運與回收"
+      },
+      {
+        "code": "environment.pest",
+        "label": "病媒防治與消毒"
+      },
+      {
+        "code": "environment.energy",
+        "label": "節能與再生能源"
+      },
+      {
+        "code": "environment.carbon",
+        "label": "碳盤查與永續顧問"
+      },
+      {
+        "code": "environment.water",
+        "label": "水處理與環境檢測"
+      },
+      {
+        "code": "environment.reuse",
+        "label": "修復再利用與循環設計"
+      },
+      {
+        "code": "environment.conservation",
+        "label": "生態保育與環境教育"
+      }
+    ]
+  },
+  {
+    "code": "personal",
+    "label": "美容、生活與個人服務",
+    "children": [
+      {
+        "code": "personal.hair",
+        "label": "美髮與造型"
+      },
+      {
+        "code": "personal.beauty",
+        "label": "美容美甲與保養"
+      },
+      {
+        "code": "personal.laundry",
+        "label": "洗衣與衣物修補"
+      },
+      {
+        "code": "personal.organizing",
+        "label": "收納整理與家務服務"
+      },
+      {
+        "code": "personal.wedding",
+        "label": "婚禮與禮俗服務"
+      },
+      {
+        "code": "personal.funeral",
+        "label": "生命禮儀服務"
+      },
+      {
+        "code": "personal.photography",
+        "label": "人像與家庭攝影"
+      },
+      {
+        "code": "personal.repair",
+        "label": "生活用品維修"
+      }
+    ]
+  },
+  {
+    "code": "pets",
+    "label": "寵物與動物服務",
+    "children": [
+      {
+        "code": "pets.veterinary",
+        "label": "動物醫療"
+      },
+      {
+        "code": "pets.grooming",
+        "label": "寵物美容"
+      },
+      {
+        "code": "pets.boarding",
+        "label": "寵物住宿與照護"
+      },
+      {
+        "code": "pets.training",
+        "label": "寵物訓練與行為"
+      },
+      {
+        "code": "pets.supplies",
+        "label": "寵物食品與用品"
+      },
+      {
+        "code": "pets.rescue",
+        "label": "動物救援與認養"
+      },
+      {
+        "code": "pets.transport",
+        "label": "寵物接送"
+      },
+      {
+        "code": "pets.farewell",
+        "label": "寵物生命服務"
+      }
+    ]
+  },
+  {
+    "code": "sports",
+    "label": "運動、體適能與戶外",
+    "children": [
+      {
+        "code": "sports.fitness",
+        "label": "健身與體適能"
+      },
+      {
+        "code": "sports.yoga",
+        "label": "瑜珈與皮拉提斯"
+      },
+      {
+        "code": "sports.swimming",
+        "label": "游泳與水域活動"
+      },
+      {
+        "code": "sports.ball",
+        "label": "球類教學與活動"
+      },
+      {
+        "code": "sports.outdoor",
+        "label": "登山與戶外運動"
+      },
+      {
+        "code": "sports.equipment",
+        "label": "運動用品與器材"
+      },
+      {
+        "code": "sports.venues",
+        "label": "運動場館營運"
+      },
+      {
+        "code": "sports.adaptive",
+        "label": "適應體育與樂齡運動"
+      }
+    ]
+  },
+  {
+    "code": "automotive",
+    "label": "汽機車與交通設備",
+    "children": [
+      {
+        "code": "automotive.sales",
+        "label": "汽機車銷售"
+      },
+      {
+        "code": "automotive.maintenance",
+        "label": "汽機車維修保養"
+      },
+      {
+        "code": "automotive.tires",
+        "label": "輪胎底盤與定位"
+      },
+      {
+        "code": "automotive.detailing",
+        "label": "車體美容與鍍膜"
+      },
+      {
+        "code": "automotive.parts",
+        "label": "汽機車零件與配件"
+      },
+      {
+        "code": "automotive.charging",
+        "label": "電動車與充電服務"
+      },
+      {
+        "code": "automotive.bicycle",
+        "label": "自行車與微型移動"
+      },
+      {
+        "code": "automotive.roadside",
+        "label": "道路救援與拖吊"
+      }
+    ]
+  },
+  {
+    "code": "social",
+    "label": "團體、社福與社區服務",
+    "children": [
+      {
+        "code": "social.welfare",
+        "label": "社會福利與弱勢服務"
+      },
+      {
+        "code": "social.children",
+        "label": "兒少與家庭支持"
+      },
+      {
+        "code": "social.elderly",
+        "label": "長者關懷與陪伴"
+      },
+      {
+        "code": "social.disability",
+        "label": "身心障礙支持"
+      },
+      {
+        "code": "social.community",
+        "label": "社區營造與地方服務"
+      },
+      {
+        "code": "social.volunteer",
+        "label": "志工組織與人力"
+      },
+      {
+        "code": "social.association",
+        "label": "協會、基金會與公益團體"
+      },
+      {
+        "code": "social.religion",
+        "label": "宗教與文化團體"
+      }
+    ]
+  },
+  {
+    "code": "property",
+    "label": "不動產、管理與人力",
+    "children": [
+      {
+        "code": "property.broker",
+        "label": "不動產仲介與租賃"
+      },
+      {
+        "code": "property.management",
+        "label": "物業與社區管理"
+      },
+      {
+        "code": "property.security",
+        "label": "保全與安全管理"
+      },
+      {
+        "code": "property.recruiting",
+        "label": "人力招募與派遣"
+      },
+      {
+        "code": "property.hr",
+        "label": "人資與勞務顧問"
+      },
+      {
+        "code": "property.cowork",
+        "label": "共享辦公與商務空間"
+      },
+      {
+        "code": "property.storage",
+        "label": "空間整理與保管"
+      },
+      {
+        "code": "property.facilities",
+        "label": "設施維護與管理"
+      }
+    ]
+  },
+  {
+    "code": "culture",
+    "label": "文化、藝術與創作",
+    "children": [
+      {
+        "code": "culture.craft",
+        "label": "工藝與手作"
+      },
+      {
+        "code": "culture.performing",
+        "label": "表演藝術與劇場"
+      },
+      {
+        "code": "culture.music",
+        "label": "音樂創作與製作"
+      },
+      {
+        "code": "culture.publishing",
+        "label": "出版與文化內容"
+      },
+      {
+        "code": "culture.curation",
+        "label": "策展與藝文推廣"
+      },
+      {
+        "code": "culture.heritage",
+        "label": "地方文化與文史"
+      },
+      {
+        "code": "culture.licensing",
+        "label": "文創商品與授權"
+      },
+      {
+        "code": "culture.art",
+        "label": "藝術創作與收藏服務"
+      }
+    ]
+  }
+]

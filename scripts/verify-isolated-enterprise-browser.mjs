@@ -97,12 +97,12 @@ try {
     const email = `signup-${randomUUID()}@example.test`;
     if (enterprise) {
       await page.goto('http://127.0.0.1:3301/1percent-partner');
-      await page.getByRole('link',{name:'企業註冊 →',exact:true}).click();
+      await page.getByRole('link',{name:'企業/團體/店家 共享合作夥伴註冊 →',exact:true}).click();
     } else {
       await page.goto('http://127.0.0.1:3301/login?next=%2Faccount');
       await page.getByRole('link',{name:'個人註冊 →',exact:true}).click();
     }
-    await expect(page.getByRole('button',{name:enterprise?'企業註冊':'個人註冊',exact:true})).toHaveAttribute('aria-pressed','true');
+    await expect(page.getByRole('button',{name:enterprise?'企業/團體/店家 共享合作夥伴註冊':'個人註冊',exact:true})).toHaveAttribute('aria-pressed','true');
     await page.getByLabel('電子郵件',{exact:true}).fill(email);
     await page.getByRole('button',{name:'寄送註冊驗證連結',exact:true}).click();
     await expect(page.getByRole('status')).toContainText('驗證連結已寄出',{timeout:30000});
@@ -114,20 +114,26 @@ try {
     if(sql(`select (select count(*) from public.memberships where user_id='${id}' and status='active')+(select count(*) from public.admin_roles where user_id='${id}');`)!=='0') throw new Error('Registration unexpectedly granted membership or admin');
     if (enterprise) {
       const signupCompany=`Signup enterprise ${randomUUID()}`;
-      for(const [label,value] of Object.entries({'企業／店家名稱＊':signupCompany,'統一編號＊':'12345678','產業類別＊':'活動公關','所在縣市＊':'臺北市','企業／店家地址＊':'Synthetic registration address','網站（選填）':'https://example.test'})) await page.getByLabel(label,{exact:true}).fill(value);
+      for(const [label,value] of Object.entries({'企業/團體/店家名稱＊':signupCompany,'統一編號＊':'12345678','所在縣市＊':'臺北市','企業/團體/店家地址＊':'Synthetic registration address','網站（選填）':'https://example.test'})) await page.getByLabel(label,{exact:true}).fill(value);
+      await page.getByLabel('主要產業大類＊',{exact:true}).selectOption('events');
+      await page.getByLabel('主要產業細項＊',{exact:true}).selectOption('events.planning');
+      await page.getByLabel('其他專業／服務',{exact:true}).selectOption('design.video');
+      await page.getByRole('button',{name:'新增專業',exact:true}).click();
       await page.getByRole('button',{name:'下一步 →',exact:true}).click();
       for(const [label,value] of Object.entries({'窗口姓名＊':'Synthetic signup contact','窗口職稱＊':'專案經理','聯絡 Email＊':email,'公司電話＊':'02-20000000','分機（選填）':'123','手機＊':'0900000000'})) await page.getByLabel(label,{exact:true}).fill(value);
       await page.getByRole('button',{name:'下一步 →',exact:true}).click();
       await page.getByLabel('提供類型＊',{exact:true}).selectOption('both');
       await page.getByLabel('1% 產品／服務內容＊',{exact:true}).fill('Synthetic product and event service; once per month; Taipei; discuss scheduling.');
+      await page.getByRole('checkbox',{name:/我同意審核通過後/}).check();
+      await page.getByLabel('共享專業網絡公開介紹＊',{exact:true}).fill('Synthetic public event and video service.');
       await page.getByRole('button',{name:'下一步 →',exact:true}).click();
-      await expect(page.getByRole('button',{name:'確認並送出企業註冊',exact:true})).toBeDisabled();
-      await page.getByRole('checkbox',{name:'我已核對企業、聯絡窗口與 1% 內容，確認資料正確。',exact:true}).check();
-      await page.getByRole('button',{name:'確認並送出企業註冊',exact:true}).click();
-      await expect(page.getByRole('status')).toContainText('企業註冊資料已送出');
-      if(sql(`select count(*) from public.enterprise_applications where requester_user_id='${id}' and status='submitted' and industry='活動公關' and address='Synthetic registration address' and phone_extension='123' and contribution_kind='both';`)!=='1') throw new Error('Signup did not save complete pending enterprise registration');
+      await expect(page.getByRole('button',{name:'確認並送出共享合作夥伴註冊',exact:true})).toBeDisabled();
+      await page.getByRole('checkbox',{name:'我已核對單位、聯絡窗口與 1% 內容，確認資料正確。',exact:true}).check();
+      await page.getByRole('button',{name:'確認並送出共享合作夥伴註冊',exact:true}).click();
+      await expect(page.getByRole('status')).toContainText('共享合作夥伴註冊資料已送出');
+      if(sql(`select count(*) from public.enterprise_applications where requester_user_id='${id}' and status='submitted' and industry_code='events.planning' and professional_codes=array['design.video'] and address='Synthetic registration address' and phone_extension='123' and contribution_kind='both';`)!=='1') throw new Error('Signup did not save complete pending enterprise registration');
       await page.reload();
-      await expect(page.getByText('企業申請進度：已送出',{exact:true})).toBeVisible();
+      await expect(page.getByText('共享合作夥伴申請進度：已送出',{exact:true})).toBeVisible();
       await expect(page.getByText(signupCompany,{exact:true})).toBeVisible();
       const signupApp=sql(`select id from public.enterprise_applications where requester_user_id='${id}';`);
       const registrationReviewer=await (await browser.newContext()).newPage();diagnosticPages.push(registrationReviewer);
@@ -146,10 +152,22 @@ try {
       for(let step=0;step<2;step++) await page.getByRole('button',{name:'下一步 →',exact:true}).click();
       await page.getByLabel('1% 產品／服務內容＊',{exact:true}).fill('Synthetic corrected product and service description.');
       await page.getByRole('button',{name:'下一步 →',exact:true}).click();
-      await page.getByRole('checkbox').check();
-      await page.getByRole('button',{name:'確認並送出企業註冊',exact:true}).click();
-      await expect(page.getByRole('status')).toContainText('企業註冊資料已送出');
+      await page.getByRole('checkbox',{name:'我已核對單位、聯絡窗口與 1% 內容，確認資料正確。',exact:true}).check();
+      await page.getByRole('button',{name:'確認並送出共享合作夥伴註冊',exact:true}).click();
+      await expect(page.getByRole('status')).toContainText('共享合作夥伴註冊資料已送出');
       if(sql(`select count(*) from public.enterprise_applications where requester_user_id='${id}' and id='${signupApp}' and status='submitted' and contribution_description='Synthetic corrected product and service description.';`)!=='1') throw new Error('Correction did not reuse original registration');
+      await registrationReviewer.reload();
+      await registrationCard.getByPlaceholder('審核說明／需補資料').fill('Verified classified partner and consented public introduction.');
+      await registrationCard.getByRole('button',{name:'核准企業身份',exact:true}).click();
+      await expect(registrationReviewer.getByText('企業已核准，申請帳號已連結企業身份。',{exact:true})).toBeVisible();
+      await page.goto('http://127.0.0.1:3301/1percent-network/directory');
+      await page.getByRole('textbox',{name:'搜尋名稱、產業、地區或服務',exact:true}).fill(signupCompany);
+      await page.getByRole('combobox').selectOption('events.planning');
+      await expect(page.getByRole('heading',{name:signupCompany,exact:true})).toBeVisible();
+      await expect(page.getByText('Synthetic public event and video service.',{exact:true})).toBeVisible();
+      if((await page.locator('.portalGrid').innerText()).includes('Synthetic registration address')) throw new Error('Private registration address leaked into network');
+      await page.getByRole('combobox').selectOption('design.video');
+      await expect(page.getByRole('heading',{name:signupCompany,exact:true})).toBeVisible();
       await registrationReviewer.context().close();
 
     }

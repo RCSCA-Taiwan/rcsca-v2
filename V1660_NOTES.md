@@ -29,3 +29,11 @@
 - Invalid-token redirect probing with the intended production callback falls back to `http://localhost:3000`; production Auth Site URL / allowed callback configuration must be corrected before registration is released. No real email was sent for this check.
 - The installed Supabase connector does not expose Auth URL configuration and no management credential is configured in the runtime. Browser fallback requires user approval under the browser tool instructions.
 - The callback uses createBrowserClient’s automatic PKCE exchange and then server-validated getUser; explicitly exchanging the same code again previously failed.
+
+## Shared cooperation partner categories
+
+- Public partner section is named 企業/團體/店家 共享合作夥伴.
+- A shared, versioned catalog contains 22 groups and 176 detailed leaf codes; registration and personal network entry use the same selector. Main classification plus up to eight cross-industry specialties are validated against the database catalog. Legacy public categories remain readable through explicit display aliases.
+- Approval creates one organization mapping per selected category, independently of a contact’s personal network profiles. Only explicitly consented public introductions, name, region and website enter the public directory after approval; registration contacts, addresses and private contribution conditions are excluded. Inactive organizations disappear from public results.
+- Network overview now supports every category via group/filter controls, without the previous eight-category cutoff. The public directory combines existing approved personal nodes and approved consenting organization nodes under an invoker view.
+- Anonymous network reads are separated from owner/admin policies so public visitors need no execute permission on administrative role helpers.

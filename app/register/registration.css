@@ -1,1 +1,3 @@
 .registrationPolicies{font-size:13px;line-height:1.8}.registrationPolicies a,.registrationLinks a{text-decoration:underline;text-underline-offset:4px}.registrationLinks{display:flex;flex-wrap:wrap;gap:14px;margin:24px 0;font-weight:700}.registrationLinks a{padding:10px 0}.authShell a:focus-visible,.registrationLinks a:focus-visible{outline:2px solid var(--deepgold);outline-offset:4px}.authPrivacy>a{display:block;margin-top:12px;font-weight:700}.authShell{overflow-wrap:anywhere}
+
+.authModeSwitch button{white-space:normal;line-height:1.6}
