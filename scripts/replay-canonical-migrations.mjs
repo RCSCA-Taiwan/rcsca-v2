@@ -79,6 +79,7 @@ try {
   // Only the disposable stack permits the browser test's loopback callback.
   const authConfigPath = path.join(replayRoot, "supabase", "config.toml");
   const authConfig = fs.readFileSync(authConfigPath, "utf8")
+    .replace(/(\[auth.email\][\s\S]*?enable_confirmations\s*=\s*)false/, '$1true')
     .replace(/^site_url\s*=.*$/m, 'site_url = "http://127.0.0.1:3301"')
     .replace(/^additional_redirect_urls\s*=.*$/m, 'additional_redirect_urls = ["http://127.0.0.1:3301/**"]');
   fs.writeFileSync(authConfigPath, authConfig);
