@@ -22,3 +22,10 @@
 - New authenticated invoker RPC validates input, verified/active account, request idempotency, duplicate applications and owner-only needs-info corrections. No automatic membership, enterprise approval, published share or badge. Legacy submissions remain reviewable.
 - Application addresses, contacts and proposed contributions remain accessible only to the applicant and enterprise reviewers/admins. Reviewer cards show all collected details. Industry carries into approved enterprise records; contact details are not copied into public enterprise profiles.
 - Staging rollback SQL verifies validation, access, retries, correction and approval behavior. CI additionally verifies actual disposable verification email → PKCE callback → profile, mobile enterprise data entry, saved pending record, independent reviewer correction and resubmission. Production email delivery depends on the existing configured email provider; no real user email was sent for testing.
+
+## Production release gate
+
+- Read-only production Auth checks show email signup enabled and email confirmation required.
+- Invalid-token redirect probing with the intended production callback falls back to `http://localhost:3000`; production Auth Site URL / allowed callback configuration must be corrected before registration is released. No real email was sent for this check.
+- The installed Supabase connector does not expose Auth URL configuration and no management credential is configured in the runtime. Browser fallback requires user approval under the browser tool instructions.
+- The callback uses createBrowserClient’s automatic PKCE exchange and then server-validated getUser; explicitly exchanging the same code again previously failed.
