@@ -36,7 +36,7 @@ export default function RewardCancellations({manage=false}:{manage?:boolean}){
  return <section className="fulfillmentOrders" aria-label="兌換取消與退點"><h2>{manage?'取消申請與退點審核':'兌換取消申請'}</h2>
  <p>限尚未核銷、尚未出貨或服務開始前的訂單。取消須經管理員審核；退回積分保留原效期。審核期間暫停履約，XP 與公益參與紀錄不受影響。</p>
  {notice&&<p className="workflowNotice" role="status">{notice}</p>}
- {rows.map(row=><article className="membershipCard" key={row.redemption_id}><div className="membershipCardHead"><h3>{row.title}</h3><strong>{row.status?labels[row.status]:'已核准兌換'}</strong></div>
+ {rows.map(row=><article className="membershipCard" key={row.redemption_id}><div className="membershipCardHead"><h3>取消申請：{row.title}</h3><strong>{row.status?labels[row.status]:'已核准兌換'}</strong></div>
  <p>{row.point_cost} 共享點 · 訂單編號 {row.redemption_id}</p>
  {row.reason&&<p>取消原因：{row.reason}</p>}{row.review_note&&<p>審核說明：{row.review_note}</p>}
  {row.status==='submitted'&&<p>等待審核中，暫停核銷、出貨與服務完成操作。</p>}
