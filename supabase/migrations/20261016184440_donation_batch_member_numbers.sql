@@ -67,7 +67,7 @@ begin
  if (select count(*) from jsonb_array_elements(p_rows) x where upper(trim(x->>'reference'))=v_reference)>1 then raise exception '本批次內的收據／交易編號重複';end if;
  exception when others then v_issue:=sqlerrm;end;
  if v_issue is null then v_ready:=v_ready+1;v_total:=v_total+v_amount;end if;
- v_rows:=v_rows||jsonb_build_array(jsonb_build_object('row',v_index,'input',v_row,'user_id',v_user,'matched_name',(select display_name from public.profiles where id=v_user),'member_number',(select member_number from public.memberships where user_id=v_user),'issue',v_issue));
+ v_rows:=v_rows||jsonb_build_array(jsonb_build_object('row',v_index,'input',v_row,'user_id',v_user,'matched_name',(select display_name from public.profiles where id=v_user),'matched_email',(select email from public.profiles where id=v_user),'member_number',(select member_number from public.memberships where user_id=v_user),'issue',v_issue));
  end loop;
  return jsonb_build_object('rows',v_rows,'ready',v_ready,'count',v_index,'total_received',v_total,'digest',md5(trim(p_activity)||p_rows::text||v_rows::text));
 end;$$;
