@@ -9,7 +9,7 @@ export default function FulfillmentOrders({manage=false}:{manage?:boolean}){
  const[notes,setNotes]=useState<Record<string,string>>({}),[carriers,setCarriers]=useState<Record<string,string>>({}),[tracking,setTracking]=useState<Record<string,string>>({}),[slots,setSlots]=useState<Record<string,RewardSlot[]>>({}),[selectedSlot,setSelectedSlot]=useState<Record<string,string>>({});
  const lock=useRef(false);
  async function load(){setLoading(true);setFailed(false);try{const r=await getFulfillmentClient().rpc('reward_fulfillment_list',{p_manage:manage});if(r.error)throw r.error;setRows(r.data as unknown as FulfillmentOrder[]);}catch{setFailed(true);}finally{setLoading(false);}}
- useEffect(()=>{void load();},[manage]);
+ useEffect(()=>{void load();const refresh=()=>void load();window.addEventListener('reward-cancellation-updated',refresh);return()=>window.removeEventListener('reward-cancellation-updated',refresh);},[manage]);
  useEffect(()=>{const timer=setTimeout(()=>void load(),60000);return()=>clearTimeout(timer);},[rows]);
  async function act(r:FulfillmentOrder,action:string){if(lock.current)return;if(['received','confirm','accept_time'].includes(action)&&!window.confirm(action==='received'?'確認你已實際收到商品或服務？':action==='accept_time'?'接受此替代時段並以目前點數完成兌換？':'確認接受本次預約或配送申請並扣除點數？'))return;lock.current=true;setBusy(r.id);setNotice('');try{const result=await getFulfillmentClient().rpc('reward_fulfillment_action',{p_redemption:r.id,p_action:action,p_note:notes[r.id]||'',p_slot:selectedSlot[r.id]||null,p_carrier:carriers[r.id]||'',p_tracking:tracking[r.id]||''});if(result.error)throw result.error;setNotice('進度已更新。');await load();}catch(e){setNotice(fulfillmentError(e));}finally{lock.current=false;setBusy('');}}
  async function findSlots(r:FulfillmentOrder){const x=await getFulfillmentClient().rpc('reward_available_slots',{p_reward:r.reward_id});if(x.error){setNotice('無法讀取替代時段。');return;}setSlots(v=>({...v,[r.id]:x.data as unknown as RewardSlot[]}));}
@@ -21,7 +21,7 @@ export default function FulfillmentOrders({manage=false}:{manage?:boolean}){
  {r.starts_at&&<p>時段：{slotTime(r.starts_at)} ～ {r.ends_at&&slotTime(r.ends_at)}（台灣時間）</p>}
  {r.hold_until&&r.redemption_status==='submitted'&&<p>暫時保留至：{slotTime(r.hold_until)}（若積分先到期，則提前釋出）</p>}
  <p>聯絡／收件人：{r.contact_name} · {r.phone}</p>{r.address&&<p>{r.postal_code} {r.address}</p>}{r.fulfillment_type==='delivery'&&<p>{shippingLabels[r.shipping_policy]}：{r.shipping_note}</p>}{r.tracking_number&&<p>物流：{r.carrier} · 單號 {r.tracking_number}</p>}{r.provider_note&&<p>夥伴說明：{r.provider_note}</p>}{r.issue_note&&<p>問題回報：{r.issue_note}</p>}{r.issue_resolution&&<p>處理回覆：{r.issue_resolution}</p>}
- <div className="fulfillmentActions">
+ {r.cancellation_pending?<p role="status">取消申請審核中，暫停核銷、出貨與服務完成操作。</p>:<div className="fulfillmentActions">
  {!manage&&r.redemption_status==='submitted'&&<button disabled={!!busy} onClick={()=>void act(r,'cancel')}>撤回申請</button>}
  {!manage&&r.effective_state==='time_proposed'&&<button disabled={!!busy} onClick={()=>void act(r,'accept_time')}>接受替代時段並兌換</button>}
  {!manage&&['shipped','service_delivered'].includes(r.effective_state)&&<button disabled={!!busy} onClick={()=>void act(r,'received')}>確認已收到商品／服務</button>}
@@ -31,6 +31,6 @@ export default function FulfillmentOrders({manage=false}:{manage?:boolean}){
  {manage&&r.effective_state==='confirmed'&&<button disabled={!!busy} onClick={()=>void act(r,'service_delivered')}>記錄服務已提供</button>}
  {!manage&&['approved','completed'].includes(r.redemption_status)&&<><label>問題說明<textarea maxLength={1000} value={notes[r.id]||''} onChange={e=>setNotes(x=>({...x,[r.id]:e.target.value}))}/></label><button disabled={!!busy||!notes[r.id]?.trim()} onClick={()=>void act(r,'report_issue')}>回報履約問題</button></>}
  {manage&&r.issue_note&&!r.issue_resolution&&<><label>問題處理結果（限管理員）<textarea maxLength={1000} value={notes[r.id]||''} onChange={e=>setNotes(x=>({...x,[r.id]:e.target.value}))}/></label><button disabled={!!busy||!notes[r.id]?.trim()} onClick={()=>void act(r,'resolve_issue')}>記錄問題處理結果</button></>}
- </div></article>):<p>目前沒有預約或配送紀錄。</p>}
+ </div>}</article>):<p>目前沒有預約或配送紀錄。</p>}
  <p><Link href="/account/redemptions">我的全部兌換 →</Link>　<Link href="/share-market">共享所 →</Link></p></section>;
 }

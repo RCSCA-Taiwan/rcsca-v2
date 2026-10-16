@@ -2,6 +2,8 @@ import type {SupabaseClient} from '@supabase/supabase-js';
 import type {Database,Json} from './database.types';
 import {getSupabaseBrowserClient} from './supabase-browser';
 type D=Omit<Database,'public'>&{public:Omit<Database['public'],'Functions'>&{Functions:Database['public']['Functions']&{
+ reward_cancellation_list:{Args:{p_manage:boolean};Returns:Json};
+ reward_cancellation_action:{Args:{p_redemption:string;p_action:string;p_note:string};Returns:undefined};
  reward_available_slots:{Args:{p_reward:string};Returns:Json};
  reward_submit_fulfillment:{Args:{p_reward:string;p_slot:string|null;p_details:Json;p_consent:boolean};Returns:string};
  reward_fulfillment_list:{Args:{p_manage:boolean};Returns:Json};

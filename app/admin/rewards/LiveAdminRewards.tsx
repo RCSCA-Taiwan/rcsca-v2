@@ -30,6 +30,8 @@ export default function LiveAdminRewards() {
   }
   useEffect(() => {
     load();
+    const refresh=()=>void load();window.addEventListener('reward-cancellation-updated',refresh);
+    return()=>window.removeEventListener('reward-cancellation-updated',refresh);
   }, []);
   async function act(id: string, d: "approved" | "rejected" | "completed") {
     if (busyId) return;
@@ -50,7 +52,7 @@ export default function LiveAdminRewards() {
     });
     setNotice(
       error
-        ? error.message.includes("redemption_points_expired") ? "這筆申請的積分已到期，不能核准扣點；請駁回並請會員重新申請。" : "操作未完成，請確認核銷權限、兌換狀態、可用積分與庫存後再試。"
+        ? error.message.includes("cancellation_review_pending") ? "此訂單正在取消審核，請先處理取消申請。" : error.message.includes("redemption_points_expired") ? "這筆申請的積分已到期，不能核准扣點；請駁回並請會員重新申請。" : "操作未完成，請確認核銷權限、兌換狀態、可用積分與庫存後再試。"
         : d === "approved"
           ? "已核准：點數與庫存已由同一受控流程結算。"
           : d === "completed"
