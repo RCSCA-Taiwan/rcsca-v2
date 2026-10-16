@@ -71,7 +71,7 @@ do $$ begin
 end $$;
 reset role;
 do $$ begin
- if exists(select 1 from public.point_transactions where user_id in (current_setting('rcsca.cm')::uuid,current_setting('rcsca.ca')::uuid)) or exists(select 1 from public.xp_transactions where user_id=current_setting('rcsca.cm')::uuid) then raise exception 'donation_or_post_changed_points_xp';end if;
+ if (select coalesce(sum(points),0) from public.point_transactions where user_id=current_setting('rcsca.cm')::uuid)<>2 or exists(select 1 from public.point_transactions where user_id=current_setting('rcsca.ca')::uuid) or exists(select 1 from public.xp_transactions where user_id=current_setting('rcsca.cm')::uuid) then raise exception 'topic_reward_or_donation_points_incorrect';end if;
  if (select count(*) from private.community_posts where id=current_setting('rcsca.cp')::uuid)<>1 then raise exception 'duplicate_post_created';end if;
 end $$;
 rollback;

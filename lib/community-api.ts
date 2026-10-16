@@ -2,6 +2,10 @@ import type {SupabaseClient} from '@supabase/supabase-js';
 import type {Database,Json} from './database.types';
 import {getSupabaseBrowserClient} from './supabase-browser';
 type D=Omit<Database,'public'>&{public:Omit<Database['public'],'Functions'>&{Functions:Database['public']['Functions']&{
+ community_daily_progress:{Args:Record<string,never>;Returns:Json};
+ community_comment_submit:{Args:{p_id:string;p_post:string;p_body:string};Returns:Json};
+ community_thread:{Args:{p_post:string;p_before:string|null};Returns:Json};
+ community_comment_hide:{Args:{p_id:string};Returns:undefined};
  community_image_register:{Args:{p_path:string};Returns:string};
  community_post_submit:{Args:{p_id:string;p_title:string;p_body:string;p_category:string;p_images:string[];p_consent:boolean};Returns:string};
  community_posts_list:{Args:{p_manage:boolean};Returns:Json};

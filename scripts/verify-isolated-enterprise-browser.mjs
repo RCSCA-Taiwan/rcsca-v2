@@ -466,6 +466,28 @@ try {
   const publishedImage=viewedPost.getByAltText(`${postTitle} 圖片 1`,{exact:true});
   await expect(publishedImage).toBeVisible();
   await expect.poll(()=>publishedImage.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
+  // The real mobile thread uses the same authenticated ledger as MY 1%.
+  const forumPostId=sql(`select id from private.community_posts where title='${postTitle}';`);
+  if(sql(`select sum(points) from public.point_transactions where source_type='community_topic' and source_id='${forumPostId}';`)!=='2')throw new Error('Approved topic did not credit exactly two points');
+  await viewedPost.getByRole('button',{name:'查看留言／參與討論',exact:true}).click();
+  await viewedPost.getByLabel('回覆這個主題',{exact:true}).fill('Synthetic first discussion reply');
+  await viewedPost.getByRole('button',{name:'發布留言',exact:true}).click();
+  await expect(viewedPost.getByRole('status')).toContainText('本次獲得 1 分');
+  await expect(viewerPage.getByText(/今日已取得 1 個主題的留言積分/)).toBeVisible();
+  await viewedPost.getByLabel('回覆這個主題',{exact:true}).fill('Synthetic second same-topic reply');
+  await viewedPost.getByRole('button',{name:'發布留言',exact:true}).click();
+  await expect(viewedPost.getByRole('status')).toContainText('不重複給分');
+  const concurrentReplies=await Promise.all([randomUUID(),randomUUID()].map(id=>imageProbe.rpc('community_comment_submit',{p_id:id,p_post:forumPostId,p_body:'Concurrent same-topic test reply'})));
+  if(concurrentReplies.some(r=>r.error||r.data.awarded))throw new Error('Concurrent reply awarded twice');
+  if(sql(`select count(*) from public.point_transactions where user_id='${member.id}' and source_type='community_reply' and source_id='${forumPostId}';`)!=='1')throw new Error('Same-thread reply reward duplicated');
+  await membershipPage.reload();
+  await expect(membershipPage.getByText('今日已送出 1／1 個主題',{exact:true})).toBeVisible();
+  await membershipPage.getByLabel('標題＊',{exact:true}).fill('Synthetic second same-day topic');
+  await membershipPage.getByLabel('分享內容＊',{exact:true}).fill('Must be rejected by the daily quota');
+  await membershipPage.getByRole('checkbox').check();
+  await membershipPage.getByRole('button',{name:'送出投稿審核',exact:true}).click();
+  await expect(membershipPage.getByRole('status')).toContainText('每人每天限一個');
+  if(await viewerPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Forum overflows mobile viewport');
   const imagePath=sql(`select i.object_path from private.community_images i join private.community_posts p on p.id=i.post_id where p.title='${postTitle}';`);
   const anonymousImage=await fetch(`${env.API_URL}/storage/v1/object/public/community-media/${imagePath}`);
   if(anonymousImage.status===200)throw new Error('Private community image is publicly readable');
@@ -492,8 +514,8 @@ try {
   await membershipPage.goto('http://127.0.0.1:3301/account/contributions');
   await expect(membershipPage.locator("body")).toContainText('已核實累計：新台幣 1,000 元');
   await expect(membershipPage.locator("body")).toContainText('徽章名稱與門檻尚待協會核定');
-  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==27)throw new Error('Community or donation unexpectedly changed points');
-  console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; verified donation stays private and grants no unconfigured badge, points or XP');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==29)throw new Error('Topic approval must add exactly two points; donation must add none');
+  console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; topic approval grants two points, mobile replies grant one point only once, daily topic quota holds; verified donation stays private and grants no unconfigured badge, points or XP');
 
   // Seed one unused, already-paid code to exercise cancellation independently.
   const cancelReward=randomUUID(),cancelOrder=randomUUID(),cancelTitle=`Browser cancellation ${randomUUID()}`;
@@ -506,7 +528,7 @@ try {
   await cancelCard.getByLabel('取消原因＊',{exact:true}).fill('Synthetic unused code cancellation');
   await cancelCard.getByRole('button',{name:'送出取消申請',exact:true}).click();
   await expect(cancelCard).toContainText('取消審核中');
-  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==20)throw new Error('Cancellation credited before review');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==22)throw new Error('Cancellation credited before review');
   await reviewPage.goto('http://127.0.0.1:3301/admin/rewards');
   const reviewCancel=reviewPage.getByRole('region',{name:'兌換取消與退點',exact:true}).locator('article').filter({hasText:cancelOrder});
   await expect(reviewCancel.getByRole('button',{name:'核准取消並退點',exact:true})).toBeDisabled();
@@ -519,7 +541,7 @@ try {
   await expect(membershipPage.getByText('SYNTHETIC-CANCEL',{exact:true})).toHaveCount(0);
   if(await membershipPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Cancellation UI overflows mobile viewport');
   const cancellation=JSON.parse(sql(`select json_build_object('balance',private.member_points_wallet('${applicant.id}')->>'balance','refunds',(select count(*) from public.point_transactions where source_type='reward_refund' and source_id='${cancelOrder}'),'stock',(select stock_remaining from public.reward_catalog where id='${cancelReward}'));`));
-  if(cancellation.balance!=='27'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
+  if(cancellation.balance!=='29'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
   console.log('PASS: mobile cancellation request → independent admin confirms review → one original-expiry refund → invalidated code → stock restored; no mobile overflow');
 
   const importMember=await user('roster-import');

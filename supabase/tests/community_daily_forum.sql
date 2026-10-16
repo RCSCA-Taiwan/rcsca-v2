@@ -1,0 +1,63 @@
+begin;
+select set_config('forum.a',gen_random_uuid()::text,true),set_config('forum.b',gen_random_uuid()::text,true),set_config('forum.c',gen_random_uuid()::text,true),set_config('forum.admin',gen_random_uuid()::text,true),set_config('forum.p1',gen_random_uuid()::text,true),set_config('forum.p2',gen_random_uuid()::text,true),set_config('forum.reply',gen_random_uuid()::text,true);
+insert into auth.users(id,email,raw_user_meta_data) select current_setting(k)::uuid,current_setting(k)||'@example.invalid','{}'::jsonb from unnest(array['forum.a','forum.b','forum.c','forum.admin']) k;
+insert into public.admin_roles(user_id,role_key) values(current_setting('forum.admin')::uuid,'admin');
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('forum.a'),'role','authenticated')::text,true);
+set local role authenticated;
+select public.community_post_submit(current_setting('forum.p1')::uuid,'Forum A','First subject','sharing',array[]::uuid[],true);
+select public.community_post_submit(current_setting('forum.p1')::uuid,'Forum A','First subject','sharing',array[]::uuid[],true);
+do $$ begin
+ if public.community_daily_progress()->>'topic_used'<>'true' then raise exception 'quota_not_visible';end if;
+ if public.community_daily_progress()->>'today_points'<>'0' then raise exception 'pending_rewarded';end if;
+ begin perform public.community_post_submit(gen_random_uuid(),'Second','Body','sharing',array[]::uuid[],true);raise exception 'quota_bypass';exception when raise_exception then if sqlerrm<>'daily_topic_limit' then raise;end if;end;
+ begin perform public.community_comment_submit(gen_random_uuid(),current_setting('forum.p1')::uuid,'Premature');raise exception 'pending_comment_allowed';exception when raise_exception then if sqlerrm<>'topic_not_open' then raise;end if;end;
+ if has_table_privilege('authenticated','private.community_comments','select') or has_function_privilege('anon','public.community_comment_submit(uuid,uuid,text)','execute') then raise exception 'forum_privilege_exposed';end if;
+end $$;
+reset role;
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('forum.b'),'role','authenticated')::text,true);set local role authenticated;
+select public.community_post_submit(current_setting('forum.p2')::uuid,'Forum B','Second author','activity',array[]::uuid[],true);
+reset role;
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('forum.admin'),'role','authenticated')::text,true);set local role authenticated;
+select public.admin_community_post_review(current_setting('forum.p1')::uuid,'approved','Reviewed first subject');
+select public.admin_community_post_review(current_setting('forum.p2')::uuid,'approved','Reviewed second subject');
+select public.admin_community_post_review(current_setting('forum.p1')::uuid,'hidden','Temporary moderation');
+select public.admin_community_post_review(current_setting('forum.p1')::uuid,'approved','Republish without reward');
+reset role;
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('forum.a'),'role','authenticated')::text,true);set local role authenticated;
+select public.community_comment_submit(gen_random_uuid(),current_setting('forum.p1')::uuid,'Author clarification');
+do $$ begin
+ if public.community_daily_progress()->>'today_points'<>'2' then raise exception 'author_reward_incorrect';end if;
+end $$;
+reset role;
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('forum.c'),'role','authenticated')::text,true);set local role authenticated;
+do $$ declare r jsonb;begin
+ r:=public.community_comment_submit(current_setting('forum.reply')::uuid,current_setting('forum.p1')::uuid,'First reply');
+ if r->>'awarded'<>'true' then raise exception 'first_reply_not_rewarded';end if;
+ r:=public.community_comment_submit(current_setting('forum.reply')::uuid,current_setting('forum.p1')::uuid,'First reply');
+ if r->>'retry'<>'true' or r->>'awarded'<>'false' then raise exception 'retry_not_idempotent';end if;
+ r:=public.community_comment_submit(gen_random_uuid(),current_setting('forum.p1')::uuid,'Another same-thread reply');
+ if r->>'awarded'<>'false' then raise exception 'same_topic_double_reward';end if;
+ r:=public.community_comment_submit(gen_random_uuid(),current_setting('forum.p2')::uuid,'Another topic reply');
+ if r->>'awarded'<>'true' then raise exception 'different_topic_not_rewarded';end if;
+ if public.community_daily_progress()->>'today_points'<>'2' or public.community_daily_progress()->>'today_reply_topics'<>'2' then raise exception 'reply_progress_incorrect';end if;
+ if jsonb_array_length(public.community_thread(current_setting('forum.p1')::uuid)->'comments')<>3 then raise exception 'thread_comments_missing';end if;
+ perform public.community_comment_hide(current_setting('forum.reply')::uuid);
+ r:=public.community_comment_submit(gen_random_uuid(),current_setting('forum.p1')::uuid,'After withdrawal still no reward');
+ if r->>'awarded'<>'false' then raise exception 'delete_farm';end if;
+ begin perform public.community_comment_submit(gen_random_uuid(),current_setting('forum.p1')::uuid,'  ');raise exception 'empty_comment_allowed';exception when raise_exception then if sqlerrm<>'invalid_comment' then raise;end if;end;
+end $$;
+reset role;
+do $$ begin
+ if (select sum(points) from public.point_transactions where user_id=current_setting('forum.a')::uuid and source_type='community_topic')<>2 then raise exception 'topic_double_reward';end if;
+ if (select count(*) from public.xp_transactions where user_id in (current_setting('forum.a')::uuid,current_setting('forum.c')::uuid))<>0 then raise exception 'unrequested_xp_awarded';end if;
+ if ('2026-10-16 16:00:00+00'::timestamptz at time zone 'Asia/Taipei')::date<>'2026-10-17'::date then raise exception 'incorrect_day_boundary';end if;
+end $$;
+select set_config('request.jwt.claims',json_build_object('sub',current_setting('forum.a'),'role','authenticated')::text,true);set local role authenticated;
+select public.community_post_withdraw(current_setting('forum.p1')::uuid);
+do $$ begin
+ begin perform public.community_post_submit(gen_random_uuid(),'After withdraw','Still capped','sharing',array[]::uuid[],true);raise exception 'withdraw_quota_bypass';exception when raise_exception then if sqlerrm<>'daily_topic_limit' then raise;end if;end;
+end $$;
+reset role;set local role anon;
+select id from public.reward_catalog limit 1;
+reset role;
+rollback;
