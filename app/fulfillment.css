@@ -1,6 +1,6 @@
 .fulfillmentFields {margin:20px 0;border:1px solid #c7b89f;padding:16px;border-radius:14px;display:grid;gap:15px}
 .fulfillmentFields label,.fulfillmentActions label {display:grid;gap:6px;text-align:left}
-.fulfillmentFields input:not([type=checkbox]),.fulfillmentFields select,.fulfillmentActions input,.fulfillmentActions textarea,.fulfillmentActions select {width:100%;padding:10px;border:1px solid #a99b84;background:#fffdf8;color:#231e18;border-radius:8px;font:inherit;box-sizing:border-box;min-width:0}
+.fulfillmentFields input:not([type=checkbox]),.fulfillmentFields select,.fulfillmentActions input:not([type=checkbox]),.fulfillmentActions textarea,.fulfillmentActions select {width:100%;padding:10px;border:1px solid #a99b84;background:#fffdf8;color:#231e18;border-radius:8px;font:inherit;box-sizing:border-box;min-width:0}
 .fulfillmentFields .membershipCheck {display:flex}
 .fulfillmentOrders {margin:28px 0;display:grid;gap:16px}
 .fulfillmentActions {display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:16px}
@@ -8,3 +8,6 @@
 .fulfillmentActions button {padding:11px 15px;border:1px solid #a88e64;border-radius:12px;background:#231e18;color:#fff;cursor:pointer}
 .fulfillmentActions button:disabled {opacity:.5;cursor:default}
 .fulfillmentOrders p {overflow-wrap:anywhere}
+
+.fulfillmentActions .membershipCheck {display:flex;flex-wrap:nowrap;align-items:flex-start}
+.fulfillmentActions .membershipCheck input[type=checkbox] {width:20px;height:20px;flex:0 0 20px;padding:0;margin-top:4px}
