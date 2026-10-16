@@ -556,6 +556,7 @@ try {
   for (const page of diagnosticPages) {
     if (!page.isClosed()) {
       console.error(`Isolated browser failure at ${new URL(page.url()).pathname}: ${await page.locator("body").innerText().catch(()=>"Page unavailable")}`);
+      console.error("Invalid form controls:",await page.locator("input,select,textarea").evaluateAll(controls=>controls.filter(control=>!control.validity.valid).map(control=>({name:control.name,label:control.getAttribute("aria-label"),message:control.validationMessage}))).catch(()=>[]));
     }
   }
   throw error;
