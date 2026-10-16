@@ -1,3 +1,4 @@
+import {memberCSVTemplate} from '../lib/member-import.mjs';
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -406,6 +407,34 @@ try {
   const cancellation=JSON.parse(sql(`select json_build_object('balance',private.member_points_wallet('${applicant.id}')->>'balance','refunds',(select count(*) from public.point_transactions where source_type='reward_refund' and source_id='${cancelOrder}'),'stock',(select stock_remaining from public.reward_catalog where id='${cancelReward}'));`));
   if(cancellation.balance!=='27'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
   console.log('PASS: mobile cancellation request → independent admin confirms review → one original-expiry refund → invalidated code → stock restored; no mobile overflow');
+
+  const importMember=await user('roster-import');
+  sql(`insert into public.memberships(user_id,membership_type,member_since,status) values('${importMember.id}','annual','2018-01-01','active');`);
+  const importPage=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();diagnosticPages.push(importPage);
+  importPage.on('dialog',dialog=>dialog.accept());
+  await login(importPage,membershipAdmin,'/admin/members/import');
+  await expect(importPage.getByRole('button',{name:'下載空白 CSV 範本',exact:true})).toBeVisible();
+  const csv=memberCSVTemplate()+`${importMember.email},Synthetic roster member,一般會員,2018-01-01,\r\n`;
+  await importPage.getByLabel('選擇 CSV UTF-8 檔案（上限 128 KB）',{exact:true}).setInputFiles({name:'synthetic-roster.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  await importPage.getByRole('button',{name:'預覽檢查',exact:true}).click();
+  await expect(importPage.getByRole('heading',{name:'預覽結果：1／1 筆可登錄',exact:true})).toBeVisible();
+  await expect(importPage.getByRole('button',{name:'確認登錄年度名冊',exact:true})).toBeDisabled();
+  if(sql(`select count(*) from private.membership_register where user_id='${importMember.id}';`)!=='0')throw new Error('Import preview wrote to roster');
+  await importPage.getByLabel('核對依據＊',{exact:true}).fill('Synthetic verified roster source');
+  await importPage.getByRole('checkbox',{name:/我已逐筆核對/}).check();
+  await importPage.getByRole('button',{name:'確認登錄年度名冊',exact:true}).click();
+  await expect(importPage.getByRole('status')).toContainText('已完成 1 筆年度名冊登錄');
+  if(sql(`select count(*) from private.membership_register where user_id='${importMember.id}' and member_since='2018-01-01';`)!=='1')throw new Error('Imported roster date/count incorrect');
+  await importPage.getByRole('button',{name:'清除本批資料',exact:true}).click();
+  await importPage.getByLabel('選擇 CSV UTF-8 檔案（上限 128 KB）',{exact:true}).setInputFiles({name:'synthetic-roster.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+  await importPage.getByRole('button',{name:'預覽檢查',exact:true}).click();
+  await expect(importPage.getByText('本年度名冊已登錄',{exact:true})).toBeVisible();
+  await expect(importPage.getByRole('button',{name:'確認登錄年度名冊',exact:true})).toBeDisabled();
+  if(await importPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Roster import overflows mobile viewport');
+  await membershipPage.goto('http://127.0.0.1:3301/admin/members/import');
+  await expect(membershipPage.getByRole('alert')).toContainText('目前無法使用名冊匯入');
+  await expect(membershipPage.locator('input[type=file]')).toHaveCount(0);
+  console.log('PASS: mobile CSV selection → server preview without writes → evidence/confirmation → one roster entry with original date → repeated import blocked; ordinary member denied and no mobile overflow');
 
 
 

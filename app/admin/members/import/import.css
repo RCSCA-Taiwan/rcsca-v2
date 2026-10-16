@@ -1,0 +1,11 @@
+.memberImport{padding-top:64px;display:grid;gap:18px;min-width:0;color:#211e19}
+.memberImport h1{font-size:clamp(28px,5vw,48px)}
+.memberImport p{line-height:1.8;overflow-wrap:anywhere}
+.importRows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.importRows dl{display:grid;gap:10px}.importRows dl>div{display:grid;grid-template-columns:100px minmax(0,1fr);gap:10px}
+.importRows dt{font-weight:600}.importRows dd{margin:0;overflow-wrap:anywhere}.importRows ul{padding-left:22px;color:#8a251b}
+.importFile,.importEvidence{display:grid;gap:10px;margin:18px 0}
+.importFile input{max-width:100%;font:inherit}.importEvidence textarea{box-sizing:border-box;width:100%;min-height:110px;padding:12px;border:1px solid #908575;border-radius:10px;font:inherit;background:#fffdfa;color:#211e19}
+.importActions{display:flex;gap:12px;flex-wrap:wrap}.memberImport button{padding:12px 18px;border:1px solid #a88e64;border-radius:12px;background:#231e18;color:#fff;cursor:pointer}.memberImport button:disabled{opacity:.5;cursor:default}
+.memberImport :focus-visible{outline:3px solid #87662c;outline-offset:3px}
+@media(max-width:640px){.importRows{grid-template-columns:1fr}.importRows dl>div{grid-template-columns:1fr;gap:4px}.memberImport{padding-top:40px}.memberImport .membershipCheck{flex-wrap:nowrap}}
