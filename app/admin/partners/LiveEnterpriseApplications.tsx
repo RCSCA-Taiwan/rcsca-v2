@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getSupabaseBrowserClient } from "../../../lib/supabase-browser";
+import {getEnterpriseRegistrationClient} from "../../../lib/enterprise-registration-api";
 type A = {
+  industry?:string|null;address?:string|null;website_url?:string|null;contact_title?:string|null;phone_extension?:string|null;mobile?:string|null;contribution_kind?:string|null;contribution_description?:string|null;
   id: string;
   company_name: string;
   tax_id: string;
@@ -20,11 +21,11 @@ export default function LiveEnterpriseApplications() {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState("");
   async function load() {
-    const s = getSupabaseBrowserClient();
+    const s = getEnterpriseRegistrationClient();
     const { data, error } = await s
       .from("enterprise_applications")
       .select(
-        "id,company_name,tax_id,contact_name,contact_email,contact_phone,region,share_options,direction,status,created_at",
+        "id,company_name,tax_id,contact_name,contact_email,contact_phone,region,share_options,direction,status,created_at,industry,address,website_url,contact_title,phone_extension,mobile,contribution_kind,contribution_description",
       )
       .in("status", ["submitted", "under_review", "needs_info"])
       .order("created_at", { ascending: true });
@@ -48,7 +49,7 @@ export default function LiveEnterpriseApplications() {
     if (!window.confirm(`確定要${action}嗎？`)) return;
     setBusy(id);
     setNotice("正在更新企業申請狀態。");
-    const s = getSupabaseBrowserClient();
+    const s = getEnterpriseRegistrationClient();
     const { error } = await s.rpc("admin_review_enterprise_application", {
       p_application_id: id,
       p_decision: decision,
@@ -87,8 +88,8 @@ export default function LiveEnterpriseApplications() {
                 </small>
                 <h3>{a.company_name}</h3>
                 <p>
-                  聯絡人：{a.contact_name} · {a.contact_email}
-                  {a.contact_phone ? ` · ${a.contact_phone}` : ""}
+                  聯絡人：{a.contact_name}{a.contact_title?`（${a.contact_title}）`:""} · {a.contact_email}
+                  {a.contact_phone ? ` · ${a.contact_phone}` : ""}{a.phone_extension?` 分機 ${a.phone_extension}`:""}{a.mobile?` · 手機 ${a.mobile}`:""}
                 </p>
                 <p>
                   可共享：
@@ -97,6 +98,10 @@ export default function LiveEnterpriseApplications() {
                     : "尚未選擇"}
                   {a.direction ? `｜合作方向：${a.direction}` : ""}
                 </p>
+                {a.industry&&<p>產業類別：{a.industry}</p>}
+                {a.address&&<p>企業／店家地址：{a.address}</p>}
+                {a.website_url&&<p>網站：{a.website_url}</p>}
+                {a.contribution_description&&<p style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>1% 產品／服務內容：{a.contribution_description}</p>}
                 <textarea
                   value={notes[a.id] || ""}
                   onChange={(e) =>

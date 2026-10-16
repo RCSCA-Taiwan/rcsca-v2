@@ -13,3 +13,12 @@
 本地驗證：6 項 CSV 解析測試、TypeScript／正式建置；測試資料庫完整回滾測試涵蓋權限、已驗證帳號、重複與錯誤日期、會籍衝突、舊預覽、確認與重試、防部分寫入、介紹來源沿用、積分與小隊不變，以及舊版日期／永久會籍保護。完整資料庫重建與手機操作由隔離 CI 驗證。
 
 正式會員名單尚未提供，未把測試資料當成正式資料匯入。徽章名稱／門檻核定、實際加密備份與異地還原演練、實體手機驗收仍列待辦。V1650 的備份工具完成不代表已取得正式資料備份。
+
+
+## Explicit personal and enterprise registration
+
+- Public `/register` provides personal registration and `/register?type=enterprise` provides the enterprise route. Home, mobile/desktop navigation, login and enterprise landing include explicit links. Email verification preserves the intended destination and personal team invitation. Existing accounts use their original identity.
+- Enterprise verification continues to `/1percent-partner/apply`: enterprise/shop name, eight-digit tax ID, industry, city/region, address, optional HTTP(S) website, contact name/title/email, company phone, optional extension, mobile, product/service type and detailed contribution. Four steps include a full confirmation summary.
+- New authenticated invoker RPC validates input, verified/active account, request idempotency, duplicate applications and owner-only needs-info corrections. No automatic membership, enterprise approval, published share or badge. Legacy submissions remain reviewable.
+- Application addresses, contacts and proposed contributions remain accessible only to the applicant and enterprise reviewers/admins. Reviewer cards show all collected details. Industry carries into approved enterprise records; contact details are not copied into public enterprise profiles.
+- Staging rollback SQL verifies validation, access, retries, correction and approval behavior. CI additionally verifies actual disposable verification email → PKCE callback → profile, mobile enterprise data entry, saved pending record, independent reviewer correction and resubmission. Production email delivery depends on the existing configured email provider; no real user email was sent for testing.

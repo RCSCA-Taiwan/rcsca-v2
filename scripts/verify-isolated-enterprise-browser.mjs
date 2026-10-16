@@ -69,6 +69,100 @@ try {
   }
   console.log("PASS: desktop/mobile formal-member sign-in/out, account read-error recovery, SSR cookie authorization and admin denial against disposable users");
   browser = await chromium.launch();
+  // Read only the disposable mail sink; no real messages are sent or inspected.
+  const mailURL = env.INBUCKET_URL || env.MAILPIT_URL;
+  if (!mailURL || !/^http:\/\/(127\.0\.0\.1|localhost):/.test(mailURL)) throw new Error('Disposable mail sink required');
+  async function verificationLink(email) {
+    let link;
+    await expect.poll(async () => {
+      for (const legacy of [false,true]) {
+        try {
+          const mailbox = email.split('@')[0];
+          const listPath = legacy ? `/api/v1/mailbox/${mailbox}` : '/api/v1/messages';
+          const response = await fetch(new URL(listPath,mailURL));
+          if (!response.ok) continue;
+          const listing = await response.json();
+          const messages = legacy ? listing : listing.messages;
+          const message = messages?.find(item => legacy || item.To?.some(to => to.Address === email));
+          if (!message) continue;
+          const detailPath = legacy ? `/api/v1/mailbox/${mailbox}/${message.id}` : `/api/v1/message/${message.ID}`;
+          const detail = await (await fetch(new URL(detailPath,mailURL))).json();
+          const html = legacy ? detail.body?.html : detail.HTML;
+          const links = [...(html || '').matchAll(/href=["']([^"']+)["']/g)];
+          link = links.map(match=>match[1].replaceAll('&amp;','&')).find(value=>value.includes('/auth/v1/verify'));
+          if (link && new URL(link).origin === new URL(env.API_URL).origin) return true;
+        } catch { /* Mail delivery may still be pending. */ }
+      }
+      return false;
+    },{timeout:30000,message:'Disposable registration verification email received'}).toBe(true);
+    return link;
+  }
+  for (const enterprise of [false,true]) {
+    const page = await (await browser.newContext({viewport:{width:390,height:844}})).newPage();
+    diagnosticPages.push(page);
+    const email = `signup-${randomUUID()}@example.test`;
+    if (enterprise) {
+      await page.goto('http://127.0.0.1:3301/1percent-partner');
+      await page.getByRole('link',{name:'企業註冊 →',exact:true}).click();
+    } else {
+      await page.goto('http://127.0.0.1:3301/login?next=%2Faccount');
+      await page.getByRole('link',{name:'個人註冊 →',exact:true}).click();
+    }
+    await expect(page.getByRole('button',{name:enterprise?'企業註冊':'個人註冊',exact:true})).toHaveAttribute('aria-pressed','true');
+    await page.getByLabel('電子郵件',{exact:true}).fill(email);
+    await page.getByRole('button',{name:'寄送註冊驗證連結',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('驗證連結已寄出');
+    if(sql(`select count(*) from auth.users where email='${email}' and email_confirmed_at is not null;`)!=='0') throw new Error('Registration confirmed email before verification');
+    await page.goto(await verificationLink(email));
+    await expect(page).toHaveURL(`http://127.0.0.1:3301${enterprise?'/1percent-partner/apply':'/account'}`,{timeout:30000});
+    const id = sql(`select id from auth.users where email='${email}' and email_confirmed_at is not null;`);
+    if (!id || sql(`select count(*) from public.profiles where id='${id}';`)!=='1') throw new Error('Verified registration profile missing');
+    if(sql(`select (select count(*) from public.memberships where user_id='${id}' and status='active')+(select count(*) from public.admin_roles where user_id='${id}');`)!=='0') throw new Error('Registration unexpectedly granted membership or admin');
+    if (enterprise) {
+      const signupCompany=`Signup enterprise ${randomUUID()}`;
+      for(const [label,value] of Object.entries({'企業／店家名稱＊':signupCompany,'統一編號＊':'12345678','產業類別＊':'活動公關','所在縣市＊':'臺北市','企業／店家地址＊':'Synthetic registration address','網站（選填）':'https://example.test'})) await page.getByLabel(label,{exact:true}).fill(value);
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      for(const [label,value] of Object.entries({'窗口姓名＊':'Synthetic signup contact','窗口職稱＊':'專案經理','聯絡 Email＊':email,'公司電話＊':'02-20000000','分機（選填）':'123','手機＊':'0900000000'})) await page.getByLabel(label,{exact:true}).fill(value);
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await page.getByLabel('提供類型＊',{exact:true}).selectOption('both');
+      await page.getByLabel('1% 產品／服務內容＊',{exact:true}).fill('Synthetic product and event service; once per month; Taipei; discuss scheduling.');
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await expect(page.getByRole('button',{name:'確認並送出企業註冊',exact:true})).toBeDisabled();
+      await page.getByRole('checkbox',{name:'我已核對企業、聯絡窗口與 1% 內容，確認資料正確。',exact:true}).check();
+      await page.getByRole('button',{name:'確認並送出企業註冊',exact:true}).click();
+      await expect(page.getByRole('status')).toContainText('企業註冊資料已送出');
+      if(sql(`select count(*) from public.enterprise_applications where requester_user_id='${id}' and status='submitted' and industry='活動公關' and address='Synthetic registration address' and phone_extension='123' and contribution_kind='both';`)!=='1') throw new Error('Signup did not save complete pending enterprise registration');
+      await page.reload();
+      await expect(page.getByText('企業申請進度：已送出',{exact:true})).toBeVisible();
+      await expect(page.getByText(signupCompany,{exact:true})).toBeVisible();
+      const signupApp=sql(`select id from public.enterprise_applications where requester_user_id='${id}';`);
+      const registrationReviewer=await (await browser.newContext()).newPage();diagnosticPages.push(registrationReviewer);
+      registrationReviewer.on('dialog',dialog=>dialog.accept());
+      await login(registrationReviewer,admin,'/admin/partners');
+      const registrationCard=registrationReviewer.locator('article').filter({has:registrationReviewer.getByRole('heading',{name:signupCompany,exact:true})});
+      await expect(registrationCard).toContainText('Synthetic registration address');
+      await expect(registrationCard).toContainText('專案經理');
+      await expect(registrationCard).toContainText('分機 123');
+      await expect(registrationCard).toContainText('Synthetic product and event service');
+      await registrationCard.getByPlaceholder('審核說明／需補資料').fill('Synthetic additional detail required');
+      await registrationCard.getByRole('button',{name:'請補資料',exact:true}).click();
+      await expect(registrationReviewer.getByText('申請狀態已更新並通知申請人。',{exact:true})).toBeVisible();
+      await page.reload();
+      await expect(page.getByText('Synthetic additional detail required',{exact:true})).toBeVisible();
+      for(let step=0;step<2;step++) await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await page.getByLabel('1% 產品／服務內容＊',{exact:true}).fill('Synthetic corrected product and service description.');
+      await page.getByRole('button',{name:'下一步 →',exact:true}).click();
+      await page.getByRole('checkbox').check();
+      await page.getByRole('button',{name:'確認並送出企業註冊',exact:true}).click();
+      await expect(page.getByRole('status')).toContainText('企業註冊資料已送出');
+      if(sql(`select count(*) from public.enterprise_applications where requester_user_id='${id}' and id='${signupApp}' and status='submitted' and contribution_description='Synthetic corrected product and service description.';`)!=='1') throw new Error('Correction did not reuse original registration');
+      await registrationReviewer.context().close();
+
+    }
+    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)) throw new Error('Registration flow overflows mobile viewport');
+    await page.context().close();
+  }
+  console.log('PASS: explicit personal/enterprise registration → real disposable verification email → PKCE callback → owned profile; preserved next destination, enterprise pending application, no automatic formal membership/admin');
   const adminPage = await (await browser.newContext()).newPage();
   const ownerPage = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
   diagnosticPages.push(adminPage, ownerPage);
@@ -432,7 +526,7 @@ try {
   await expect(importPage.getByRole('button',{name:'確認登錄年度名冊',exact:true})).toBeDisabled();
   if(await importPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Roster import overflows mobile viewport');
   await membershipPage.goto('http://127.0.0.1:3301/admin/members/import');
-  await expect(membershipPage.getByRole('alert')).toContainText('目前無法使用名冊匯入');
+  await expect(membershipPage.getByRole('alert').filter({hasText:'目前無法使用名冊匯入'})).toBeVisible();
   await expect(membershipPage.locator('input[type=file]')).toHaveCount(0);
   console.log('PASS: mobile CSV selection → server preview without writes → evidence/confirmation → one roster entry with original date → repeated import blocked; ordinary member denied and no mobile overflow');
 
