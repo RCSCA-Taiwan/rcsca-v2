@@ -1,0 +1,16 @@
+ 'use client';
+import Link from 'next/link';import {useEffect,useRef,useState,type FormEvent} from 'react';
+import {getHistoryClient,historyError} from '../../../lib/member-history';
+type Preview={status:'manual'|'matched';membership_type?:string;member_since?:string;membership_year?:number};
+export default function LegacyClaimForm(){
+ const [ready,setReady]=useState(false),[signedIn,setSignedIn]=useState(false),[name,setName]=useState(''),[phone,setPhone]=useState(''),[identity,setIdentity]=useState(''),[consent,setConsent]=useState(false),[preview,setPreview]=useState<Preview|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[sent,setSent]=useState(false);const active=useRef(false);
+ useEffect(()=>{void getHistoryClient().auth.getUser().then(({data})=>{setSignedIn(!!data.user);setReady(true);});},[]);
+ async function check(){if(active.current)return;active.current=true;setBusy(true);setMessage('');try{const {data,error}=await getHistoryClient().rpc('legacy_member_preview',{p_name:name});if(error)throw error;setPreview(data as unknown as Preview);}catch(e){setMessage(historyError(e));}finally{active.current=false;setBusy(false);}}
+ async function submit(e:FormEvent){e.preventDefault();if(active.current)return;active.current=true;setBusy(true);setMessage('');try{const {error}=await getHistoryClient().rpc('legacy_member_claim',{p_name:name,p_phone:phone,p_identity:identity,p_consent:consent});if(error)throw error;setIdentity('');setPhone('');setSent(true);setMessage('認領申請已送出，請等待協會核對。核准前不變更會籍、積分或小隊。');}catch(e){setMessage(historyError(e));}finally{active.current=false;setBusy(false);}}
+ if(!ready)return <p role="status">正在確認登入狀態…</p>;
+ if(!signedIn)return <div className="privacyCallout"><p>先登入已驗證的本人帳號。</p><Link href="/login?next=%2Fmembership%2Fclaim">登入</Link> · <Link href="/register?next=%2Fmembership%2Fclaim">註冊個人帳號</Link></div>;
+ return <div className="membershipWorkspace"><form className="membershipForm" onSubmit={submit}><fieldset disabled={busy||sent}><legend>核對舊名冊</legend><label>會員姓名＊<input required maxLength={100} autoComplete="name" value={name} onChange={e=>{setName(e.target.value);setPreview(null);}}/></label><p><button type="button" disabled={busy||!name.trim()} onClick={()=>void check()}>以已驗證信箱比對</button></p>
+ {preview?.status==='matched'?<div className="privacyCallout"><p>已找到信箱與姓名相符的資料，請確認：</p><p>{preview.membership_type==='lifetime'?'永久會員':'一般會員'} · 原入會日期 {preview.member_since} · 最後有效年度 {preview.membership_year}</p><small>資料經協會審核核准後才會連結。</small></div>:<p>若舊名冊尚未匯入、信箱不同或比對不唯一，可補填原電話或身分證，交由協會核對。僅憑電話／證件不會公開或自動帶出名冊資料。</p>}
+ {preview?.status!=='matched'&&<div className="membershipFields"><label>舊名冊電話<input type="tel" maxLength={30} value={phone} onChange={e=>setPhone(e.target.value)}/></label><label>身分證字號（可留空）<input type="password" autoComplete="off" minLength={10} maxLength={10} value={identity} onChange={e=>setIdentity(e.target.value.toUpperCase())}/></label></div>}
+ <label className="membershipCheck"><input required type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>我確認為本人，並同意協會使用上述資料核對及連結原有會籍。</label><button disabled={busy||sent}>{busy?'處理中…':'送出認領申請'}</button></fieldset></form>{message&&<p role="status">{message}</p>}<Link href="/account">回到個人中心查看認領進度 →</Link></div>;
+}

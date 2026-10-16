@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import MemberHistoryPanel from './MemberHistory';
 import PointsExpiry from '../PointsExpiry';
 import type {PointsWallet} from '../../lib/points';
 import type { Session } from '@supabase/supabase-js';
@@ -15,7 +16,7 @@ const copy:Record<Locale,any>={
 };
 
 type Snapshot={
-  signedIn:boolean; email?:string; displayName?:string; membership?:string|null;
+  signedIn:boolean; userId?:string; email?:string; displayName?:string; membership?:string|null;
   level:number; xp:number; points:number; wallet?:PointsWallet; footprints:number; team?:string|null; enterprise?:string|null;
 };
 
@@ -49,7 +50,7 @@ export default function LiveAccount(){
       const wallet=points.data as unknown as PointsWallet;const pointTotal=wallet.balance;
       const teamName=(team.data as any)?.teams?.name || null;
       const enterpriseName=(enterprise.data as any)?.enterprises?.display_name || (enterprise.data as any)?.enterprises?.legal_name || null;
-      if(active())setData({signedIn:true,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,wallet,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
+      if(active())setData({signedIn:true,userId:uid,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,wallet,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
       if(active())setLoading(false);
     };
     const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>{
@@ -65,6 +66,7 @@ export default function LiveAccount(){
   if(!data.signedIn)return <section className="liveAccountGuest"><div><small>{c.identity}</small><strong>{c.visitor}</strong><p>{c.guestLead}</p></div><Link href="/login">{c.login}</Link></section>;
   return <>
     <section className="liveIdentity"><div><small>{c.identity}</small><strong>{identity}</strong><span>{data.displayName}</span></div><div><small>{c.level}</small><strong>Lv.{data.level} · {levelNames[data.level]||levelNames[1]}</strong><span>{data.xp.toLocaleString(locale)} XP</span></div><div><small>{c.footprints}</small><strong>{data.footprints.toLocaleString(locale)}</strong><span>{c.database}</span></div><div><small>{c.points}</small><strong>{data.points.toLocaleString(locale)}</strong><span>{c.available}</span></div></section>
+    <MemberHistoryPanel key={data.userId}/>
     <PointsExpiry wallet={data.wallet||null} onRetry={()=>setRefresh(x=>x+1)}/><section className="liveContext"><div><small>{c.team}</small><strong>{data.team||c.notJoined}</strong></div><div><small>{c.enterprise}</small><strong>{data.enterprise||c.none}</strong></div><button onClick={logout}>{c.logout}</button></section>
   </>;
 }

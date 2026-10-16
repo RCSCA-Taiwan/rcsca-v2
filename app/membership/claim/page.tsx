@@ -1,0 +1,2 @@
+import SiteHeader from '../../SiteHeader';import LegacyClaimForm from './LegacyClaimForm';
+export default function Page(){return <main className="membershipPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">RCSCA MEMBERSHIP</div><h1>認領歷年會員資料</h1><p>保留原始入會日期、一般／永久會員身分及累積年資。請先用本人信箱註冊並驗證，再提出認領。</p></div></section><section className="portalSection"><div className="portalWrap"><LegacyClaimForm/></div></section></main>}

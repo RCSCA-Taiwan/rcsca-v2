@@ -12,6 +12,7 @@ export const membershipStatus = {pending:'待審核',needs_info:'請補件後重
 export function taiwanYear() { return Number(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',year:'numeric'}).format(new Date())); }
 export function taiwanDate() { return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
 const errors: Record<string,string> = {
+  invalid_birthday:'請填寫有效生日，不能晚於今天。',
   invalid_source_text:'介紹人或所屬企業請勿超過 200 字。',source_team_not_unique:'介紹來源或小隊已變更，請重新確認自動帶入結果。',
   authentication_required:'請先登入後再操作。',admin_required:'目前帳號沒有會員管理權限。',
   active_membership_required:'此名冊限有效協會會員及會員管理員查看。',invalid_identity:'請確認身分證字號格式與檢查碼。',

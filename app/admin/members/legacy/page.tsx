@@ -1,0 +1,2 @@
+import SiteHeader from '../../../SiteHeader';import LegacyMembersAdmin from './LegacyMembersAdmin';
+export default function Page(){return <main className="adminPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><h1>歷年會員名冊與認領</h1><p>可先匯入尚未註冊的會員。匯入不建立帳號、不啟用會籍；認領須經會員管理員核對。</p></div></section><section className="portalSection"><div className="portalWrap"><LegacyMembersAdmin/></div></section></main>}

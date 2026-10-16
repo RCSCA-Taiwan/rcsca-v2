@@ -5,6 +5,7 @@ const protectedPrefixes = [
   "/account",
   "/community",
   "/membership/apply",
+  "/membership/claim",
   "/membership/directory",
   "/admin",
   "/my-1percent",
