@@ -466,6 +466,28 @@ try {
   const publishedImage=viewedPost.getByAltText(`${postTitle} 圖片 1`,{exact:true});
   await expect(publishedImage).toBeVisible();
   await expect.poll(()=>publishedImage.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
+  // The real mobile thread uses the same authenticated ledger as MY 1%.
+  const forumPostId=sql(`select id from private.community_posts where title='${postTitle}';`);
+  if(sql(`select sum(points) from public.point_transactions where source_type='community_topic' and source_id='${forumPostId}';`)!=='2')throw new Error('Approved topic did not credit exactly two points');
+  await viewedPost.getByRole('button',{name:'查看留言／參與討論',exact:true}).click();
+  await viewedPost.getByLabel('回覆這個主題',{exact:true}).fill('Synthetic first discussion reply');
+  await viewedPost.getByRole('button',{name:'發布留言',exact:true}).click();
+  await expect(viewedPost.getByRole('status')).toContainText('本次獲得 1 分');
+  await expect(viewerPage.getByText(/今日已取得 1 個主題的留言積分/)).toBeVisible();
+  await viewedPost.getByLabel('回覆這個主題',{exact:true}).fill('Synthetic second same-topic reply');
+  await viewedPost.getByRole('button',{name:'發布留言',exact:true}).click();
+  await expect(viewedPost.getByRole('status')).toContainText('不重複給分');
+  const concurrentReplies=await Promise.all([randomUUID(),randomUUID()].map(id=>imageProbe.rpc('community_comment_submit',{p_id:id,p_post:forumPostId,p_body:'Concurrent same-topic test reply'})));
+  if(concurrentReplies.some(r=>r.error||r.data.awarded))throw new Error('Concurrent reply awarded twice');
+  if(sql(`select count(*) from public.point_transactions where user_id='${member.id}' and source_type='community_reply' and source_id='${forumPostId}';`)!=='1')throw new Error('Same-thread reply reward duplicated');
+  await membershipPage.reload();
+  await expect(membershipPage.getByText('今日已送出 1／1 個主題',{exact:true})).toBeVisible();
+  await membershipPage.getByLabel('標題＊',{exact:true}).fill('Synthetic second same-day topic');
+  await membershipPage.getByLabel('分享內容＊',{exact:true}).fill('Must be rejected by the daily quota');
+  await membershipPage.getByRole('checkbox').check();
+  await membershipPage.getByRole('button',{name:'送出投稿審核',exact:true}).click();
+  await expect(membershipPage.getByRole('status')).toContainText('每人每天限一個');
+  if(await viewerPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Forum overflows mobile viewport');
   const imagePath=sql(`select i.object_path from private.community_images i join private.community_posts p on p.id=i.post_id where p.title='${postTitle}';`);
   const anonymousImage=await fetch(`${env.API_URL}/storage/v1/object/public/community-media/${imagePath}`);
   if(anonymousImage.status===200)throw new Error('Private community image is publicly readable');
@@ -492,8 +514,8 @@ try {
   await membershipPage.goto('http://127.0.0.1:3301/account/contributions');
   await expect(membershipPage.locator("body")).toContainText('已核實累計：新台幣 1,000 元');
   await expect(membershipPage.locator("body")).toContainText('徽章名稱與門檻尚待協會核定');
-  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==27)throw new Error('Community or donation unexpectedly changed points');
-  console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; verified donation stays private and grants no unconfigured badge, points or XP');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==29)throw new Error('Topic approval must add exactly two points; donation must add none');
+  console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; topic approval grants two points, mobile replies grant one point only once, daily topic quota holds; verified donation stays private and grants no unconfigured badge, points or XP');
 
   // Seed one unused, already-paid code to exercise cancellation independently.
   const cancelReward=randomUUID(),cancelOrder=randomUUID(),cancelTitle=`Browser cancellation ${randomUUID()}`;
@@ -506,7 +528,7 @@ try {
   await cancelCard.getByLabel('取消原因＊',{exact:true}).fill('Synthetic unused code cancellation');
   await cancelCard.getByRole('button',{name:'送出取消申請',exact:true}).click();
   await expect(cancelCard).toContainText('取消審核中');
-  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==20)throw new Error('Cancellation credited before review');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==22)throw new Error('Cancellation credited before review');
   await reviewPage.goto('http://127.0.0.1:3301/admin/rewards');
   const reviewCancel=reviewPage.getByRole('region',{name:'兌換取消與退點',exact:true}).locator('article').filter({hasText:cancelOrder});
   await expect(reviewCancel.getByRole('button',{name:'核准取消並退點',exact:true})).toBeDisabled();
@@ -519,7 +541,7 @@ try {
   await expect(membershipPage.getByText('SYNTHETIC-CANCEL',{exact:true})).toHaveCount(0);
   if(await membershipPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Cancellation UI overflows mobile viewport');
   const cancellation=JSON.parse(sql(`select json_build_object('balance',private.member_points_wallet('${applicant.id}')->>'balance','refunds',(select count(*) from public.point_transactions where source_type='reward_refund' and source_id='${cancelOrder}'),'stock',(select stock_remaining from public.reward_catalog where id='${cancelReward}'));`));
-  if(cancellation.balance!=='27'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
+  if(cancellation.balance!=='29'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
   console.log('PASS: mobile cancellation request → independent admin confirms review → one original-expiry refund → invalidated code → stock restored; no mobile overflow');
 
   const importMember=await user('roster-import');
@@ -551,6 +573,70 @@ try {
   console.log('PASS: mobile CSV selection → server preview without writes → evidence/confirmation → one roster entry with original date → repeated import blocked; ordinary member denied and no mobile overflow');
 
 
+
+  const periodicTitle=`Browser monthly supply ${randomUUID()}`;
+  const periodStart=new Date(Date.now()-3600000+8*3600000).toISOString().slice(0,16);
+  const periodEnd=new Date(Date.now()+30*86400000+8*3600000).toISOString().slice(0,16);
+  await ownerPage.goto('http://127.0.0.1:3301/1percent-partner/offers');
+  await ownerPage.getByLabel('項目名稱＊',{exact:true}).fill(periodicTitle);
+  await ownerPage.getByLabel('期別名稱＊',{exact:true}).fill('Synthetic current period');
+  await ownerPage.getByLabel('本期份數＊',{exact:true}).fill('5');
+  await ownerPage.getByLabel('開放兌換時間＊',{exact:true}).fill(periodStart);
+  await ownerPage.getByLabel('兌換截止時間＊',{exact:true}).fill(periodEnd);
+  await ownerPage.getByLabel('產品／服務說明＊',{exact:true}).fill('Synthetic monthly product with reviewed image.');
+  await ownerPage.getByLabel('適用對象、服務地區與使用條件＊',{exact:true}).fill('Synthetic eligibility and usage conditions.');
+  await ownerPage.getByLabel('配送與運費說明＊',{exact:true}).fill('Synthetic free delivery.');
+  await ownerPage.locator('input[type=file]').setInputFiles({name:'periodic.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAIAAABvFaqvAAAAIklEQVR4nGPsKXBjoAZgooopowaNGjRq0KhBowaNGkQRAABFEQFybJFhWAAAAABJRU5ErkJggg==','base64')});
+  await expect(ownerPage.getByRole('status').filter({hasText:'圖片已上傳'})).toBeVisible();
+  await ownerPage.getByRole('button',{name:'儲存草稿',exact:true}).click();
+  const periodicRow=ownerPage.locator('article').filter({has:ownerPage.getByRole('heading',{name:periodicTitle,exact:true})});
+  await expect(periodicRow).toContainText('草稿');
+  await periodicRow.getByRole('button',{name:'繼續編輯／補件',exact:true}).click();
+  await ownerPage.getByRole('button',{name:'送交協會審核',exact:true}).click();
+  await expect(periodicRow).toContainText('待審核');
+  const periodicId=sql(`select id from private.partner_period_offers where details->>'title'='${periodicTitle}';`);
+  const periodicPath=sql(`select details->'images'->>0 from private.partner_period_offers where id='${periodicId}';`);
+  const publicOfferClient=createClient(env.API_URL,publicKey,{auth:{persistSession:false}});
+  if(!(await publicOfferClient.storage.from('partner-offer-media').createSignedUrl(periodicPath,60)).error)throw new Error('Unreviewed product image readable anonymously');
+  await reviewPage.goto('http://127.0.0.1:3301/admin/rewards');
+  const reviewOffer=reviewPage.locator('#partner-offer-review article').filter({has:reviewPage.getByRole('heading',{name:periodicTitle,exact:true})});
+  await expect(reviewOffer.locator('img')).toBeVisible();
+  await reviewOffer.getByLabel('審核說明（補件、拒絕、下架時必填）',{exact:true}).fill('Clarify synthetic terms.');
+  await reviewOffer.getByRole('button',{name:'要求補件',exact:true}).click();
+  await expect(reviewOffer).toHaveCount(0);
+  await ownerPage.reload();
+  await expect(periodicRow).toContainText('待補資料');
+  await periodicRow.getByRole('button',{name:'繼續編輯／補件',exact:true}).click();
+  await ownerPage.getByLabel('適用對象、服務地區與使用條件＊',{exact:true}).fill('Corrected synthetic eligibility and conditions.');
+  await ownerPage.getByRole('button',{name:'送交協會審核',exact:true}).click();
+  await expect(periodicRow).toContainText('待審核');
+  await reviewPage.getByRole('button',{name:'重新讀取待審供應',exact:true}).click();
+  await reviewOffer.getByLabel('核定兌換點數＊',{exact:true}).fill('6');
+  await reviewOffer.getByRole('checkbox').check();
+  await reviewOffer.getByRole('button',{name:'核准本期供應並上架',exact:true}).click();
+  await expect(reviewOffer).toHaveCount(0);
+  const periodicReward=sql(`select reward_id from private.partner_period_offers where id='${periodicId}' and state='approved';`);
+  if(!periodicReward)throw new Error('Periodic offer did not publish a reward');
+  const publicMarket=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();diagnosticPages.push(publicMarket);
+  await publicMarket.goto('http://127.0.0.1:3301/share-market');
+  const publicCard=publicMarket.locator('.rewardCard').filter({has:publicMarket.getByRole('heading',{name:periodicTitle,exact:true})});
+  await expect(publicCard).toContainText('6 共享點');await expect(publicCard).toContainText('剩餘份數 5');
+  await expect(publicCard.locator('img')).toBeVisible();
+  await expect.poll(()=>publicCard.locator('img').evaluate(img=>img.naturalWidth)).toBeGreaterThan(0);
+  if(await publicMarket.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Periodic market overflows mobile');
+  await ownerPage.reload();
+  await periodicRow.getByRole('button',{name:'複製為下一期',exact:true}).click();
+  await expect(ownerPage.getByLabel('期別名稱＊',{exact:true})).toHaveValue('');
+  await expect(ownerPage.getByLabel('項目名稱＊',{exact:true})).toHaveValue(periodicTitle);
+  await periodicRow.getByRole('button',{name:'申請下架',exact:true}).click();
+  await expect(periodicRow).toContainText('下架審核中');
+  await reviewPage.getByRole('button',{name:'重新讀取待審供應',exact:true}).click();
+  await reviewOffer.getByLabel('審核說明（補件、拒絕、下架時必填）',{exact:true}).fill('Synthetic period closed.');
+  await reviewOffer.getByRole('button',{name:'核准下架',exact:true}).click();
+  await expect(reviewOffer).toHaveCount(0);
+  await publicMarket.reload();await expect(publicCard).toHaveCount(0);
+  if(!(await publicOfferClient.storage.from('partner-offer-media').createSignedUrl(periodicPath,60)).error)throw new Error('Withdrawn product image permits new anonymous signed links');
+  console.log('PASS: mobile periodic product → real compressed private image upload → saved draft → correction/resubmission → independent points approval → anonymous image/text/stock card → next-period copy → withdrawal and image access revoked');
 
 } catch (error) {
   for (const page of diagnosticPages) {

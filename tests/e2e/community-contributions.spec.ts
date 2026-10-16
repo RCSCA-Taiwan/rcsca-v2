@@ -7,6 +7,7 @@ for(const path of ['/community','/account/contributions','/account/fulfillment']
 test('community draft validates consent and unsupported image types before upload',async({page})=>{
  test.skip(!process.env.RCSCA_E2E_EMAIL||!process.env.RCSCA_E2E_PASSWORD,'Disposable member required');
  await page.route('**/rest/v1/rpc/community_posts_list',r=>r.fulfill({contentType:'application/json',body:'[]'}));
+ await page.route('**/rest/v1/rpc/community_daily_progress',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({day:'2026-10-17',topic_used:false,today_points:0,today_reply_topics:0,wallet:{balance:0}})}));
  let submitted=0;
  await page.route('**/rest/v1/rpc/community_post_submit',r=>{submitted++;return r.fulfill({contentType:'application/json',body:JSON.stringify('00000000-0000-4000-8000-000000001630')});});
  await page.goto('/login?next=%2Fcommunity');
@@ -23,5 +24,5 @@ test('community draft validates consent and unsupported image types before uploa
  await page.getByRole('checkbox').check();
  await page.getByRole('button',{name:'送出投稿審核',exact:true}).click();
  await expect.poll(()=>submitted).toBe(1);
- await expect(page.getByRole('status')).toContainText('投稿已送出');
+ await expect(page.getByRole('status')).toContainText('主題已送審');
 });

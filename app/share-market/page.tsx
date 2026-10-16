@@ -10,6 +10,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getSupabaseBrowserClient } from '../../lib/supabase-browser';
 import { useI18n } from '../i18n';
 import { marketCopy } from './marketCopy';
+import {getOfferClient,type PublicOfferMedia} from '../../lib/partner-offers';
+import OfferImages from '../components/OfferImages';
+import '../partner-offers.css';
 
 type Category = 'all' | 'daily' | 'selected' | 'rare' | 'secret';
 type Reward = {
@@ -26,6 +29,7 @@ export default function ShareMarket() {
   const [cat, setCat] = useState<Category>('all');
   const [selected, setSelected] = useState<string | null>(null);
   const [rewards, setRewards] = useState<Reward[]>([]);
+  const [media,setMedia]=useState<Record<string,PublicOfferMedia>>({});
   const [account, setAccount] = useState<Account>(emptyAccount);
   const [loading, setLoading] = useState(true);
   const [readError, setReadError] = useState(false);
@@ -37,6 +41,7 @@ export default function ShareMarket() {
   const inFlight = useRef(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const categoryLabels = { daily: t('market.daily'), selected: t('market.selected'), rare: t('market.rare'), secret: t('market.secret') };
+  useEffect(()=>{let alive=true;void getOfferClient().rpc('public_partner_offer_media').then(({data,error})=>{if(alive)setMedia(error?{}:Object.fromEntries((data as unknown as PublicOfferMedia[]||[]).map(row=>[row.reward_id,row])));});return()=>{alive=false}},[attempt]);
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -75,11 +80,13 @@ export default function ShareMarket() {
   useEffect(() => { if (selected && dialog.current && !dialog.current.open) dialog.current.showModal(); }, [selected]);
   const list = useMemo(() => rewards.filter(r => cat === 'all' || r.category === cat), [cat, rewards]);
   const item = rewards.find(r => r.id === selected);
+  function remaining(r:Reward){return media[r.id]?.available_quantity??r.stock_remaining;}
+  function availability(r:Reward){const now=Date.now();return r.ends_at&&new Date(r.ends_at).getTime()<=now?c.closed:r.starts_at&&new Date(r.starts_at).getTime()>now?c.notStarted:remaining(r)===0?c.soldOut:c.open;}
   function eligible(r: Reward) {
     const now = Date.now();
     return !loading && !readError && account.signed && account.member && !account.pending.includes(r.id) &&
       account.points >= r.point_cost && account.level >= (r.min_level || 1) &&
-      account.footprints >= r.min_footprints && (r.stock_remaining === null || r.stock_remaining > 0) &&
+      account.footprints >= r.min_footprints && (remaining(r) === null || (remaining(r)??0) > 0) &&
       (!r.starts_at || new Date(r.starts_at).getTime() <= now) && (!r.ends_at || new Date(r.ends_at).getTime() > now);
   }
   async function redeem(r: Reward) {
@@ -125,9 +132,12 @@ export default function ShareMarket() {
         readError ? <div role="alert" className="privacyCallout"><p>{c.readError}</p>
           <button className="secondaryAction" onClick={() => setAttempt(a => a + 1)}>{c.retry}</button></div> :
         <div className="marketGrid">{list.length ? list.map(r => <article key={r.id} className={'rewardCard ' + (r.category === 'secret' ? 'secret' : '')}>
+          <OfferImages paths={media[r.id]?.images||[]} title={r.title} cover/>
+          {media[r.id]&&<div className="offerMeta"><span>{media[r.id].enterprise_name}</span><span>{media[r.id].period}</span></div>}
+          <p className="offerAvailability">{availability(r)}</p>
           <small>{categoryLabels[r.category]}</small><h3>{r.title}</h3><p>{r.description}</p>
           <div className="rewardMeta"><b>{r.point_cost} {c.points}</b>
-            <span>{r.stock_remaining === null ? c.unlimited : c.available + ' ' + r.stock_remaining}</span></div>
+            <span>{remaining(r) === null ? c.unlimited : (r.fulfillment_type==='delivery'?c.units:c.available) + ' ' + remaining(r)}</span></div>
           <p className="micro">{r.ends_at ? c.ends + ' ' + new Date(r.ends_at).toLocaleDateString(locale) : c.noEnd}</p>
           <button onClick={() => { setMessage(null);setFulfillmentNotice('');setDraft({slot:'',details:{destination_type:'home'},consent:false}); setSelected(r.id); }}>{c.preview} →</button>
         </article>) : <p className="emptyData">{c.noItems}</p>}</div>}
@@ -135,6 +145,8 @@ export default function ShareMarket() {
     {item && <dialog ref={dialog} className="marketRedemptionDialog" aria-labelledby="redemption-title" onCancel={e => { if (busy) e.preventDefault(); else close(); }}>
       <button className="modalClose" aria-label={c.close} disabled={busy} onClick={close}>×</button>
       <small>{categoryLabels[item.category]}</small><h2 id="redemption-title">{item.title}</h2><p>{item.description}</p>
+      <OfferImages paths={media[item.id]?.images||[]} title={item.title}/>
+      <p className="offerAvailability">{availability(item)}</p>
       <dl className="redemptionBalance">
         <div><dt>{c.balance}</dt><dd>{balance}</dd></div>
         <div><dt>{c.cost}</dt><dd>{item.point_cost.toLocaleString(locale)} {c.points}</dd></div>
