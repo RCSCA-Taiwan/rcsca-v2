@@ -11,7 +11,7 @@ const copy:any={
 'ko':{eye:'계정 및 보안',title:'로그인 정보와 회원 데이터는 분리해 관리합니다.',lead:'이메일과 비밀번호는 로그인 보안 설정입니다. 변경해도 회원 자격, 공유 레벨, 기업 권한은 바뀌지 않습니다.',signin:'로그인이 필요합니다',signinLead:'로그인 후 계정 보안 설정을 관리할 수 있습니다.',go:'로그인으로 →',changeEmail:'이메일 변경',current:'현재 이메일',newEmail:'새 이메일',sendEmail:'이메일 변경 요청',password:'로그인 비밀번호',update:'비밀번호 변경',newPass:'새 비밀번호',again:'다시 입력',security:'보안 원칙',securityLead:'RCSCA는 일반 회원 데이터에 로그인 비밀번호를 저장하지 않습니다. 비밀번호를 잊었거나 로그인할 수 없을 때는 인증된 계정 복구 절차를 이용하며 운영자가 기존 비밀번호를 열람하지 않습니다.',emailLabel:'로그인 이메일',reset:'인증이 완료되었습니다. 아래에서 새 로그인 비밀번호를 설정하세요.',different:'현재와 다른 새 이메일을 입력해 주세요.',emailFailed:'이메일 변경 요청을 완료하지 못했습니다. 형식을 확인하거나 잠시 후 다시 시도해 주세요.',emailSent:'이메일 변경 요청을 제출했습니다. 인증이 필요한 경우 받은 편지함의 확인 절차를 완료해야 적용됩니다.',short:'새 비밀번호는 8자 이상이어야 합니다.',mismatch:'두 비밀번호가 일치하지 않습니다.',passwordFailed:'비밀번호를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.',passwordDone:'비밀번호를 변경했습니다.'}};
 export default function AccountSecurity(){
  const{locale}=useI18n();const c=copy[locale];
- const emailEnabled=process.env.NEXT_PUBLIC_REGISTRATION_OPEN==='true'||process.env.NODE_ENV==='development';
+ const emailEnabled=process.env.NEXT_PUBLIC_AUTH_EMAIL_ENABLED==='true'||process.env.NEXT_PUBLIC_REGISTRATION_OPEN==='true'||process.env.NODE_ENV==='development';
  const unavailable={'zh-Hant':'Email 寄信服務準備中，暫時無法變更登入 Email。已登入的帳號仍可更新密碼。',en:'Email delivery is being prepared. Email changes are temporarily unavailable. Signed-in accounts can still update their password.',ja:'メール送信を準備中のため、メールアドレスはまだ変更できません。ログイン中のアカウントはパスワードを更新できます。',ko:'이메일 발송 준비 중으로 로그인 이메일을 변경할 수 없습니다. 로그인한 계정은 비밀번호를 변경할 수 있습니다.'};
  const working={'zh-Hant':'處理中…',en:'Processing…',ja:'処理中…',ko:'처리 중…'};
  const updating=useRef(false);

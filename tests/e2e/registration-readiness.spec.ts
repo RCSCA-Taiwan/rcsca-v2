@@ -11,9 +11,18 @@ test('unopened public registration gives a clear participation route and preserv
  await expect(login).toHaveAttribute('href','/login?next=%2F1percent-partner%2Fapply');
  await login.click();
  await expect(page).toHaveURL(/\/login\?next=%2F1percent-partner%2Fapply$/);
+ await page.getByRole('button',{name:'Email＋密碼',exact:true}).click();
  await expect(page.getByLabel('密碼',{exact:true})).toBeVisible();
- await expect(page.getByRole('button',{name:'寄送登入連結',exact:true})).toHaveCount(0);
+ const emailReady=await page.getByRole('button',{name:'Email 安全連結',exact:true}).isEnabled();
+ if(emailReady){
+  await page.getByRole('button',{name:'Email 安全連結',exact:true}).click();
+  await expect(page.getByRole('button',{name:'寄送登入連結',exact:true})).toBeVisible();
+ }else await expect(page.getByRole('button',{name:'寄送登入連結',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Email＋密碼',exact:true}).click();
  await page.getByRole('link',{name:'忘記密碼？重新設定 →',exact:true}).click();
- await expect(page.locator('form.authForm')).toHaveCount(0);
- await expect(page.getByText('Email 寄信服務準備中，目前請使用已設定的密碼登入。',{exact:true})).toBeVisible();
+ if(emailReady)await expect(page.getByRole('button',{name:'寄送密碼重設連結',exact:true})).toBeVisible();
+ else{
+  await expect(page.locator('form.authForm')).toHaveCount(0);
+  await expect(page.getByText('Email 寄信服務準備中，目前請使用已設定的密碼登入。',{exact:true})).toBeVisible();
+ }
 });
