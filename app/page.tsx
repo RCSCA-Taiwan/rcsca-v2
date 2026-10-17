@@ -4,6 +4,7 @@ import RegistrationLinks from './RegistrationLinks';
 import BrandEntrance from './BrandEntrance';
 import SiteHeader from './SiteHeader';
 import {useI18n} from './i18n';
+import './home-cycle.css';
 
 const OneMark=({className=''})=><span className={`oneMark ${className}`}><b>1</b><i>%</i></span>;
 
