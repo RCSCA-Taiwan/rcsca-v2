@@ -29,20 +29,29 @@ export default function LiveAccount(){
     const supabase=getSupabaseBrowserClient();
     let alive=true;
     let generation=0;
+    let scheduled:ReturnType<typeof setTimeout>|undefined;
     const load=async(session:Session|null)=>{
       const current=++generation;
       const active=()=>alive&&current===generation;
       if(active()){setLoading(true);setFailed(false);}
       if(!session){if(active()){setData(d=>({...d,signedIn:false}));setLoading(false);}return;}
       const uid=session.user.id;
+      // A first Data API request can reject a newly established session. Retry
+      // read-only requests once; persistent errors still fail the whole snapshot.
+      const read=async<T extends {status:number}>(query:()=>PromiseLike<T>):Promise<T>=>{
+        const result=await query();
+        if(result.status!==401||!active())return result;
+        await new Promise(resolve=>setTimeout(resolve,250));
+        return active()?await query():result;
+      };
       const [profile,membership,level,points,footprints,team,enterprise]=await Promise.all([
-        supabase.from('profiles').select('display_name,email').eq('id',uid).maybeSingle(),
-        supabase.from('memberships').select('membership_type,status').eq('user_id',uid).maybeSingle(),
-        supabase.from('member_levels').select('level,lifetime_xp').eq('user_id',uid).maybeSingle(),
-        supabase.rpc('point_wallet_self'),
-        supabase.from('sharing_footprints').select('id').eq('user_id',uid),
-        supabase.from('team_members').select('teams(name)').eq('user_id',uid).is('left_at',null).limit(1).maybeSingle(),
-        supabase.from('enterprise_users').select('enterprises(display_name,legal_name)').eq('user_id',uid).limit(1).maybeSingle(),
+        read(()=>supabase.from('profiles').select('display_name,email').eq('id',uid).maybeSingle()),
+        read(()=>supabase.from('memberships').select('membership_type,status').eq('user_id',uid).maybeSingle()),
+        read(()=>supabase.from('member_levels').select('level,lifetime_xp').eq('user_id',uid).maybeSingle()),
+        read(()=>supabase.rpc('point_wallet_self')),
+        read(()=>supabase.from('sharing_footprints').select('id').eq('user_id',uid)),
+        read(()=>supabase.from('team_members').select('teams(name)').eq('user_id',uid).is('left_at',null).limit(1).maybeSingle()),
+        read(()=>supabase.from('enterprise_users').select('enterprises(display_name,legal_name)').eq('user_id',uid).limit(1).maybeSingle()),
       ]);
       if(!active())return;
       if([profile,membership,level,points,footprints,team,enterprise].some(result=>result.error)){setFailed(true);setLoading(false);return;}
@@ -53,9 +62,16 @@ export default function LiveAccount(){
       if(active())setLoading(false);
     };
     const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>{
-      void load(session);
+      generation++;
+      clearTimeout(scheduled);
+      // Leave the auth callback before making further Supabase requests.
+      scheduled=setTimeout(()=>{
+        const pending=load(session);
+        const current=generation;
+        void pending.catch(()=>{if(alive&&current===generation){setFailed(true);setLoading(false);}});
+      },0);
     });
-    return()=>{alive=false;listener.subscription.unsubscribe();};
+    return()=>{alive=false;clearTimeout(scheduled);listener.subscription.unsubscribe();};
   },[locale,refresh]);
   const identity=useMemo(()=>!data.signedIn?c.visitor:data.membership?'RCSCA會員':c.partner,[data,locale]);
   const levelNames=c.levels;
