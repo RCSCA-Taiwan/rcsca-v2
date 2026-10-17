@@ -1,0 +1,13 @@
+/* Keep the description outside the orbit and clear of its bottom node. */
+.livingCycle {
+  margin-bottom: 56px;
+}
+
+.livingCycle > .cycleCaption {
+  top: calc(100% + 12px);
+  bottom: auto !important;
+  left: 0;
+  right: 0;
+  text-align: center;
+  line-height: 1.5;
+}
