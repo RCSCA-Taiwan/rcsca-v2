@@ -1,5 +1,6 @@
 'use client';
 import { FormEvent, useEffect, useState } from 'react';
+import MemberHistoryPanel from '../MemberHistory';
 import SiteHeader from '../../SiteHeader';
 import Link from 'next/link';
 import { getSupabaseBrowserClient } from '../../../lib/supabase-browser';
@@ -33,5 +34,5 @@ export default function ProfilePage(){
     const {error}=await supabase.rpc('account_update_basic_profile',{p_display_name:name,p_mobile:mobile});
     setMessage(error?c.failed:c.saved);
   }
-  return <main className="flowPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">{c.eye}</div><h1>{c.title}</h1><p>{c.lead}</p></div></section><section className="portalSection"><div className="portalWrap"><p><Link href="/account/data-requests">申請需協會審核的資料修改、全部重置或刪除 →</Link></p>{loading?<p>{c.loading}</p>:!signedIn?<div className="privacyCallout"><strong>{c.signin}</strong><p>{c.signinLead}</p><a href="/login">{c.go}</a></div>:<form className="authForm" onSubmit={save}><label>{c.name}<input value={name} onChange={e=>setName(e.target.value)} placeholder={c.namePlaceholder}/></label><label>{c.mobile}<input value={mobile} onChange={e=>setMobile(e.target.value)} placeholder="09XXXXXXXX" inputMode="tel"/></label><button>{c.save}</button>{message&&<div className="authMessage sent">{message}</div>}</form>}</div></section></main>
+  return <main className="flowPage"><SiteHeader/><section className="flowHero"><div className="portalWrap"><div className="eyebrow">{c.eye}</div><h1>{c.title}</h1><p>{c.lead}</p></div></section><section className="portalSection"><div className="portalWrap"><p><Link href="/account/data-requests">申請需協會審核的資料修改、全部重置或刪除 →</Link></p>{loading?<p>{c.loading}</p>:!signedIn?<div className="privacyCallout"><strong>{c.signin}</strong><p>{c.signinLead}</p><a href="/login">{c.go}</a></div>:<form className="authForm" onSubmit={save}><label>{c.name}<input value={name} onChange={e=>setName(e.target.value)} placeholder={c.namePlaceholder}/></label><label>{c.mobile}<input value={mobile} onChange={e=>setMobile(e.target.value)} placeholder="09XXXXXXXX" inputMode="tel"/></label><button>{c.save}</button>{message&&<div className="authMessage sent">{message}</div>}</form>}<MemberHistoryPanel/></div></section></main>
 }

@@ -15,7 +15,7 @@ const copy:Record<Locale,any>={
 };
 
 type Snapshot={
-  signedIn:boolean; email?:string; displayName?:string; membership?:string|null;
+  signedIn:boolean; userId?:string; email?:string; displayName?:string; membership?:string|null;
   level:number; xp:number; points:number; wallet?:PointsWallet; footprints:number; team?:string|null; enterprise?:string|null;
 };
 
@@ -49,7 +49,7 @@ export default function LiveAccount(){
       const wallet=points.data as unknown as PointsWallet;const pointTotal=wallet.balance;
       const teamName=(team.data as any)?.teams?.name || null;
       const enterpriseName=(enterprise.data as any)?.enterprises?.display_name || (enterprise.data as any)?.enterprises?.legal_name || null;
-      if(active())setData({signedIn:true,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,wallet,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
+      if(active())setData({signedIn:true,userId:uid,email:session.user.email,displayName:profile.data?.display_name||profile.data?.email||session.user.email||c.partner,membership:membership.data?.status==='active'?membership.data.membership_type:null,level:level.data?.level||1,xp:level.data?.lifetime_xp||0,points:pointTotal,wallet,footprints:footprints.data?.length||0,team:teamName,enterprise:enterpriseName});
       if(active())setLoading(false);
     };
     const {data:listener}=supabase.auth.onAuthStateChange((_event,session)=>{
@@ -57,7 +57,7 @@ export default function LiveAccount(){
     });
     return()=>{alive=false;listener.subscription.unsubscribe();};
   },[locale,refresh]);
-  const identity=useMemo(()=>!data.signedIn?c.visitor:data.membership?'RCSCA MEMBER':c.partner,[data,locale]);
+  const identity=useMemo(()=>!data.signedIn?c.visitor:data.membership?'RCSCA會員':c.partner,[data,locale]);
   const levelNames=c.levels;
   async function logout(){await getSupabaseBrowserClient().auth.signOut();window.location.href='/';}
   if(loading)return <div className="liveAccountLoading">{c.loading}</div>;

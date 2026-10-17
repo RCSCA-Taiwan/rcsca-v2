@@ -488,3 +488,12 @@ table{max-width:100%}
 .membershipWorkspace dl{display:grid;gap:12px}.membershipWorkspace dl>div{display:flex;gap:20px;flex-wrap:wrap}.membershipWorkspace dt{color:#655b4c}.membershipWorkspace dd{margin:0}
 .membershipWorkspace .workflowNotice button,.membershipWorkspace .workflowNotice a{margin-left:16px}
 @media(max-width:640px){.membershipFields,.membershipRoster{grid-template-columns:1fr}.membershipForm,.membershipCard{padding:18px}.membershipCardHead .primaryFlow{width:100%;text-align:center}.membershipWorkspace .workflowNotice button,.membershipWorkspace .workflowNotice a{display:block;margin:12px 0}}
+
+/* Pair dark level cards with explicit foregrounds so generic paragraph rules cannot override them. */
+.myPage .levelTrack .bronze{background:linear-gradient(145deg,#594126,#2c2419);color:#fff9ef}
+.myPage .levelTrack .blackgold{background:linear-gradient(145deg,#171512,#050504);color:#ffe09a}
+.myPage .levelTrack :is(.bronze,.blackgold)>:is(span,h3,b){color:inherit;opacity:1}
+.myPage .levelTrack .bronze>p{color:#f8ecda;opacity:1}
+.myPage .levelTrack .blackgold>p{color:#fff8e8;opacity:1}
+.myPage .levelTrack :is(.bronze,.blackgold)>span{font-size:12px}
+.myPage .levelTrack :is(.bronze,.blackgold)>p{font-size:14px;line-height:1.75}

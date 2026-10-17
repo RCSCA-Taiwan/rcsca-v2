@@ -1,3 +1,4 @@
+import {legacyCSVTemplate} from '../lib/legacy-member-import.mjs';
 import {memberCSVTemplate} from '../lib/member-import.mjs';
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -61,6 +62,55 @@ try {
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, RCSCA_E2E_BASE_URL: "http://127.0.0.1:3301",
     RCSCA_E2E_EMAIL: member.email, RCSCA_E2E_PASSWORD: password };
   browser = await chromium.launch();
+  // Real mobile history flow uses only generated accounts in the disposable stack.
+  const historyAdmin=await user('history-reviewer'),historyMember=await user('history-member');
+  sql(`insert into public.admin_roles(user_id,role_key) values('${historyAdmin.id}','admin');`);
+  const historyName=`Synthetic history ${randomUUID()}`;
+  const historyAdminPage=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();diagnosticPages.push(historyAdminPage);
+  await login(historyAdminPage,historyAdmin,'/admin/members/legacy');
+  await expect(historyAdminPage.getByRole('heading',{name:'未註冊會員名冊匯入',exact:true})).toBeVisible();
+  await historyAdminPage.getByLabel('選取待認領會員CSV').setInputFiles({name:'legacy.csv',mimeType:'text/csv',buffer:Buffer.from(legacyCSVTemplate()+`${historyName},永久會員,2018-03-01,2026,${historyMember.email},0900000000,,1990-02-28,Synthetic source\r\n`)});
+  await historyAdminPage.getByRole('button',{name:'預覽核對',exact:true}).click();
+  await expect(historyAdminPage.getByRole('status')).toContainText('可匯入 1／1 筆');
+  await historyAdminPage.getByLabel('名冊來源與核對依據').fill('Disposable synthetic roster');
+  await historyAdminPage.getByRole('checkbox',{name:/已核對來源/}).check();
+  await historyAdminPage.getByRole('button',{name:'確認匯入待認領名冊',exact:true}).click();
+  await expect(historyAdminPage.getByRole('status')).toContainText('已保存 1 筆');
+  const historyPage=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();diagnosticPages.push(historyPage);
+  await login(historyPage,historyMember,'/membership/claim');
+  await historyPage.getByLabel('會員姓名＊',{exact:true}).fill(historyName);
+  await historyPage.getByRole('button',{name:'以已驗證信箱比對',exact:true}).click();
+  await expect(historyPage.getByText('已找到信箱與姓名相符的資料，請確認：',{exact:true})).toBeVisible();
+  await expect(historyPage.locator('.privacyCallout')).toContainText('2018-03-01');
+  await historyPage.getByRole('checkbox',{name:/我確認為本人/}).check();
+  await historyPage.getByRole('button',{name:'送出認領申請',exact:true}).click();
+  await expect(historyPage.getByRole('status')).toContainText('認領申請已送出');
+  await historyAdminPage.getByRole('button',{name:'重新讀取',exact:true}).click();
+  const claimCard=historyAdminPage.locator('article').filter({has:historyAdminPage.getByRole('heading',{name:historyName,exact:true})});
+  await claimCard.getByRole('button',{name:'檢視認領',exact:true}).click();
+  await historyAdminPage.getByLabel('結果',{exact:true}).selectOption('approve');
+  await historyAdminPage.getByLabel('選擇經核對的原始名冊').selectOption({label:`${historyName} · 2018-03-01 · 永久 · 2026年度`});
+  await historyAdminPage.getByRole('checkbox',{name:/已獨立核對本人身分/}).check();
+  await historyAdminPage.getByLabel('審核依據與回覆＊').fill('Independent synthetic identity and eligibility review');
+  await historyAdminPage.getByRole('button',{name:'確認處理認領',exact:true}).click();
+  await expect(historyAdminPage.getByRole('status')).toContainText('已連結原始會籍');
+  await historyPage.goto('http://127.0.0.1:3301/account/profile');
+  await expect(historyPage.getByText('會員身分：永久會員（有效）',{exact:true})).toBeVisible();
+  await expect(historyPage.getByText('原始入會日期：2018-03-01',{exact:true})).toBeVisible();
+  await expect(historyPage.getByLabel('生日',{exact:true})).toHaveValue('1990-02-28');
+  await historyPage.getByLabel('生日',{exact:true}).fill('1992-02-29');
+  await historyPage.getByRole('checkbox',{name:/我願意讓協會使用生日/}).check();
+  await historyPage.getByRole('button',{name:'儲存生日資料',exact:true}).click();
+  await expect(historyPage.getByRole('region',{name:'會籍與生日資料'}).getByRole('status').filter({hasText:'生日資料已儲存'})).toBeVisible();
+  await historyPage.reload();await expect(historyPage.getByLabel('生日',{exact:true})).toHaveValue('1992-02-29');
+  await historyAdminPage.goto('http://127.0.0.1:3301/admin/members/birthdays');
+  await historyAdminPage.getByLabel('月份').selectOption('2');
+  await expect(historyAdminPage.getByRole('heading',{name:historyName,exact:true})).toBeVisible();
+  await expect(historyAdminPage.locator('article').filter({hasText:historyName})).toContainText('2月29日');
+  for(const p of [historyPage,historyAdminPage]) if(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Member history overflows mobile');
+  console.log('PASS: mobile legacy CSV preview/import → verified email prefill → claim → independent review → original date/type/year display → birthday edit/reload → opted-in monthly birthday list');
+  await historyPage.context().close();await historyAdminPage.context().close();
+
   // Read only the disposable mail sink; no real messages are sent or inspected.
   const mailURL = env.INBUCKET_URL || env.MAILPIT_URL;
   if (!mailURL || !/^http:\/\/(127\.0\.0\.1|localhost):/.test(mailURL)) throw new Error('Disposable mail sink required');
@@ -297,6 +347,7 @@ try {
   diagnosticPages.push(membershipPage, reviewPage);
   await login(membershipPage, applicant, "/membership/apply");
   const applicantName = `Synthetic member ${randomUUID()}`;
+  await membershipPage.getByLabel("生日＊", {exact:true}).fill("1990-02-28");
   await membershipPage.getByLabel("姓名＊", {exact:true}).fill(applicantName);
   await membershipPage.getByLabel("身分證字號＊", {exact:true}).fill("A123456789");
   await membershipPage.getByLabel("聯絡電話＊", {exact:true}).fill("0900000000");

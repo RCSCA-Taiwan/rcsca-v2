@@ -18,16 +18,16 @@ test('logo replays the entrance from home and another page after it was already 
   expect(await page.evaluate(() => sessionStorage.getItem('rcsca-brand-entered-v20'))).toBe('1');
 });
 
-test('entrance owns the viewport until deliberate entry, rings before fading, then unlocks the site', async ({ page, isMobile }) => {
+test('entrance owns the viewport until deliberate entry, plays a receding flyby before fading, then unlocks the site', async ({ page, isMobile }) => {
   await page.addInitScript(() => {
     const NativeAudioContext = window.AudioContext;
-    (window as any).__doorbellNotes = [];
+    (window as any).__flybyEngines = [];
     window.AudioContext = class extends NativeAudioContext {
       createOscillator() {
         const oscillator = super.createOscillator();
         const start = oscillator.start.bind(oscillator);
         oscillator.start = (when?: number) => {
-          (window as any).__doorbellNotes.push({frequency: oscillator.frequency.value, when});
+          (window as any).__flybyEngines.push({frequency: oscillator.frequency.value, when});
           start(when);
         };
         return oscillator;
@@ -56,14 +56,14 @@ test('entrance owns the viewport until deliberate entry, rings before fading, th
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.clientWidth === innerWidth)).toBe(true);
   await expect(page.locator('main')).toHaveCount(0);
   await entrance.click();
-  await expect(entrance).toHaveAttribute('data-phase', 'ringing');
+  await expect(entrance).toHaveAttribute('data-phase', 'flyby');
   await expect(entrance).toHaveCSS('opacity', '1');
   await expect(page.locator('main')).toHaveCount(0);
-  const notes = await page.evaluate(() => (window as any).__doorbellNotes);
-  expect(notes).toHaveLength(6);
-  expect(notes[0].frequency).toBeCloseTo(659.25);
-  expect(notes[3].frequency).toBeCloseTo(523.25);
-  expect(notes[3].when - notes[0].when).toBeCloseTo(0.45);
+  const notes = await page.evaluate(() => (window as any).__flybyEngines);
+  expect(notes).toHaveLength(3);
+  expect(notes[0].frequency).toBeCloseTo(170);
+  expect(notes[1].frequency).toBeCloseTo(340);
+  expect(notes[1].when - notes[0].when).toBeCloseTo(0);
   await expect(entrance).toHaveAttribute('data-phase', 'fading');
   await expect(page.locator('main')).toHaveCount(0);
   await expect(entrance).toHaveCount(0);
