@@ -45,6 +45,9 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      # Verify existing-account email access without opening new registration.
+      NEXT_PUBLIC_AUTH_EMAIL_ENABLED: "true"
+      NEXT_PUBLIC_REGISTRATION_OPEN: "false"
       # Authenticated coverage runs with generated users in database-replay.
       RCSCA_E2E_EMAIL: ""
       RCSCA_E2E_PASSWORD: ""
