@@ -67,7 +67,11 @@ try {
   sql(`insert into public.admin_roles(user_id,role_key) values('${historyAdmin.id}','admin');`);
   const historyName=`Synthetic history ${randomUUID()}`;
   const historyAdminPage=await (await browser.newContext({viewport:{width:390,height:844}})).newPage();diagnosticPages.push(historyAdminPage);
-  await login(historyAdminPage,historyAdmin,'/admin/members/legacy');
+  await login(historyAdminPage,historyAdmin,'/admin/queue');
+  await expect(historyAdminPage.locator('#mail-routing')).toContainText('管理通知尚未設定獨立寄信憑證。');
+  await expect(historyAdminPage.getByRole('button',{name:'檢查寄信連線（不寄信）',exact:true})).toBeDisabled();
+  console.log('PASS: admin SMTP diagnostics fail closed without private credentials; no verification mail sent');
+  await historyAdminPage.goto('http://127.0.0.1:3301/admin/members/legacy');
   await expect(historyAdminPage.getByRole('heading',{name:'未註冊會員名冊匯入',exact:true})).toBeVisible();
   await historyAdminPage.getByLabel('選取待認領會員CSV').setInputFiles({name:'legacy.csv',mimeType:'text/csv',buffer:Buffer.from(legacyCSVTemplate()+`${historyName},永久會員,2018-03-01,2026,${historyMember.email},0900000000,,1990-02-28,Synthetic source\r\n`)});
   await historyAdminPage.getByRole('button',{name:'預覽核對',exact:true}).click();
