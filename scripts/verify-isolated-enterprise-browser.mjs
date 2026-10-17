@@ -128,7 +128,7 @@ try {
   if(birthdayDownloads.length!==1)throw new Error('Revoked greeting consent still exported');
   await expect(historyAdminPage.getByRole('button',{name:'匯出本月生日名單 CSV',exact:true})).toBeDisabled();
   await historyPage.goto('http://127.0.0.1:3301/admin/members/birthdays');
-  await expect(historyPage.getByRole('alert')).toContainText('目前帳號沒有會員管理權限');
+  await expect(historyPage.getByRole('alert').filter({hasText:'目前帳號沒有會員管理權限'})).toBeVisible();
   await expect(historyPage.getByRole('button',{name:'匯出本月生日名單 CSV',exact:true})).toBeDisabled();
   for(const p of [historyPage,historyAdminPage]) if(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Member history overflows mobile');
   console.log('PASS: mobile legacy CSV preview/import → verified email prefill → independent review → birthday edit/reload → opted-in month list and private CSV → fresh consent recheck blocks revoked export → ordinary member denied');
