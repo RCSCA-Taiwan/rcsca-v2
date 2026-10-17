@@ -4,7 +4,7 @@ import './brand-entrance.css';
 
 const HOLD_MS = 1400;
 const FADE_MS = 950;
-const ENTRY_SOUND_SRC = '/audio/brand-rocket.mp3';
+const ENTRY_SOUND_SRC = '/audio/brand-children-go.mp3';
 
 export default function BrandEntrance({children}: {children: ReactNode}) {
   const [visible, setVisible] = useState(true);

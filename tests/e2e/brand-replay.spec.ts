@@ -18,14 +18,14 @@ test('logo replays the entrance from home and another page after it was already 
   expect(await page.evaluate(() => sessionStorage.getItem('rcsca-brand-entered-v20'))).toBe('1');
 });
 
-test('entrance owns the viewport until deliberate entry, plays the rocket launch sound before fading, then unlocks the site', async ({ page, isMobile }) => {
+test('entrance owns the viewport until deliberate entry, plays the children Go chant before fading, then unlocks the site', async ({ page, isMobile }) => {
   await page.addInitScript(() => {
     const nativePlay = HTMLMediaElement.prototype.play;
     (window as any).__entrySounds = [];
     (window as any).__entrySoundPlayed = false;
     (window as any).__entrySoundEnded = false;
     HTMLMediaElement.prototype.play = function () {
-      if (this.src.includes('/audio/brand-rocket.mp3')) {
+      if (this.src.includes('/audio/brand-children-go.mp3')) {
         (window as any).__entrySounds.push({src: this.src, volume: this.volume});
         this.addEventListener('playing', () => { (window as any).__entrySoundPlayed = true; }, {once:true});
         this.addEventListener('ended', () => { (window as any).__entrySoundEnded = true; }, {once:true});
@@ -61,7 +61,7 @@ test('entrance owns the viewport until deliberate entry, plays the rocket launch
   await expect(page.locator('main')).toHaveCount(0);
   const sounds = await page.evaluate(() => (window as any).__entrySounds);
   expect(sounds).toHaveLength(1);
-  expect(sounds[0].src).toContain('/audio/brand-rocket.mp3');
+  expect(sounds[0].src).toContain('/audio/brand-children-go.mp3');
   expect(sounds[0].volume).toBeCloseTo(0.65);
   await expect.poll(() => page.evaluate(() => (window as any).__entrySoundPlayed), {intervals:[50,100]}).toBe(true);
   await expect.poll(() => page.evaluate(() => (window as any).__entrySoundEnded), {intervals:[50,100]}).toBe(true);
