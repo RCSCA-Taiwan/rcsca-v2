@@ -101,7 +101,7 @@ try {
   await historyPage.getByLabel('生日',{exact:true}).fill('1992-02-29');
   await historyPage.getByRole('checkbox',{name:/我願意讓協會使用生日/}).check();
   await historyPage.getByRole('button',{name:'儲存生日資料',exact:true}).click();
-  await expect(historyPage.getByRole('status')).toContainText('生日資料已儲存');
+  await expect(historyPage.getByRole('region',{name:'會籍與生日資料'}).getByRole('status').filter({hasText:'生日資料已儲存'})).toBeVisible();
   await historyPage.reload();await expect(historyPage.getByLabel('生日',{exact:true})).toHaveValue('1992-02-29');
   await historyAdminPage.goto('http://127.0.0.1:3301/admin/members/birthdays');
   await historyAdminPage.getByLabel('月份').selectOption('2');
