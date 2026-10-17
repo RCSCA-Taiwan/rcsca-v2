@@ -69,7 +69,7 @@ export default function Participate() {
             <option value="">{c.activity}</option>{activities.map(activity=><option value={activity.id} key={activity.id}>{activity.name}</option>)}
           </select></label>
           <label><span className="srOnly">{c.method}</span><select disabled={loading||loadFailed||sending} value={method} onChange={event=>setMethod(event.target.value)}>
-            <option value="">{c.method}</option><option value="transfer">{c.transfer}</option><option value="cash">{c.cash}</option><option value="volunteer">{c.volunteer}</option><option value="contact">{c.contact}</option>
+            <option value="">{c.method}</option><option value="transfer">{c.transfer}</option><option value="cash">{locale==='zh-Hant'?'現金轉交':c.cash}</option>
           </select></label>
         </div>
         <button className="submitLead" disabled={sending||loading||loadFailed||!activityId||registered.includes(activityId)}>
