@@ -21,18 +21,21 @@
     "backup:verify": "node scripts/backup/run.mjs verify",
     "verify:backup-tools": "node --test scripts/backup/archive.test.mjs",
     "verify:member-import": "node --test lib/member-import.test.mjs lib/legacy-member-import.test.mjs lib/network-taxonomy.test.mjs lib/donation-import.test.mjs lib/membership-tenure.test.mjs lib/member-birthday-export.test.mjs",
-    "verify:network-taxonomy": "node --test lib/network-taxonomy.test.mjs"
+    "verify:network-taxonomy": "node --test lib/network-taxonomy.test.mjs",
+    "verify:mail-config": "node --test lib/admin-mail-config.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.0",
     "@supabase/supabase-js": "2.112.4",
     "next": "15.5.28",
+    "nodemailer": "10.1.2",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",
     "@types/node": "^22.0.0",
+    "@types/nodemailer": "8.0.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.8.0"
