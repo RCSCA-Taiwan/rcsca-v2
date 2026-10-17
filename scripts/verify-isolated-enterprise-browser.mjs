@@ -1,5 +1,5 @@
 import {legacyCSVTemplate} from '../lib/legacy-member-import.mjs';
-import {memberCSVTemplate} from '../lib/member-import.mjs';
+import {memberCSVTemplate,parseCSVMatrix} from '../lib/member-import.mjs';
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -107,8 +107,31 @@ try {
   await historyAdminPage.getByLabel('月份').selectOption('2');
   await expect(historyAdminPage.getByRole('heading',{name:historyName,exact:true})).toBeVisible();
   await expect(historyAdminPage.locator('article').filter({hasText:historyName})).toContainText('2月29日');
+  const birthdayDownloads=[];
+  historyAdminPage.on('download',download=>birthdayDownloads.push(download));
+  const birthdayDownloadPromise=historyAdminPage.waitForEvent('download');
+  await historyAdminPage.getByRole('button',{name:'匯出本月生日名單 CSV',exact:true}).click();
+  const birthdayDownload=await birthdayDownloadPromise;
+  if(birthdayDownload.suggestedFilename()!=='member-birthdays-02.csv')throw new Error('Birthday export month mismatch');
+  const birthdayStream=await birthdayDownload.createReadStream();
+  if(!birthdayStream)throw new Error('Birthday CSV download missing');
+  const birthdayChunks=[];for await(const chunk of birthdayStream)birthdayChunks.push(chunk);
+  const birthdayCSV=Buffer.concat(birthdayChunks).toString('utf8');
+  const birthdayMatrix=parseCSVMatrix(birthdayCSV.slice(1));
+  if(birthdayCSV[0]!=='\uFEFF'||JSON.stringify(birthdayMatrix)!==JSON.stringify([['會員姓名','生日月份','生日日期','會籍類型'],[historyName,'2','29','永久會員']]))throw new Error('Birthday CSV fields/data mismatch');
+  if(birthdayCSV.includes('1992')||birthdayCSV.includes(historyMember.email)||birthdayCSV.includes('0900000000'))throw new Error('Birthday CSV leaked private fields');
+  await historyPage.getByRole('checkbox',{name:/我願意讓協會使用生日/}).uncheck();
+  await historyPage.getByRole('button',{name:'儲存生日資料',exact:true}).click();
+  await expect(historyPage.getByRole('region',{name:'會籍與生日資料'}).getByRole('status').filter({hasText:'生日資料已儲存'})).toBeVisible();
+  await historyAdminPage.getByRole('button',{name:'匯出本月生日名單 CSV',exact:true}).click();
+  await expect(historyAdminPage.getByText('本月已沒有符合條件的會員，未產生匯出檔案。',{exact:true})).toBeVisible();
+  if(birthdayDownloads.length!==1)throw new Error('Revoked greeting consent still exported');
+  await expect(historyAdminPage.getByRole('button',{name:'匯出本月生日名單 CSV',exact:true})).toBeDisabled();
+  await historyPage.goto('http://127.0.0.1:3301/admin/members/birthdays');
+  await expect(historyPage.getByRole('alert')).toContainText('目前帳號沒有會員管理權限');
+  await expect(historyPage.getByRole('button',{name:'匯出本月生日名單 CSV',exact:true})).toBeDisabled();
   for(const p of [historyPage,historyAdminPage]) if(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Member history overflows mobile');
-  console.log('PASS: mobile legacy CSV preview/import → verified email prefill → claim → independent review → original date/type/year display → birthday edit/reload → opted-in monthly birthday list');
+  console.log('PASS: mobile legacy CSV preview/import → verified email prefill → independent review → birthday edit/reload → opted-in month list and private CSV → fresh consent recheck blocks revoked export → ordinary member denied');
   await historyPage.context().close();await historyAdminPage.context().close();
 
   // Read only the disposable mail sink; no real messages are sent or inspected.
