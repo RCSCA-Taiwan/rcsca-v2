@@ -22,7 +22,7 @@
     "verify:backup-tools": "node --test scripts/backup/archive.test.mjs",
     "verify:member-import": "node --test lib/member-import.test.mjs lib/legacy-member-import.test.mjs lib/network-taxonomy.test.mjs lib/donation-import.test.mjs lib/membership-tenure.test.mjs lib/member-birthday-export.test.mjs",
     "verify:network-taxonomy": "node --test lib/network-taxonomy.test.mjs",
-    "verify:mail-config": "node --test lib/admin-mail-config.test.mjs lib/admin-mail-outbox.test.mjs lib/admin-mail-worker.test.mjs"
+    "verify:mail-config": "node --test lib/admin-mail-config.test.mjs lib/admin-mail-outbox.test.mjs lib/admin-mail-worker.test.mjs lib/admin-mail-signature.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.0",

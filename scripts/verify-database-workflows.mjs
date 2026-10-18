@@ -45,6 +45,7 @@ try {
     console.log(sql(fs.readFileSync(`supabase/tests/${file}`, "utf8").replaceAll(":'member_id'", `'${member}'`)));
   }
   console.log(sql(fs.readFileSync('supabase/tests/admin_mail_automation.sql','utf8').replaceAll(":'member_id'",`'${member}'`)));
+  console.log(sql(fs.readFileSync('supabase/tests/admin_mail_signed_ticks.sql','utf8')));
   const mailRace=spawnSync(process.execPath,["scripts/verify-mail-outbox-concurrency.mjs",container],{stdio:"inherit"});
   if(mailRace.error||mailRace.status!==0)throw mailRace.error??new Error("Mail claim concurrency failed");
   const workerRace=spawnSync(process.execPath,["scripts/verify-mail-worker-concurrency.mjs",container],{stdio:"inherit"});
