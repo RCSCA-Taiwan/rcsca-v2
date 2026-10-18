@@ -41,9 +41,11 @@ try {
   sql(`insert into auth.users(id,email,raw_user_meta_data) values('${member}','${member}@example.invalid','{}');
     insert into public.memberships(user_id,membership_type,status) values('${member}','annual','active')
     on conflict(user_id) do update set membership_type='annual',status='active';`);
-  for (const file of ["member_history.sql", "donation_batch.sql", "community_daily_forum.sql", "site_mail_routing.sql", "partner_period_offers.sql", "partner_network_taxonomy.sql", "enterprise_registration.sql", "membership_import.sql", "reward_cancellation.sql", "community_donations.sql", "reward_fulfillment.sql", "personal_data_requests.sql", "points_anniversary.sql", "membership_applications.sql", "participation_review_once.sql", "reward_review_lifecycle.sql", "reward_membership.sql", "redemption_balance.sql", "enterprise_review_lifecycle.sql", "enterprise_share_lifecycle.sql", "case_outcome_delivery.sql"]) {
+  for (const file of ["member_history.sql", "donation_batch.sql", "community_daily_forum.sql", "site_mail_routing.sql", "admin_mail_outbox.sql", "partner_period_offers.sql", "partner_network_taxonomy.sql", "enterprise_registration.sql", "membership_import.sql", "reward_cancellation.sql", "community_donations.sql", "reward_fulfillment.sql", "personal_data_requests.sql", "points_anniversary.sql", "membership_applications.sql", "participation_review_once.sql", "reward_review_lifecycle.sql", "reward_membership.sql", "redemption_balance.sql", "enterprise_review_lifecycle.sql", "enterprise_share_lifecycle.sql", "case_outcome_delivery.sql"]) {
     console.log(sql(fs.readFileSync(`supabase/tests/${file}`, "utf8").replaceAll(":'member_id'", `'${member}'`)));
   }
+  const mailRace=spawnSync(process.execPath,["scripts/verify-mail-outbox-concurrency.mjs",container],{stdio:"inherit"});
+  if(mailRace.error||mailRace.status!==0)throw mailRace.error??new Error("Mail claim concurrency failed");
   sql(`insert into public.admin_roles(user_id,role_key) values('${member}','admin');
     insert into public.point_transactions(user_id,tx_type,points,source_type) values('${member}','adjust',100,'isolated_concurrency_test');
     insert into public.reward_catalog(id,category,title,point_cost,stock_total,stock_remaining,min_level,min_footprints,status)

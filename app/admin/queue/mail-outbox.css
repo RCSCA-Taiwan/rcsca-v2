@@ -1,0 +1,9 @@
+.mailOutbox{margin-block:1.5rem;overflow-wrap:anywhere}
+.mailReceiptConfirm{display:flex;align-items:flex-start;gap:.65rem;margin-block:1rem;line-height:1.6}
+.mailReceiptConfirm input{width:1.2rem;height:1.2rem;flex:0 0 auto;margin-top:.3rem}
+.mailOutboxActions{display:flex;flex-wrap:wrap;gap:.75rem;margin-block:1rem}
+.mailOutboxList{list-style:none;padding:0;display:grid;gap:.8rem}
+.mailOutboxList li{display:flex;flex-direction:column;align-items:flex-start;gap:.45rem;padding:1rem;border:1px solid #cfc5b1;border-radius:1rem;background:#fffdf7;min-width:0}
+.mailOutboxList time{font-size:.85em;color:#625d52}
+.mailOutbox button{white-space:normal;max-width:100%}
+@media(max-width:600px){.mailOutboxActions{flex-direction:column}.mailOutboxActions button{width:100%}}

@@ -100,6 +100,50 @@ try {
   await expect(historyAdminPage.locator('#mail-routing')).toContainText('目前尚未確認送達');
   await historyAdminPage.unroute('**/api/admin/mail');
   console.log('PASS: synthetic mail UI requires verification and explicit action, prevents overlapping sends, and distinguishes acceptance from delivery; SMTP sending mocked');
+  const outboxHeaders={Origin:'http://127.0.0.1:3301',Authorization:`Bearer ${mailAdminLogin.data.session.access_token}`};
+  const deniedEnable=await historyAdminPage.request.post('http://127.0.0.1:3301/api/admin/mail/outbox',{headers:outboxHeaders,data:{action:'set_manual',enabled:true,receipt_confirmed:false}});
+  expect(deniedEnable.status()).toBe(409);
+  const noCredentialsSend=await historyAdminPage.request.post('http://127.0.0.1:3301/api/admin/mail/outbox',{headers:outboxHeaders,data:{action:'send_next'}});
+  expect(noCredentialsSend.status()).toBe(503);
+  expect(await noCredentialsSend.json()).toMatchObject({state:'not_configured'});
+  let manualEnabled=false,outboxSends=0,outboxRetries=0,releaseOutboxSend=()=>{};
+  const outboxGate=new Promise(resolve=>{releaseOutboxSend=resolve;});
+  const outboxItems=[{id:'10c95f11-60c1-4e1a-bfd9-121a80043114',source_kind:'enterprise_applications',state:'pending',attempts:0,failure_code:null,created_at:'2026-10-18T00:00:00Z',retry_after:'2026-01-01T00:00:00Z'},
+   {id:'20c95f11-60c1-4e1a-bfd9-121a80043114',source_kind:'membership_applications',state:'unknown',attempts:1,failure_code:'unconfirmed',created_at:'2026-10-18T00:00:00Z',retry_after:'2026-01-01T00:00:00Z'}];
+  await historyAdminPage.route('**/api/admin/mail/outbox',async route=>{
+    const req=route.request();
+    if(req.method()==='GET')return route.fulfill({contentType:'application/json',body:JSON.stringify({manual_enabled:manualEnabled,automatic_enabled:false,items:outboxItems,counts:Object.fromEntries(['pending','sending','accepted','failed','unknown'].map(state=>[state,outboxItems.filter(item=>item.state===state).length]))})});
+    const body=req.postDataJSON();
+    if(body.action==='set_manual')manualEnabled=body.enabled;
+    if(body.action==='retry'){expect(body.duplicate_checked).toBe(true);outboxRetries++;}
+    if(body.action==='send_next'){outboxSends++;await outboxGate;outboxItems[0].state='accepted';}
+    await route.fulfill({contentType:'application/json',body:JSON.stringify({state:body.action==='send_next'?'send_accepted':body.action==='retry'?'retry_queued':'updated'})});
+  });
+  await historyAdminPage.reload();
+  const outboxSection=historyAdminPage.locator('#mail-outbox');
+  await expect(outboxSection.getByRole('button',{name:'啟用手動交寄',exact:true})).toBeDisabled();
+  await expect(outboxSection.getByRole('button',{name:'交寄下一封通知',exact:true})).toBeDisabled();
+  await outboxSection.getByRole('checkbox').check();
+  await outboxSection.getByRole('button',{name:'啟用手動交寄',exact:true}).click();
+  await expect(outboxSection.getByRole('button',{name:'停用手動交寄',exact:true})).toBeEnabled();
+  expect(outboxSends).toBe(0);
+  await outboxSection.getByRole('button',{name:'交寄下一封通知',exact:true}).click();
+  await expect.poll(()=>outboxSends).toBe(1);
+  await outboxSection.getByRole('button',{name:'正在處理通知…',exact:true}).dispatchEvent('click');
+  expect(outboxSends).toBe(1);
+  releaseOutboxSend();
+  await expect(outboxSection.getByRole('status')).toContainText('實際收到仍需到信箱確認');
+  historyAdminPage.once('dialog',dialog=>dialog.dismiss());
+  await outboxSection.getByRole('button',{name:'核對信箱後排入重試',exact:true}).click();
+  expect(outboxRetries).toBe(0);
+  historyAdminPage.once('dialog',dialog=>dialog.accept());
+  await outboxSection.getByRole('button',{name:'核對信箱後排入重試',exact:true}).click();
+  await expect.poll(()=>outboxRetries).toBe(1);
+  await expect(outboxSection.getByRole('status')).toContainText('仍需主動按');
+  expect(outboxSends).toBe(1);
+  await expect.poll(()=>historyAdminPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await historyAdminPage.unroute('**/api/admin/mail/outbox');
+  console.log('PASS: mobile admin outbox requires receipt confirmation and explicit single send, prevents overlapping actions, confirms uncertain retry and never auto-sends; SMTP sending mocked');
   await historyAdminPage.goto('http://127.0.0.1:3301/admin/members/legacy');
   await expect(historyAdminPage.getByRole('heading',{name:'未註冊會員名冊匯入',exact:true})).toBeVisible();
   await historyAdminPage.getByLabel('選取待認領會員CSV').setInputFiles({name:'legacy.csv',mimeType:'text/csv',buffer:Buffer.from(legacyCSVTemplate()+`${historyName},永久會員,2018-03-01,2026,${historyMember.email},0900000000,,1990-02-28,Synthetic source\r\n`)});
