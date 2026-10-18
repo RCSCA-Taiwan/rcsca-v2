@@ -17,6 +17,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  backup-restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run verify:backup-tools
+      - run: npm run verify:backup-restore
+
   remove-obsolete-diagnostics:
     # One-time removal of the pre-isolation report, whose snapshot included
     # shared login input. No checkout or repository code runs with this token.
