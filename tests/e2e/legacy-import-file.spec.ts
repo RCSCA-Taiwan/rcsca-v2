@@ -21,13 +21,13 @@ test('legacy CSV rejects invalid bytes and changing files clears prior evidence 
  const file=page.getByLabel('選取待認領會員CSV');
  const preview=page.getByRole('button',{name:'預覽核對',exact:true});
  await file.setInputFiles({name:'damaged.csv',mimeType:'text/csv',buffer:Buffer.concat([Buffer.from(legacyCSVTemplate()),Buffer.from([0xff])])});
- await expect(page.getByRole('alert')).toContainText('檔案不是有效的 UTF-8');
+ await expect(page.locator('.membershipWorkspace').getByRole('alert')).toContainText('檔案不是有效的 UTF-8');
  await expect(preview).toBeDisabled();
  expect(importCalls).toBe(0);
  for(const [index,year] of [2025,2026].entries()){
   await file.setInputFiles({name:`valid-${year}.csv`,mimeType:'text/csv',buffer:Buffer.from(legacyCSVTemplate()+`測試會員,一般會員,2018-03-01,${year},fixture@example.invalid,,,,\r\n`)});
   await expect(preview).toBeEnabled();await preview.click();
-  await expect(page.getByRole('status')).toContainText('可匯入 1／1 筆');
+  await expect(page.locator('.membershipWorkspace').getByRole('status')).toContainText('可匯入 1／1 筆');
   await expect(page.getByText(`最後有效年度：${year}`,{exact:true})).toBeVisible();
   await expect(page.getByText(/原入會日期：2018-03-01/)).toBeVisible();
   const evidence=page.getByLabel('名冊來源與核對依據');
