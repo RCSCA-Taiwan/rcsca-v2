@@ -9,6 +9,9 @@ test('mail diagnostics reject unauthenticated and cross-origin requests',async({
   expect(verify.status()).toBe(401);
   const foreign=await request.post('/api/admin/mail',{headers:{Origin:'https://example.test'}});
   expect(foreign.status()).toBe(403);
+  const wrongPort=new URL(baseURL!);wrongPort.port=String(Number(wrongPort.port||80)+1);
+  expect((await request.post('/api/admin/mail',{headers:{Origin:wrongPort.origin}})).status()).toBe(403);
+  expect((await request.post('/api/admin/mail')).status()).toBe(403);
   expect(await read.json()).toEqual({state:'unavailable'});
 });
 

@@ -48,6 +48,12 @@ async function handle(request:NextRequest,verify:boolean){
 }
 export async function GET(request:NextRequest){return handle(request,false);}
 export async function POST(request:NextRequest){
-  if(request.headers.get('origin')!==request.nextUrl.origin)return reply({state:'unavailable'},403);
+  // NextURL normalizes loopback hosts (127.0.0.1 -> localhost). Compare the
+  // browser's Origin with the actual request Host, including its port.
+  try{
+    const origin=new URL(request.headers.get('origin')||'');
+    if(origin.origin!==request.headers.get('origin')||origin.host!==request.headers.get('host')?.toLowerCase()||origin.protocol!==request.nextUrl.protocol)
+      return reply({state:'unavailable'},403);
+  }catch{return reply({state:'unavailable'},403);}
   return handle(request,true);
 }
