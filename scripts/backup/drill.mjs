@@ -29,7 +29,7 @@ try{
  docker(['run','--detach','--name',container,'--network','none','--env','POSTGRES_HOST_AUTH_METHOD=trust','postgres:17']);
  let ready=false;
  for(let attempt=0;attempt<100;attempt++){
-  const r=spawnSync('docker',['exec',container,'pg_isready','-U','postgres'],{stdio:'ignore',timeout:3000});
+  const r=spawnSync('docker',['exec',container,'pg_isready','-h','127.0.0.1','-U','postgres'],{stdio:'ignore',timeout:3000});
   if(r.status===0){ready=true;break;}await new Promise(resolve=>setTimeout(resolve,200));
  }
  assert.ok(ready,'Disposable database did not become ready');
@@ -62,12 +62,16 @@ try{
  await unseal(path.join(directory,'database.enc'),key,restored.child.stdin);await restored.done;
  const snapshot=`select json_build_object('users',(select json_agg(t order by id) from auth.users t),'members',(select json_agg(t order by id) from public.members t),'points',(select json_agg(t order by id) from private.points t),'objects',(select json_agg(t order by id) from storage.objects t),'balance',public.point_balance(1),'rls',(select relrowsecurity from pg_class where oid='public.members'::regclass),'policies',(select count(*) from pg_policy where polrelid='public.members'::regclass));`;
  assert.deepEqual(JSON.parse(sql('drill_restored',snapshot)),JSON.parse(sql('drill_source',snapshot)));
+ // Export intentionally omits grants; apply a controlled test role separately.
+ sql('drill_restored',`create role drill_reader; grant usage on schema public to drill_reader; grant select on public.members to drill_reader;`);
+ assert.equal(sql('drill_restored',`set role drill_reader; set drill.user_id='1'; select count(*) from public.members;`).split('\n').at(-1),'1');
+ assert.equal(sql('drill_restored',`set role drill_reader; set drill.user_id='2'; select count(*) from public.members;`).split('\n').at(-1),'0');
  assert.equal(sql('drill_restored',`insert into public.members(user_id,name) values(1,'After restore') returning id;`).split('\n')[0],'2');
  assert.throws(()=>sql('drill_restored',`insert into private.points(member_id,amount) values(999,1);`),/foreign key/);
  const received=[];
  await unseal(path.join(directory,'object-00000000.enc'),key,new Writable({write(chunk,_encoding,done){received.push(chunk);done();}}));
  assert.deepEqual(Buffer.concat(received),bytes);
- console.log(JSON.stringify({status:'synthetic_restore_drill_passed',checks:['authenticated_bundle','wrong_key_rejected','empty_database_restore','rows_and_balances','rls_and_policy_definitions','foreign_keys','identity_sequence','storage_payload_bytes'],production_backup:false,production_restore:false,offsite_copy:false}));
+ console.log(JSON.stringify({status:'synthetic_restore_drill_passed',checks:['authenticated_bundle','wrong_key_rejected','empty_database_restore','rows_and_balances','rls_definitions_and_row_isolation','foreign_keys','identity_sequence','storage_payload_bytes'],production_backup:false,production_restore:false,offsite_copy:false}));
 }finally{
  spawnSync('docker',['rm','--force','--volumes',container],{stdio:'ignore',timeout:30000});
  await rm(directory,{recursive:true,force:true});
