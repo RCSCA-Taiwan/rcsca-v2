@@ -78,6 +78,58 @@ do $$begin
  if public.admin_mail_worker(repeat('a',64),'claim',current_setting('rcsca.worker_run')::uuid) is not null then raise exception 'pause_ignored';end if;
 end$$;
 reset role;
+-- Exhaustion and source review races must not revive mail automatically.
+select public.admin_mail_worker(repeat('a',64),'close',current_setting('rcsca.worker_run')::uuid,p_outcome=>'completed');
+update private.admin_mail_outbox set retry_after=now()+interval '1 day' where state='pending';
+insert into public.enterprise_applications(requester_user_id,company_name,tax_id,contact_name,contact_email)
+values(:'member_id','Synthetic exhaustion source','AUTO-'||gen_random_uuid()::text,'Synthetic','automation@example.invalid') returning set_config('rcsca.worker_source',id::text,true);
+update private.admin_mail_outbox set attempts=4 where source_id=current_setting('rcsca.worker_source')::uuid;
+set local role authenticated;
+select public.admin_mail_set_automatic(true,true);
+reset role;
+set local role anon;
+select set_config('rcsca.worker_run',(public.admin_mail_worker(repeat('a',64),'begin')->>'id'),true);
+select set_config('rcsca.worker_claim',public.admin_mail_worker(repeat('a',64),'claim',current_setting('rcsca.worker_run')::uuid)::text,true);
+do $$declare c jsonb:=current_setting('rcsca.worker_claim')::jsonb;r uuid:=current_setting('rcsca.worker_run')::uuid;begin
+ perform public.admin_mail_worker(repeat('a',64),'finish',r,(c->>'id')::uuid,(c->>'lease_id')::uuid,'failed','connection_failed');
+ if public.admin_mail_worker(repeat('a',64),'claim',r) is not null then raise exception 'fifth_failure_retried';end if;
+ perform public.admin_mail_worker(repeat('a',64),'close',r,p_outcome=>'completed');
+end$$;
+reset role;
+do $$begin
+ if not exists(select 1 from private.admin_mail_outbox where source_id=current_setting('rcsca.worker_source')::uuid and attempts=5 and state='failed') then raise exception 'attempt_limit_missing';end if;
+end$$;
+update public.enterprise_applications set status='needs_info' where id=current_setting('rcsca.worker_source')::uuid;
+update public.enterprise_applications set status='submitted' where id=current_setting('rcsca.worker_source')::uuid;
+set local role anon;
+select set_config('rcsca.worker_run',(public.admin_mail_worker(repeat('a',64),'begin')->>'id'),true);
+select set_config('rcsca.worker_claim',public.admin_mail_worker(repeat('a',64),'claim',current_setting('rcsca.worker_run')::uuid)::text,true);
+reset role;
+-- Source is reviewed while SMTP is in progress; failure must not later send a
+-- stale notification, even though the trigger could not cancel a live lease.
+update public.enterprise_applications set status='needs_info' where id=current_setting('rcsca.worker_source')::uuid;
+set local role anon;
+do $$declare c jsonb:=current_setting('rcsca.worker_claim')::jsonb;begin
+ perform public.admin_mail_worker(repeat('a',64),'finish',current_setting('rcsca.worker_run')::uuid,(c->>'id')::uuid,(c->>'lease_id')::uuid,'failed','connection_failed');
+end$$;
+reset role;
+update private.admin_mail_outbox set retry_after=now()-interval '1 second' where id=(current_setting('rcsca.worker_claim')::jsonb->>'id')::uuid;
+set local role anon;
+do $$begin
+ if public.admin_mail_worker(repeat('a',64),'claim',current_setting('rcsca.worker_run')::uuid) is not null then raise exception 'reviewed_source_reclaimed';end if;
+end$$;
+reset role;
+do $$begin
+ if not exists(select 1 from private.admin_mail_outbox where id=(current_setting('rcsca.worker_claim')::jsonb->>'id')::uuid and state='cancelled') then raise exception 'reviewed_source_not_cancelled';end if;
+end$$;
+-- Simulate an interrupted function. Expiration does not infer non-delivery.
+update private.admin_mail_runs set lease_until=now()-interval '1 second' where id=current_setting('rcsca.worker_run')::uuid;
+set local role anon;
+select public.admin_mail_worker(repeat('a',64),'begin');
+reset role;
+do $$begin
+ if not exists(select 1 from private.admin_mail_runs where id=current_setting('rcsca.worker_run')::uuid and state='unknown') then raise exception 'interrupted_run_not_unknown';end if;
+end$$;
 do $$begin
  if exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('admin_mail_worker','admin_mail_set_automatic') and p.prosecdef) then raise exception 'privileged_public_rpc';end if;
  if has_function_privilege('anon','private.dispatch_admin_mail_tick()','EXECUTE') then raise exception 'scheduler_exposed';end if;

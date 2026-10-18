@@ -47,6 +47,8 @@ try {
   console.log(sql(fs.readFileSync('supabase/tests/admin_mail_automation.sql','utf8').replaceAll(":'member_id'",`'${member}'`)));
   const mailRace=spawnSync(process.execPath,["scripts/verify-mail-outbox-concurrency.mjs",container],{stdio:"inherit"});
   if(mailRace.error||mailRace.status!==0)throw mailRace.error??new Error("Mail claim concurrency failed");
+  const workerRace=spawnSync(process.execPath,["scripts/verify-mail-worker-concurrency.mjs",container],{stdio:"inherit"});
+  if(workerRace.error||workerRace.status!==0)throw workerRace.error??new Error("Worker run concurrency failed");
   sql(`insert into public.admin_roles(user_id,role_key) values('${member}','admin');
     insert into public.point_transactions(user_id,tx_type,points,source_type) values('${member}','adjust',100,'isolated_concurrency_test');
     insert into public.reward_catalog(id,category,title,point_cost,stock_total,stock_remaining,min_level,min_footprints,status)

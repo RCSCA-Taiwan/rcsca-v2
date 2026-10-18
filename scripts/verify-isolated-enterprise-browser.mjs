@@ -1,7 +1,7 @@
 import {legacyCSVTemplate} from '../lib/legacy-member-import.mjs';
 import {memberCSVTemplate,parseCSVMatrix} from '../lib/member-import.mjs';
 import { spawn, spawnSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { chromium, expect } from "@playwright/test";
 
@@ -15,6 +15,7 @@ const publicKey = env.PUBLISHABLE_KEY || env.ANON_KEY;
 if (!publicKey || !env.SERVICE_ROLE_KEY) throw new Error("Disposable stack API keys missing");
 const auth = createClient(env.API_URL, env.SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const password = `Replay-${randomUUID()}!`;
+const workerToken=randomBytes(32).toString('hex');
 const company = `Browser enterprise ${randomUUID()}`;
 const shareTitle = `Browser sharing ${randomUUID()}`;
 const users = [];
@@ -47,8 +48,9 @@ try {
   sql(`insert into public.admin_roles(user_id,role_key) values('${admin.id}','enterprise_reviewer'),('${admin.id}','outcome_reviewer');
     insert into public.enterprise_applications(requester_user_id,company_name,tax_id,contact_name,contact_email)
     values('${owner.id}','${company}','${randomUUID()}','Replay contact','${owner.email}');`);
+  sql(`update private.admin_mail_worker_config set token_hash=sha256(convert_to('${workerToken}','UTF8')) where singleton;`);
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3301"], {
-    env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, NEXT_TELEMETRY_DISABLED: "1" }, stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, VERCEL_ENV:'production',RCSCA_MAIL_WORKER_SECRET:workerToken, NEXT_PUBLIC_SUPABASE_URL: env.API_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, NEXT_TELEMETRY_DISABLED: "1" }, stdio: ["ignore", "pipe", "pipe"],
   });
   let serverLog = "";
   for (const stream of [server.stdout, server.stderr]) stream.on("data", (v) => { serverLog = (serverLog + v).slice(-4000); });
@@ -58,6 +60,11 @@ try {
     if (Date.now() > deadline || server.exitCode !== null) throw new Error("Isolated Next.js server did not become ready");
     await new Promise((r) => setTimeout(r,500));
   }
+  const pausedWorker=await fetch('http://127.0.0.1:3301/api/internal/admin-mail/run',{method:'POST',headers:{Authorization:`Bearer ${workerToken}`}});
+  expect(pausedWorker.status).toBe(200);
+  expect(await pausedWorker.json()).toEqual({state:'paused',processed:0});
+  expect(sql('select worker_seen_at is not null from private.admin_mail_worker_config where singleton')).toBe('t');
+  console.log('PASS: real authenticated worker HTTP → invoker RPC → capability-guarded DB heartbeat returns paused without claiming mail or opening SMTP');
   const testEnv = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, RCSCA_E2E_BASE_URL: "http://127.0.0.1:3301",
     RCSCA_E2E_EMAIL: member.email, RCSCA_E2E_PASSWORD: password };

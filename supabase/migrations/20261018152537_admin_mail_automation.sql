@@ -17,6 +17,7 @@ create table private.admin_mail_runs (
  finished_at timestamptz
 );
 create index admin_mail_runs_recent on private.admin_mail_runs(started_at desc);
+create unique index admin_mail_one_running_worker on private.admin_mail_runs((true)) where state='running';
 alter table private.admin_mail_outbox add column worker_run_id uuid references private.admin_mail_runs(id);
 create index admin_mail_outbox_run on private.admin_mail_outbox(worker_run_id) where worker_run_id is not null;
 alter table private.admin_mail_worker_config enable row level security;
@@ -79,7 +80,8 @@ begin
   source_schema:=case when entry.source_kind='membership_applications' then 'private' else 'public' end;
   expected:=case when entry.source_kind in ('membership_applications','activity_participations') then 'pending' else 'submitted' end;
   execute format('select status::text from %I.%I where id=$1',source_schema,entry.source_kind) into current_status using entry.source_id;
-  if current_status is distinct from expected then
+  if current_status is distinct from expected or exists(select 1 from private.admin_mail_outbox
+   where source_kind=entry.source_kind and source_id=entry.source_id and submission>entry.submission) then
    update private.admin_mail_outbox set state='cancelled',updated_at=now() where id=entry.id;
    return null;
   end if;
