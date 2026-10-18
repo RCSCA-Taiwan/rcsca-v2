@@ -89,7 +89,7 @@ begin
 end;$$;
 revoke all on function private.expire_admin_mail_leases() from public,anon,authenticated;
 
-create function public.admin_mail_queue()
+create function private.admin_mail_queue()
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare result jsonb;begin
  if auth.uid() is null or not private.is_admin('admin') then raise exception 'admin_required';end if;
@@ -103,7 +103,7 @@ declare result jsonb;begin
  return result;
 end;$$;
 
-create function public.admin_mail_set_manual(p_enabled boolean,p_receipt_confirmed boolean default false)
+create function private.admin_mail_set_manual(p_enabled boolean,p_receipt_confirmed boolean default false)
 returns void language plpgsql security definer set search_path='' as $$
 begin
  if auth.uid() is null or not private.is_admin('admin') then raise exception 'admin_required';end if;
@@ -112,7 +112,7 @@ begin
  insert into private.admin_mail_actions(actor_id,action) values(auth.uid(),case when p_enabled then 'enable_manual' else 'disable_manual' end);
 end;$$;
 
-create function public.admin_mail_claim()
+create function private.admin_mail_claim()
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare entry private.admin_mail_outbox; routing private.site_mail_routing;begin
  if auth.uid() is null or not private.is_admin('admin') then raise exception 'admin_required';end if;
@@ -130,7 +130,7 @@ declare entry private.admin_mail_outbox; routing private.site_mail_routing;begin
  return jsonb_build_object('id',entry.id,'lease_id',entry.lease_id,'source_kind',entry.source_kind,'recipient_email',entry.recipient_email,'subject_prefix',entry.subject_prefix);
 end;$$;
 
-create function public.admin_mail_finish(p_id uuid,p_lease uuid,p_outcome text,p_failure text default null)
+create function private.admin_mail_finish(p_id uuid,p_lease uuid,p_outcome text,p_failure text default null)
 returns void language plpgsql security definer set search_path='' as $$
 begin
  if auth.uid() is null or not private.is_admin('admin') then raise exception 'admin_required';end if;
@@ -144,7 +144,7 @@ begin
  update private.admin_mail_attempts set state=p_outcome,failure_code=p_failure,finished_at=now() where lease_id=p_lease;
 end;$$;
 
-create function public.admin_mail_retry(p_id uuid,p_duplicate_checked boolean default false)
+create function private.admin_mail_retry(p_id uuid,p_duplicate_checked boolean default false)
 returns void language plpgsql security definer set search_path='' as $$
 declare entry private.admin_mail_outbox; source_schema text; expected text; current_status text;begin
  if auth.uid() is null or not private.is_admin('admin') then raise exception 'admin_required';end if;
@@ -163,5 +163,14 @@ declare entry private.admin_mail_outbox; source_schema text; expected text; curr
  insert into private.admin_mail_actions(outbox_id,actor_id,action) values(p_id,auth.uid(),case when entry.state='unknown' then 'retry_unknown' else 'retry_failed' end);
  update private.admin_mail_outbox set state='pending',lease_id=null,lease_until=null,updated_at=now() where id=p_id;
 end;$$;
+-- Exposed RPCs are invoker-only wrappers. Privileged work stays private and
+-- independently rechecks the authenticated user and authoritative admin role.
+create function public.admin_mail_queue() returns jsonb language sql security invoker set search_path='' as $$select private.admin_mail_queue();$$;
+create function public.admin_mail_set_manual(p_enabled boolean,p_receipt_confirmed boolean default false) returns void language sql security invoker set search_path='' as $$select private.admin_mail_set_manual(p_enabled,p_receipt_confirmed);$$;
+create function public.admin_mail_claim() returns jsonb language sql security invoker set search_path='' as $$select private.admin_mail_claim();$$;
+create function public.admin_mail_finish(p_id uuid,p_lease uuid,p_outcome text,p_failure text default null) returns void language sql security invoker set search_path='' as $$select private.admin_mail_finish(p_id,p_lease,p_outcome,p_failure);$$;
+create function public.admin_mail_retry(p_id uuid,p_duplicate_checked boolean default false) returns void language sql security invoker set search_path='' as $$select private.admin_mail_retry(p_id,p_duplicate_checked);$$;
+revoke all on function private.admin_mail_queue(),private.admin_mail_set_manual(boolean,boolean),private.admin_mail_claim(),private.admin_mail_finish(uuid,uuid,text,text),private.admin_mail_retry(uuid,boolean) from public,anon;
+grant execute on function private.admin_mail_queue(),private.admin_mail_set_manual(boolean,boolean),private.admin_mail_claim(),private.admin_mail_finish(uuid,uuid,text,text),private.admin_mail_retry(uuid,boolean) to authenticated;
 revoke all on function public.admin_mail_queue(),public.admin_mail_set_manual(boolean,boolean),public.admin_mail_claim(),public.admin_mail_finish(uuid,uuid,text,text),public.admin_mail_retry(uuid,boolean) from public,anon;
 grant execute on function public.admin_mail_queue(),public.admin_mail_set_manual(boolean,boolean),public.admin_mail_claim(),public.admin_mail_finish(uuid,uuid,text,text),public.admin_mail_retry(uuid,boolean) to authenticated;

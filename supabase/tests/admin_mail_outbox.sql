@@ -3,6 +3,7 @@ select set_config('rcsca.mail_member',:'member_id',true);
 do $$begin
  if has_table_privilege('authenticated','private.admin_mail_outbox','SELECT') or has_table_privilege('anon','private.admin_mail_attempts','SELECT') or has_function_privilege('anon','public.admin_mail_claim()','EXECUTE') then raise exception 'outbox_exposed';end if;
  if (select count(*) from pg_trigger where tgname='capture_admin_mail_submission')<>8 then raise exception 'missing_source_trigger';end if;
+ if exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('admin_mail_queue','admin_mail_set_manual','admin_mail_claim','admin_mail_finish','admin_mail_retry') and p.prosecdef) then raise exception 'public_privileged_rpc';end if;
 end$$;
 insert into public.enterprise_applications(requester_user_id,company_name,tax_id,contact_name,contact_email)
 values(:'member_id','Synthetic rollback mail source','MAIL-'||gen_random_uuid()::text,'Synthetic','mail@example.invalid') returning set_config('rcsca.mail_source',id::text,true);
