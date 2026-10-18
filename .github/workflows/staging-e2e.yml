@@ -61,6 +61,7 @@ jobs:
       - run: npm run verify:backup-tools
       - run: npm run verify:member-import
       - run: npm run verify:network-taxonomy
+      - run: npm run verify:mail-config
       - run: npm run verify
       - name: Install browser dependencies
         timeout-minutes: 5
