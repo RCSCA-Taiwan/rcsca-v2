@@ -8,7 +8,7 @@ test('partial admin queue keeps successful rows, identifies the failed queue and
     if(table==='network_match_responses')reads++;
     const deny=allFailed||(table==='network_match_responses'&&failed);
     const data=table==='activities'?[{id:'10000000-0000-4000-8000-000000004300',name:'Synthetic queue recovery',status:'draft',created_at:'2026-01-01T00:00:00Z'}]:[];
-    await route.fulfill({status:deny?(allFailed?503:403):200,headers:{'Retry-After':'0'},contentType:'application/json',body:JSON.stringify(deny?{message:'Synthetic unavailable read'}:data)});
+    await route.fulfill({status:deny?(allFailed?503:403):200,headers:{'Retry-After':'0','Access-Control-Expose-Headers':'Retry-After'},contentType:'application/json',body:JSON.stringify(deny?{message:'Synthetic unavailable read'}:data)});
   });
   await page.goto('/login?next=%2Fadmin%2Fqueue');
   await page.getByRole('button',{name:'Email＋密碼',exact:true}).click();
