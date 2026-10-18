@@ -48,7 +48,7 @@ try {
   sql(`insert into public.admin_roles(user_id,role_key) values('${admin.id}','enterprise_reviewer'),('${admin.id}','outcome_reviewer');
     insert into public.enterprise_applications(requester_user_id,company_name,tax_id,contact_name,contact_email)
     values('${owner.id}','${company}','${randomUUID()}','Replay contact','${owner.email}');`);
-  sql(`update private.admin_mail_worker_config set token_hash=sha256(convert_to('${workerToken}','UTF8')) where singleton;`);
+  sql(`update private.admin_mail_worker_config set token_hash=sha256(convert_to('${workerToken}','UTF8')),vault_secret_id=vault.create_secret('${workerToken}') where singleton;`);
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3301"], {
     env: { ...process.env, VERCEL_ENV:'production',RCSCA_MAIL_WORKER_SECRET:workerToken, NEXT_PUBLIC_SUPABASE_URL: env.API_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, NEXT_TELEMETRY_DISABLED: "1" }, stdio: ["ignore", "pipe", "pipe"],
   });
@@ -65,6 +65,17 @@ try {
   expect(await pausedWorker.json()).toEqual({state:'paused',processed:0});
   expect(sql('select worker_seen_at is not null from private.admin_mail_worker_config where singleton')).toBe('t');
   console.log('PASS: real authenticated worker HTTP → invoker RPC → capability-guarded DB heartbeat returns paused without claiming mail or opening SMTP');
+  const signedHeaders=JSON.parse(sql('select private.make_admin_mail_tick(true)'));
+  expect(JSON.stringify(signedHeaders)).not.toContain(workerToken);
+  // Verification remains SMTP-free even if delivery is enabled concurrently.
+  sql('update private.admin_mail_control set automatic_enabled=true where singleton');
+  const signedCalls=await Promise.all([1,2].map(()=>fetch('http://127.0.0.1:3301/api/internal/admin-mail/run',{method:'POST',headers:signedHeaders})));
+  expect(signedCalls.map(r=>r.status).sort()).toEqual([200,401]);
+  const verified=signedCalls.find(r=>r.status===200);
+  expect(await verified.json()).toEqual({state:'verified',processed:0});
+  expect(sql('select count(*) from private.admin_mail_runs')).toBe('0');
+  sql('update private.admin_mail_control set automatic_enabled=false where singleton');
+  console.log('PASS: real SQL HMAC → HTTP verification → atomic DB nonce consume accepts only one concurrent replay; verification never starts a mail run, even with auto enabled');
   const testEnv = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, RCSCA_E2E_BASE_URL: "http://127.0.0.1:3301",
     RCSCA_E2E_EMAIL: member.email, RCSCA_E2E_PASSWORD: password };
