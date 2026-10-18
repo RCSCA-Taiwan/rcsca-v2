@@ -18,10 +18,15 @@ const messages:Record<string,string>={
   connection_failed:'無法連接寄信服務，請檢查伺服器與連接埠，並稍後重試。',
   tls_failed:'寄信服務的加密連線驗證失敗，請由網站維護人員檢查連線設定。',
   unavailable:'目前無法確認管理通知設定，請重新登入具管理權限的帳號後再試。',
+  test_accepted:'測試信已由寄信服務接受，請到收件匣確認是否收到「寄信功能測試」。目前尚未確認送達。',
+  test_failed:'測試信未確認交寄成功，請先查看信箱，再決定是否重試。',
+  test_recipient_invalid:'管理通知收件設定不完整，請由網站維護人員核對。',
+  test_unknown:'目前無法確認寄送結果。請先查看收件匣，避免重複寄送。',
 };
 export default function MailRoutingStatus(){
   const[routing,setRouting]=useState<Routing|null>(null),[state,setState]=useState('loading'),[busy,setBusy]=useState(false);
   const submitting=useRef(false);
+  const [sending,setSending]=useState(false),[testState,setTestState]=useState(''),[testAccepted,setTestAccepted]=useState(false);
   useEffect(()=>{
     let alive=true;
     void(async()=>{
@@ -51,11 +56,27 @@ export default function MailRoutingStatus(){
     }catch{setState('unavailable');}
     finally{submitting.current=false;setBusy(false);}
   }
+  async function sendTest(){
+    if(submitting.current||testAccepted||state!=='connection_verified')return;
+    submitting.current=true;setBusy(true);setSending(true);setTestState('');
+    try{
+      const {data:{session}}=await getSupabaseBrowserClient().auth.getSession();
+      if(!session)throw new Error('unauthorized');
+      const response=await fetch('/api/admin/mail',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'X-RCSCA-Mail-Action':'send_test'}});
+      const result=await response.json();
+      if(response.ok&&result.state==='test_accepted'){setTestAccepted(true);setTestState('test_accepted');}
+      else setTestState(messages[result.state]?result.state:'test_unknown');
+    }catch{setTestState('test_unknown');}
+    finally{submitting.current=false;setBusy(false);setSending(false);}
+  }
   if(!routing)return null;
   return <section className="privacyCallout" id="mail-routing"><h2>官網通知信設定</h2>
     {routing.recipient_email?<><p>管理通知收件人：<strong>{routing.recipient_email}</strong></p><p>主旨前綴：{routing.subject_prefix} · Gmail 標籤：{routing.gmail_label}</p></>:<p>尚未指定管理通知收件人。</p>}
     <p role="status">{messages[state]||messages.unavailable}</p>
-    <button disabled={busy||!['configured','connection_verified','verification_failed','authentication_failed','connection_timeout','connection_failed','tls_failed'].includes(state)} onClick={()=>void verify()}>{busy?'正在驗證 SMTP…':'檢查寄信連線（不寄信）'}</button>
+    <button disabled={busy||!['configured','connection_verified','verification_failed','authentication_failed','connection_timeout','connection_failed','tls_failed'].includes(state)} onClick={()=>void verify()}>{busy&&!sending?'正在驗證 SMTP…':'檢查寄信連線（不寄信）'}</button>
+    <p>連線通過後，可主動寄一封測試信到上方管理信箱。主旨：{routing.subject_prefix} 寄信功能測試。</p>
+    <button disabled={busy||state!=='connection_verified'||testAccepted||testState==='test_unknown'} onClick={()=>void sendTest()}>{sending?'正在寄送測試信…':testAccepted?'測試信已交寄':'寄送一封測試信'}</button>
+    {testState&&<p role="status">{messages[testState]||messages.test_unknown}</p>}
     <p><strong>審核通知尚未啟用自動寄送。</strong>目前仍請使用各審核後台處理待辦；連線驗證通過不代表通知已寄出。</p>
   </section>;
 }

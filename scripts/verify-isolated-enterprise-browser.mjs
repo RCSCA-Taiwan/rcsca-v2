@@ -72,7 +72,34 @@ try {
   await expect(historyAdminPage.getByRole('button',{name:'檢查寄信連線（不寄信）',exact:true})).toBeDisabled();
   await expect(historyAdminPage.locator('.liveAccountLoading')).toHaveCount(0);
   await expect(historyAdminPage.locator('.workflowNotice[role="alert"]')).toHaveCount(0);
+  const mailAdminClient=createClient(env.API_URL,publicKey,{auth:{persistSession:false,autoRefreshToken:false}});
+  const mailAdminLogin=await mailAdminClient.auth.signInWithPassword({email:historyAdmin.email,password});
+  if(mailAdminLogin.error)throw new Error('Disposable mail admin login failed');
+  const blockedTest=await historyAdminPage.request.post('http://127.0.0.1:3301/api/admin/mail',{headers:{Origin:'http://127.0.0.1:3301',Authorization:`Bearer ${mailAdminLogin.data.session.access_token}`,'X-RCSCA-Mail-Action':'send_test'}});
+  expect(blockedTest.status()).toBe(503);
+  expect(await blockedTest.json()).toEqual({state:'not_configured'});
   console.log('PASS: admin SMTP diagnostics fail closed without private credentials; no verification mail sent');
+  let testMailRequests=0,releaseTestMail=()=>{};
+  const testMailGate=new Promise(resolve=>{releaseTestMail=resolve;});
+  await historyAdminPage.route('**/api/admin/mail',async route=>{
+    const request=route.request();
+    if(request.headers()['x-rcsca-mail-action']==='send_test'){
+      testMailRequests++;await testMailGate;
+      await route.fulfill({contentType:'application/json',body:'{"state":"test_accepted","delivery_verified":false}'});
+    }else await route.fulfill({contentType:'application/json',body:JSON.stringify({state:request.method()==='GET'?'configured':'connection_verified'})});
+  });
+  await historyAdminPage.reload();
+  await expect(historyAdminPage.getByRole('button',{name:'寄送一封測試信',exact:true})).toBeDisabled();
+  await historyAdminPage.getByRole('button',{name:'檢查寄信連線（不寄信）',exact:true}).click();
+  await historyAdminPage.getByRole('button',{name:'寄送一封測試信',exact:true}).click();
+  await expect.poll(()=>testMailRequests).toBe(1);
+  await historyAdminPage.getByRole('button',{name:'正在寄送測試信…',exact:true}).dispatchEvent('click');
+  expect(testMailRequests).toBe(1);
+  releaseTestMail();
+  await expect(historyAdminPage.getByRole('button',{name:'測試信已交寄',exact:true})).toBeDisabled();
+  await expect(historyAdminPage.locator('#mail-routing')).toContainText('目前尚未確認送達');
+  await historyAdminPage.unroute('**/api/admin/mail');
+  console.log('PASS: synthetic mail UI requires verification and explicit action, prevents overlapping sends, and distinguishes acceptance from delivery; SMTP sending mocked');
   await historyAdminPage.goto('http://127.0.0.1:3301/admin/members/legacy');
   await expect(historyAdminPage.getByRole('heading',{name:'未註冊會員名冊匯入',exact:true})).toBeVisible();
   await historyAdminPage.getByLabel('選取待認領會員CSV').setInputFiles({name:'legacy.csv',mimeType:'text/csv',buffer:Buffer.from(legacyCSVTemplate()+`${historyName},永久會員,2018-03-01,2026,${historyMember.email},0900000000,,1990-02-28,Synthetic source\r\n`)});

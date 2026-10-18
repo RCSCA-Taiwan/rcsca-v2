@@ -2,3 +2,4 @@ export function adminMailFailureState(error:unknown):'authentication_failed'|'co
 export function adminMailConfig(env:NodeJS.ProcessEnv):
   | {state:'not_configured'|'invalid'|'invalid_gmail_password'}
   | {state:'configured';host:string;port:number;user:string;pass:string;from:string};
+export function adminTestMessage(config:{from:string},routing:unknown):{from:string;to:string;subject:string;text:string}|null;
