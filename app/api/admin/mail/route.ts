@@ -1,7 +1,7 @@
 import {NextResponse,type NextRequest} from 'next/server';
 import {createClient} from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
-import {adminMailConfig} from '../../../../lib/admin-mail-config.mjs';
+import {adminMailConfig,adminMailFailureState} from '../../../../lib/admin-mail-config.mjs';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -40,6 +40,10 @@ async function handle(request:NextRequest,verify:boolean){
       // SMTP verification authenticates without sending any message.
       await transport.verify();
       return reply({state:'connection_verified',delivery_verified:false});
+    }catch(error){
+      const state=adminMailFailureState(error);
+      console.warn('admin_mail_verification',state);
+      return reply({state},502);
     }finally{transport.close();}
   }catch{
     // Provider messages can contain credentials or addresses. Never expose them.
