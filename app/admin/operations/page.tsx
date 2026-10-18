@@ -1,2 +1,14 @@
-import AdminPageIntro from '../AdminPageIntro';import SiteHeader from '../../SiteHeader';import Link from 'next/link';import LiveAuditLog from './LiveAuditLog';
-export default function AdminOperations(){return <main className="adminPage"><SiteHeader/><AdminPageIntro section="operations"/><section className="portalSection"><div className="portalWrap"><div className="portalGrid three"><Link href="/admin/queue"><h3>統一工作佇列</h3><p>先看今天有哪些公益、企業、媒合與個案需要處理。</p><span>進入 →</span></Link><Link href="/admin/verification"><h3>活動完成核實</h3><p>核實是否完成參與，再建立共享足跡；金額不決定 XP。</p><span>進入 →</span></Link><Link href="/admin/partners"><h3>企業申請與共享</h3><p>審核企業身份、共享用途、年度標章與公開範圍。</p><span>進入 →</span></Link><Link href="/admin/network"><h3>1% Network 媒合</h3><p>管理回應、補件、媒合成立與完成；聯絡資料仍採雙方同意。</p><span>進入 →</span></Link><Link href="/admin/cases"><h3>受保護需求案件</h3><p>處理生活與支持需求；對本人可見回覆與內部工作筆記分層保存。</p><span>進入 →</span></Link><Link href="/admin/data-readiness"><h3>資料治理</h3><p>確認資料邊界、歷史資料匯入原則與敏感資料保護。</p><span>進入 →</span></Link></div><div className="sectionHead"><div><div className="eyebrow">操作紀錄</div><h2>重要異動不能無痕覆寫。</h2></div><p>這裡直接讀取受權限保護的 Audit Log；沒有管理權限的帳號無法取得紀錄。</p></div><LiveAuditLog/></div></section></main>}
+import AdminPageIntro from '../AdminPageIntro';
+import SiteHeader from '../../SiteHeader';
+import Link from 'next/link';
+import LiveAuditLog from './LiveAuditLog';
+import {ADMIN_WORKSPACES,PAGE_NAMES} from '../../../lib/site-navigation.mjs';
+import './workspaces.css';
+export default function AdminOperations(){return <main className="adminPage"><SiteHeader/><AdminPageIntro section="operations"/>
+ <section className="portalSection"><div className="portalWrap">
+ <nav id="workspaces" className="adminWorkspaces" aria-label="後台完整工作區">
+ <h2>後台工作總覽</h2><p>依工作選擇入口；進入後仍依帳號的管理角色顯示可用資料與操作。</p>
+ <div className="portalGrid three">{ADMIN_WORKSPACES.map(group=><article key={group.title}><h3>{group.title}</h3><p>{group.lead}</p>{group.items.map(([href,description])=><Link key={href} href={href}><strong>{PAGE_NAMES[href]}</strong><span>{description} →</span></Link>)}</article>)}</div>
+ </nav>
+ <section id="audit-log" className="adminWorkspaces"><div className="sectionHead"><div><div className="eyebrow">操作紀錄</div><h2>重要異動不能無痕覆寫。</h2></div><p>依管理權限查看操作人員、時間與處理結果。</p></div><LiveAuditLog/></section>
+ </div></section></main>}

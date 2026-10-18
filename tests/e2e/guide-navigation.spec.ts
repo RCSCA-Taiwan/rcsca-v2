@@ -10,11 +10,20 @@ test('feature guide finds a task, clears empty results, and preserves the protec
  await expect(page.getByRole('heading',{name:'還沒找到符合的功能'})).toBeVisible();
  await page.getByRole('button',{name:'顯示全部入口',exact:true}).click();
  await expect(search).toHaveValue('');
+ await search.fill('人才');
+ await expect(page.getByRole('link',{name:/^提出人才需求/})).toHaveAttribute('href','/member-network/talent-request');
+ await search.fill('活動');
+ await expect(page.getByRole('link',{name:/^登記參與關懷活動/})).toHaveAttribute('href','/care-actions/participate');
+ await search.fill('後台完整');
+ await expect(page.getByRole('link',{name:/^後台完整工作總覽/})).toHaveAttribute('href','/admin/operations');
+ await page.getByRole('button',{name:'清除搜尋',exact:true}).click();
  await page.getByRole('button',{name:'我的資料、積分與紀錄',exact:true}).click();
  await expect(page.getByRole('link',{name:'申請資料修改／重置／刪除'})).toBeVisible();
  await page.getByRole('link',{name:'查看兌換／預約／配送與取消'}).click();
  await expect(page).toHaveURL(/\/login\?next=%2Faccount%2Fredemptions$/);
  await expect(page.getByRole('navigation',{name:'目前位置'}).getByText('登入帳號',{exact:true})).toBeVisible();
+ await page.goto('/care-actions/archive');
+ await expect(page.getByRole('navigation',{name:'目前位置'}).getByText('歷年行動紀錄',{exact:true})).toBeVisible();
 });
 
 test('main navigation and footer give a visible guide entry on desktop and mobile',async({page,isMobile})=>{
