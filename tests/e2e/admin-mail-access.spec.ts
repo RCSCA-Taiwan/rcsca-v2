@@ -7,6 +7,7 @@ test('mail diagnostics reject unauthenticated and cross-origin requests',async({
   expect(read.headers()['cache-control']).toContain('no-store');
   const verify=await request.post('/api/admin/mail',{headers:{Origin:new URL(baseURL!).origin}});
   expect(verify.status()).toBe(401);
+  expect((await request.post('/api/admin/mail',{headers:{Origin:new URL(baseURL!).origin,'X-RCSCA-Mail-Action':'send_test'}})).status()).toBe(401);
   const foreign=await request.post('/api/admin/mail',{headers:{Origin:'https://example.test'}});
   expect(foreign.status()).toBe(403);
   const wrongPort=new URL(baseURL!);wrongPort.port=String(Number(wrongPort.port||80)+1);
@@ -26,4 +27,7 @@ test('ordinary members cannot inspect or verify private SMTP configuration',asyn
     expect(response.status()).toBe(403);
     expect(await response.json()).toEqual({state:'unavailable'});
   }
+  const send=await request.post('/api/admin/mail',{headers:{...headers,'X-RCSCA-Mail-Action':'send_test'}});
+  expect(send.status()).toBe(403);
+  expect(await send.json()).toEqual({state:'unavailable'});
 });
