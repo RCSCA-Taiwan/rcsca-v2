@@ -9,6 +9,7 @@ const messages:Record<string,string>={
   loading:'正在確認管理通知的寄信設定…',
   not_configured:'管理通知尚未設定獨立寄信憑證。登入／驗證信與審核通知分開設定。',
   invalid:'管理通知寄信設定有誤，請檢查寄件帳號、伺服器與連接埠。',
+  invalid_gmail_password:'Gmail 應用程式密碼格式不符。請在 Vercel 更新為 Google 產生的 16 個小寫英文字母，儲存後重新部署。',
   configured:'管理通知寄信設定已填入，尚未測試連線。',
   connection_verified:'SMTP 連線與帳密驗證通過；尚未驗證實際收信。',
   verification_failed:'SMTP 連線驗證失敗，請檢查管理通知寄信設定。',
