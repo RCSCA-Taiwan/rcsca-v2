@@ -36,9 +36,9 @@ export async function POST(request:NextRequest){
   const auth=await access(request);if(!auth.client)return reply('unavailable',auth.status);
   if(Number(request.headers.get('content-length')||0)>1024)return reply('invalid_action',400);
   const body=await request.json();
-  if(body.action==='set_manual'){
+  if(body.action==='set_manual'||body.action==='set_automatic'){
    if(typeof body.enabled!=='boolean')return reply('invalid_action',400);
-   const r=await auth.client.rpc('admin_mail_set_manual',{p_enabled:body.enabled,p_receipt_confirmed:body.receipt_confirmed===true});
+   const r=await auth.client.rpc(body.action==='set_manual'?'admin_mail_set_manual':'admin_mail_set_automatic',{p_enabled:body.enabled,p_receipt_confirmed:body.receipt_confirmed===true});
    return reply(r.error?'action_rejected':'updated',r.error?409:200);
   }
   if(body.action==='retry'){

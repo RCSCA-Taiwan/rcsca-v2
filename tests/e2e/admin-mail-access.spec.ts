@@ -6,6 +6,9 @@ test('mail diagnostics reject unauthenticated and cross-origin requests',async({
   expect(read.status()).toBe(401);
   expect(read.headers()['cache-control']).toContain('no-store');
   expect((await request.get('/api/admin/mail/outbox')).status()).toBe(401);
+  expect((await request.get('/api/internal/admin-mail/run')).status()).toBe(405);
+  expect((await request.post('/api/internal/admin-mail/run')).status()).toBe(401);
+  expect((await request.post('/api/internal/admin-mail/run',{headers:{Authorization:'Bearer invalid'}})).status()).toBe(401);
   expect((await request.post('/api/admin/mail/outbox',{headers:{Origin:new URL(baseURL!).origin},data:{action:'send_next'}})).status()).toBe(401);
   expect((await request.post('/api/admin/mail/outbox',{headers:{Origin:'https://example.test'},data:{action:'send_next'}})).status()).toBe(403);
   const verify=await request.post('/api/admin/mail',{headers:{Origin:new URL(baseURL!).origin}});
@@ -34,7 +37,7 @@ test('ordinary members cannot inspect or verify private SMTP configuration',asyn
   expect(send.status()).toBe(403);
   expect(await send.json()).toEqual({state:'unavailable'});
   expect((await request.get('/api/admin/mail/outbox',{headers})).status()).toBe(403);
-  for(const action of [{action:'send_next'},{action:'set_manual',enabled:true,receipt_confirmed:true},{action:'retry',id:'10c95f11-60c1-4e1a-bfd9-121a80043114',duplicate_checked:true}]){
+  for(const action of [{action:'send_next'},{action:'set_automatic',enabled:true,receipt_confirmed:true},{action:'set_manual',enabled:true,receipt_confirmed:true},{action:'retry',id:'10c95f11-60c1-4e1a-bfd9-121a80043114',duplicate_checked:true}]){
     expect((await request.post('/api/admin/mail/outbox',{headers,data:action})).status()).toBe(403);
   }
 });

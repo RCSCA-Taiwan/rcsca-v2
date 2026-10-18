@@ -1,7 +1,7 @@
 import {legacyCSVTemplate} from '../lib/legacy-member-import.mjs';
 import {memberCSVTemplate,parseCSVMatrix} from '../lib/member-import.mjs';
 import { spawn, spawnSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { chromium, expect } from "@playwright/test";
 
@@ -15,6 +15,7 @@ const publicKey = env.PUBLISHABLE_KEY || env.ANON_KEY;
 if (!publicKey || !env.SERVICE_ROLE_KEY) throw new Error("Disposable stack API keys missing");
 const auth = createClient(env.API_URL, env.SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const password = `Replay-${randomUUID()}!`;
+const workerToken=randomBytes(32).toString('hex');
 const company = `Browser enterprise ${randomUUID()}`;
 const shareTitle = `Browser sharing ${randomUUID()}`;
 const users = [];
@@ -47,8 +48,9 @@ try {
   sql(`insert into public.admin_roles(user_id,role_key) values('${admin.id}','enterprise_reviewer'),('${admin.id}','outcome_reviewer');
     insert into public.enterprise_applications(requester_user_id,company_name,tax_id,contact_name,contact_email)
     values('${owner.id}','${company}','${randomUUID()}','Replay contact','${owner.email}');`);
+  sql(`update private.admin_mail_worker_config set token_hash=sha256(convert_to('${workerToken}','UTF8')) where singleton;`);
   server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", "3301"], {
-    env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, NEXT_TELEMETRY_DISABLED: "1" }, stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, VERCEL_ENV:'production',RCSCA_MAIL_WORKER_SECRET:workerToken, NEXT_PUBLIC_SUPABASE_URL: env.API_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, NEXT_TELEMETRY_DISABLED: "1" }, stdio: ["ignore", "pipe", "pipe"],
   });
   let serverLog = "";
   for (const stream of [server.stdout, server.stderr]) stream.on("data", (v) => { serverLog = (serverLog + v).slice(-4000); });
@@ -58,6 +60,11 @@ try {
     if (Date.now() > deadline || server.exitCode !== null) throw new Error("Isolated Next.js server did not become ready");
     await new Promise((r) => setTimeout(r,500));
   }
+  const pausedWorker=await fetch('http://127.0.0.1:3301/api/internal/admin-mail/run',{method:'POST',headers:{Authorization:`Bearer ${workerToken}`}});
+  expect(pausedWorker.status).toBe(200);
+  expect(await pausedWorker.json()).toEqual({state:'paused',processed:0});
+  expect(sql('select worker_seen_at is not null from private.admin_mail_worker_config where singleton')).toBe('t');
+  console.log('PASS: real authenticated worker HTTP → invoker RPC → capability-guarded DB heartbeat returns paused without claiming mail or opening SMTP');
   const testEnv = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: env.API_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: publicKey, RCSCA_E2E_BASE_URL: "http://127.0.0.1:3301",
     RCSCA_E2E_EMAIL: member.email, RCSCA_E2E_PASSWORD: password };
@@ -106,15 +113,16 @@ try {
   const noCredentialsSend=await historyAdminPage.request.post('http://127.0.0.1:3301/api/admin/mail/outbox',{headers:outboxHeaders,data:{action:'send_next'}});
   expect(noCredentialsSend.status()).toBe(503);
   expect(await noCredentialsSend.json()).toMatchObject({state:'not_configured'});
-  let manualEnabled=false,outboxSends=0,outboxRetries=0,releaseOutboxSend=()=>{};
+  let manualEnabled=false,automaticEnabled=false,outboxSends=0,outboxRetries=0,releaseOutboxSend=()=>{};
   const outboxGate=new Promise(resolve=>{releaseOutboxSend=resolve;});
   const outboxItems=[{id:'10c95f11-60c1-4e1a-bfd9-121a80043114',source_kind:'enterprise_applications',state:'pending',attempts:0,failure_code:null,created_at:'2026-10-18T00:00:00Z',retry_after:'2026-01-01T00:00:00Z'},
    {id:'20c95f11-60c1-4e1a-bfd9-121a80043114',source_kind:'membership_applications',state:'unknown',attempts:1,failure_code:'unconfirmed',created_at:'2026-10-18T00:00:00Z',retry_after:'2026-01-01T00:00:00Z'}];
   await historyAdminPage.route('**/api/admin/mail/outbox',async route=>{
     const req=route.request();
-    if(req.method()==='GET')return route.fulfill({contentType:'application/json',body:JSON.stringify({manual_enabled:manualEnabled,automatic_enabled:false,items:outboxItems,counts:Object.fromEntries(['pending','sending','accepted','failed','unknown'].map(state=>[state,outboxItems.filter(item=>item.state===state).length]))})});
+    if(req.method()==='GET')return route.fulfill({contentType:'application/json',body:JSON.stringify({manual_enabled:manualEnabled,automatic_enabled:automaticEnabled,automatic_ready:true,scheduler_tick_at:new Date().toISOString(),worker_seen_at:new Date().toISOString(),last_run:null,items:outboxItems,counts:Object.fromEntries(['pending','sending','accepted','failed','unknown'].map(state=>[state,outboxItems.filter(item=>item.state===state).length]))})});
     const body=req.postDataJSON();
     if(body.action==='set_manual')manualEnabled=body.enabled;
+    if(body.action==='set_automatic'){if(body.enabled)expect(body.receipt_confirmed).toBe(true);automaticEnabled=body.enabled;}
     if(body.action==='retry'){expect(body.duplicate_checked).toBe(true);outboxRetries++;}
     if(body.action==='send_next'){outboxSends++;await outboxGate;outboxItems[0].state='accepted';}
     await route.fulfill({contentType:'application/json',body:JSON.stringify({state:body.action==='send_next'?'send_accepted':body.action==='retry'?'retry_queued':'updated'})});
@@ -122,8 +130,14 @@ try {
   await historyAdminPage.reload();
   const outboxSection=historyAdminPage.locator('#mail-outbox');
   await expect(outboxSection.getByRole('button',{name:'啟用手動交寄',exact:true})).toBeDisabled();
+  await expect(outboxSection.getByRole('button',{name:'啟用自動寄送',exact:true})).toBeDisabled();
   await expect(outboxSection.getByRole('button',{name:'交寄下一封通知',exact:true})).toBeDisabled();
   await outboxSection.getByRole('checkbox').check();
+  await outboxSection.getByRole('button',{name:'啟用自動寄送',exact:true}).click();
+  await expect(outboxSection.getByRole('button',{name:'暫停自動寄送',exact:true})).toBeEnabled();
+  expect(outboxSends).toBe(0);
+  await outboxSection.getByRole('button',{name:'暫停自動寄送',exact:true}).click();
+  await expect(outboxSection.getByRole('button',{name:'啟用自動寄送',exact:true})).toBeEnabled();
   await outboxSection.getByRole('button',{name:'啟用手動交寄',exact:true}).click();
   await expect(outboxSection.getByRole('button',{name:'停用手動交寄',exact:true})).toBeEnabled();
   expect(outboxSends).toBe(0);
@@ -139,7 +153,7 @@ try {
   historyAdminPage.once('dialog',dialog=>dialog.accept());
   await outboxSection.getByRole('button',{name:'核對信箱後排入重試',exact:true}).click();
   await expect.poll(()=>outboxRetries).toBe(1);
-  await expect(outboxSection.getByRole('status')).toContainText('仍需主動按');
+  await expect(outboxSection.getByRole('status')).toContainText('依目前啟用的寄送模式處理');
   expect(outboxSends).toBe(1);
   await expect.poll(()=>historyAdminPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   await historyAdminPage.unroute('**/api/admin/mail/outbox');
