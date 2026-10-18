@@ -3,7 +3,7 @@ import Link from 'next/link';
 import {useEffect,useRef,useState} from 'react';
 import {getMembershipClient} from '../../../../lib/membership-api';
 import {taiwanYear} from '../../../../lib/membership';
-import {parseMemberCSV,memberCSVTemplate,IMPORT_ERRORS,importError,type MemberImportRow} from '../../../../lib/member-import.mjs';
+import {parseMemberCSV,memberCSVTemplate,IMPORT_ERRORS,importError,decodeCSVBytes,type MemberImportRow} from '../../../../lib/member-import.mjs';
 import './import.css';
 type PreviewRow=MemberImportRow&{row:number;user_id:string|null;referrer_id:string|null;inherited_source:boolean;errors:string[]};
 type Preview={year:number;total:number;ready:number;fingerprint:string;rows:PreviewRow[]};
@@ -14,7 +14,7 @@ export default function MemberImport(){
  useEffect(()=>{let active=true;(async()=>{try{const r=await getMembershipClient().rpc('admin_membership_import_preview',{p_rows:[],p_year:year});if(r.error)throw r.error;if(active)setAccess('allowed');}catch{if(active)setAccess('denied');}})();return()=>{active=false;};},[year]);
  function clear(){selection.current++;setRows([]);setPreview(null);setConfirmed(false);setNote('');setNotice('');setDone(false);batch.current='';if(fileInput.current)fileInput.current.value='';}
  async function readFile(file:File|undefined){const current=++selection.current;setRows([]);setPreview(null);setConfirmed(false);setDone(false);setNote('');setNotice('');batch.current='';if(!file)return;
-  try{if(file.size>131072)throw Error('檔案上限為 128 KB。');const text=new TextDecoder('utf-8',{fatal:true}).decode(await file.arrayBuffer());const parsed=parseMemberCSV(text);if(current===selection.current){setRows(parsed);setNotice(`已讀取 ${parsed.length} 筆，請執行預覽檢查。`);}}catch(error){if(current===selection.current)setNotice(error instanceof TypeError?'請將檔案另存為 CSV UTF-8。':(error as Error).message);}
+  try{if(file.size>131072)throw Error('檔案上限為 128 KB。');const text=decodeCSVBytes(await file.arrayBuffer());const parsed=parseMemberCSV(text);if(current===selection.current){setRows(parsed);setNotice(`已讀取 ${parsed.length} 筆，請執行預覽檢查。`);}}catch(error){if(current===selection.current)setNotice((error as Error).message);}
  }
  function template(){const url=URL.createObjectURL(new Blob([memberCSVTemplate()],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='member-roster-template.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  async function check(){if(lock.current||!rows.length)return;lock.current=true;setBusy(true);setNotice('');setPreview(null);setConfirmed(false);setDone(false);
