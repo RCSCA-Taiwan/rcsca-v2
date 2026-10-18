@@ -106,15 +106,16 @@ try {
   const noCredentialsSend=await historyAdminPage.request.post('http://127.0.0.1:3301/api/admin/mail/outbox',{headers:outboxHeaders,data:{action:'send_next'}});
   expect(noCredentialsSend.status()).toBe(503);
   expect(await noCredentialsSend.json()).toMatchObject({state:'not_configured'});
-  let manualEnabled=false,outboxSends=0,outboxRetries=0,releaseOutboxSend=()=>{};
+  let manualEnabled=false,automaticEnabled=false,outboxSends=0,outboxRetries=0,releaseOutboxSend=()=>{};
   const outboxGate=new Promise(resolve=>{releaseOutboxSend=resolve;});
   const outboxItems=[{id:'10c95f11-60c1-4e1a-bfd9-121a80043114',source_kind:'enterprise_applications',state:'pending',attempts:0,failure_code:null,created_at:'2026-10-18T00:00:00Z',retry_after:'2026-01-01T00:00:00Z'},
    {id:'20c95f11-60c1-4e1a-bfd9-121a80043114',source_kind:'membership_applications',state:'unknown',attempts:1,failure_code:'unconfirmed',created_at:'2026-10-18T00:00:00Z',retry_after:'2026-01-01T00:00:00Z'}];
   await historyAdminPage.route('**/api/admin/mail/outbox',async route=>{
     const req=route.request();
-    if(req.method()==='GET')return route.fulfill({contentType:'application/json',body:JSON.stringify({manual_enabled:manualEnabled,automatic_enabled:false,items:outboxItems,counts:Object.fromEntries(['pending','sending','accepted','failed','unknown'].map(state=>[state,outboxItems.filter(item=>item.state===state).length]))})});
+    if(req.method()==='GET')return route.fulfill({contentType:'application/json',body:JSON.stringify({manual_enabled:manualEnabled,automatic_enabled:automaticEnabled,automatic_ready:true,scheduler_tick_at:new Date().toISOString(),worker_seen_at:new Date().toISOString(),last_run:null,items:outboxItems,counts:Object.fromEntries(['pending','sending','accepted','failed','unknown'].map(state=>[state,outboxItems.filter(item=>item.state===state).length]))})});
     const body=req.postDataJSON();
     if(body.action==='set_manual')manualEnabled=body.enabled;
+    if(body.action==='set_automatic'){if(body.enabled)expect(body.receipt_confirmed).toBe(true);automaticEnabled=body.enabled;}
     if(body.action==='retry'){expect(body.duplicate_checked).toBe(true);outboxRetries++;}
     if(body.action==='send_next'){outboxSends++;await outboxGate;outboxItems[0].state='accepted';}
     await route.fulfill({contentType:'application/json',body:JSON.stringify({state:body.action==='send_next'?'send_accepted':body.action==='retry'?'retry_queued':'updated'})});
@@ -122,8 +123,14 @@ try {
   await historyAdminPage.reload();
   const outboxSection=historyAdminPage.locator('#mail-outbox');
   await expect(outboxSection.getByRole('button',{name:'啟用手動交寄',exact:true})).toBeDisabled();
+  await expect(outboxSection.getByRole('button',{name:'啟用自動寄送',exact:true})).toBeDisabled();
   await expect(outboxSection.getByRole('button',{name:'交寄下一封通知',exact:true})).toBeDisabled();
   await outboxSection.getByRole('checkbox').check();
+  await outboxSection.getByRole('button',{name:'啟用自動寄送',exact:true}).click();
+  await expect(outboxSection.getByRole('button',{name:'暫停自動寄送',exact:true})).toBeEnabled();
+  expect(outboxSends).toBe(0);
+  await outboxSection.getByRole('button',{name:'暫停自動寄送',exact:true}).click();
+  await expect(outboxSection.getByRole('button',{name:'啟用自動寄送',exact:true})).toBeEnabled();
   await outboxSection.getByRole('button',{name:'啟用手動交寄',exact:true}).click();
   await expect(outboxSection.getByRole('button',{name:'停用手動交寄',exact:true})).toBeEnabled();
   expect(outboxSends).toBe(0);
@@ -139,7 +146,7 @@ try {
   historyAdminPage.once('dialog',dialog=>dialog.accept());
   await outboxSection.getByRole('button',{name:'核對信箱後排入重試',exact:true}).click();
   await expect.poll(()=>outboxRetries).toBe(1);
-  await expect(outboxSection.getByRole('status')).toContainText('仍需主動按');
+  await expect(outboxSection.getByRole('status')).toContainText('依目前啟用的寄送模式處理');
   expect(outboxSends).toBe(1);
   await expect.poll(()=>historyAdminPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   await historyAdminPage.unroute('**/api/admin/mail/outbox');

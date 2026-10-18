@@ -77,6 +77,6 @@ export default function MailRoutingStatus(){
     <p>連線通過後，可主動寄一封測試信到上方管理信箱。主旨：{routing.subject_prefix} 寄信功能測試。</p>
     <button disabled={busy||state!=='connection_verified'||testAccepted||testState==='test_unknown'} onClick={()=>void sendTest()}>{sending?'正在寄送測試信…':testAccepted?'測試信已交寄':'寄送一封測試信'}</button>
     {testState&&<p role="status">{messages[testState]||messages.test_unknown}</p>}
-    <p><strong>審核通知尚未啟用自動寄送。</strong>目前仍請使用各審核後台處理待辦；連線驗證通過不代表通知已寄出。</p>
+    <p>審核通知的自動／手動寄送狀態請查看下方通知佇列。各項審核仍由管理員處理；連線驗證通過不代表通知已寄出。</p>
   </section>;
 }
