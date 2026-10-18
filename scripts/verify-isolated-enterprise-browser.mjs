@@ -70,6 +70,8 @@ try {
   await login(historyAdminPage,historyAdmin,'/admin/queue');
   await expect(historyAdminPage.locator('#mail-routing')).toContainText('管理通知尚未設定獨立寄信憑證。');
   await expect(historyAdminPage.getByRole('button',{name:'檢查寄信連線（不寄信）',exact:true})).toBeDisabled();
+  await expect(historyAdminPage.locator('.liveAccountLoading')).toHaveCount(0);
+  await expect(historyAdminPage.locator('.workflowNotice[role="alert"]')).toHaveCount(0);
   console.log('PASS: admin SMTP diagnostics fail closed without private credentials; no verification mail sent');
   await historyAdminPage.goto('http://127.0.0.1:3301/admin/members/legacy');
   await expect(historyAdminPage.getByRole('heading',{name:'未註冊會員名冊匯入',exact:true})).toBeVisible();

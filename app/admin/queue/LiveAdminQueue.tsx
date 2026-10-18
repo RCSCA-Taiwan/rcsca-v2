@@ -15,7 +15,9 @@ type Row = {
 const copy: Record<Locale, Record<string, string>> = {
   "zh-Hant": {
     signin: "請先使用具管理權限的帳號登入。",
-    partial: "目前帳號沒有完整後台權限，或部分工作佇列暫時無法讀取。",
+    partial: "以下待辦讀取失敗，清單尚未完整：",
+    failed: "目前無法讀取後台待辦，請重新讀取。",
+    retry: "重新讀取",
     loading: "正在整理後台工作佇列…",
     empty: "目前沒有待處理項目。",
     submitted: "已送出",
@@ -50,7 +52,9 @@ const copy: Record<Locale, Record<string, string>> = {
   en: {
     signin: "Please sign in with an account that has administrative access.",
     partial:
-      "This account does not have full administrative access, or part of the work queue is temporarily unavailable.",
+      "These queues could not be loaded; the list is incomplete: ",
+    failed: "Unable to load the work queue. Please retry.",
+    retry: "Reload",
     loading: "Preparing the admin work queue…",
     empty: "There are no items waiting for action.",
     submitted: "Submitted",
@@ -85,7 +89,9 @@ const copy: Record<Locale, Record<string, string>> = {
   ja: {
     signin: "管理権限のあるアカウントでログインしてください。",
     partial:
-      "このアカウントには完全な管理権限がないか、一部の作業キューを現在読み込めません。",
+      "次の待ち項目を読み込めず、一覧は未完成です：",
+    failed: "作業キューを読み込めません。再読み込みしてください。",
+    retry: "再読み込み",
     loading: "管理作業キューを整理中…",
     empty: "現在、対応待ちの項目はありません。",
     submitted: "送信済み",
@@ -120,7 +126,9 @@ const copy: Record<Locale, Record<string, string>> = {
   ko: {
     signin: "관리 권한이 있는 계정으로 로그인해 주세요.",
     partial:
-      "현재 계정에 전체 관리 권한이 없거나 일부 작업 대기열을 일시적으로 불러올 수 없습니다.",
+      "다음 대기열을 불러오지 못해 목록이 완전하지 않습니다: ",
+    failed: "작업 대기열을 불러올 수 없습니다. 다시 시도해 주세요.",
+    retry: "다시 불러오기",
     loading: "관리 작업 대기열 정리 중…",
     empty: "현재 처리 대기 항목이 없습니다.",
     submitted: "제출됨",
@@ -159,12 +167,17 @@ export default function LiveAdminQueue() {
   const [loading, setLoading] = useState(true),
     [rows, setRows] = useState<Row[]>([]),
     [notice, setNotice] = useState("");
+  const [reload,setReload]=useState(0);
   useEffect(() => {
+    let active=true;
+    setLoading(true);setNotice("");setRows([]);
     (async () => {
+      try {
       const s = getSupabaseBrowserClient();
       const {
         data: { session },
       } = await s.auth.getSession();
+      if(!active)return;
       if (!session) {
         setNotice(c.signin);
         setLoading(false);
@@ -231,8 +244,8 @@ export default function LiveAdminQueue() {
           .order("created_at", { ascending: true })
           .limit(30),
       ]);
-      if (
-        [
+      if(!active)return;
+      const results=[
           parts,
           shares,
           matches,
@@ -241,9 +254,10 @@ export default function LiveAdminQueue() {
           rewards,
           activities,
           changes,
-        ].some((x) => x.error)
-      )
-        setNotice(c.partial);
+        ];
+      const names=[c.care,c.share,c.match,c.case,c.join,c.reward,c.activity,c.change];
+      const failed=results.flatMap((result,index)=>result.error?[names[index]]:[]);
+      if(failed.length)setNotice(c.partial+failed.join("、"));
       const all: Row[] = [];
       for (const x of parts.data || [])
         all.push({
@@ -336,9 +350,14 @@ export default function LiveAdminQueue() {
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
       );
       setRows(all);
-      setLoading(false);
+      }catch{
+        if(active)setNotice(c.failed);
+      }finally{
+        if(active)setLoading(false);
+      }
     })();
-  }, [locale]);
+    return()=>{active=false;};
+  }, [locale,reload]);
   const label: Record<string, string> = {
     submitted: c.submitted,
     under_review: c.under_review,
@@ -349,7 +368,7 @@ export default function LiveAdminQueue() {
   if (loading) return <div className="liveAccountLoading">{c.loading}</div>;
   return (
     <>
-      {notice && <div className="workflowNotice">{notice}</div>}
+      {notice && <div className="workflowNotice" role="alert"><p>{notice}</p><button onClick={()=>setReload(value=>value+1)}>{c.retry}</button></div>}
       <div className="adminQueue">
         {rows.length ? (
           rows.map((r) => (
@@ -370,7 +389,7 @@ export default function LiveAdminQueue() {
             </Link>
           ))
         ) : (
-          <div className="emptyData">{c.empty}</div>
+          !notice&&<div className="emptyData">{c.empty}</div>
         )}
       </div>
     </>
