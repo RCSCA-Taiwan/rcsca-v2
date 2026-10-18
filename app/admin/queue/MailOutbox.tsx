@@ -10,20 +10,25 @@ const failures:Record<string,string>={authentication_failed:'帳密驗證被拒�
 const messages:Record<string,string>={updated:'手動交寄設定已更新。',retry_queued:'已排回待交寄，仍需主動按「交寄下一封通知」。',retry_unavailable:'目前不能重試，可能尚在冷卻、已達上限或待辦狀態已變更，請重新讀取。',send_accepted:'寄信服務已接受交寄；實際收到仍需到信箱確認。',send_failed:'本次交寄失敗，已保留紀錄，請先檢查寄信設定。',send_unknown:'結果不明，請先核對信箱；這封信不會自動重寄。',nothing_due:'目前沒有可交寄的通知，請以最新佇列為準。',claim_unavailable:'尚未啟用手動交寄，或目前無法取得待寄通知。',not_configured:'寄信設定尚未完成。',invalid_gmail_password:'寄信憑證格式不符，請核對設定。',action_rejected:'未完成收信確認或設定變更被拒絕。',unavailable:'無法讀取通知佇列，請重新讀取。'};
 export default function MailOutbox(){
  const [queue,setQueue]=useState<Queue|null>(null),[unavailable,setUnavailable]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[confirmed,setConfirmed]=useState(false);
- const lock=useRef(false),alive=useRef(true);
+ const lock=useRef(false),alive=useRef(true),readSequence=useRef(0);
  const request=useCallback(async(body?:Record<string,unknown>)=>{
   const {data:{session}}=await getSupabaseBrowserClient().auth.getSession();
   if(!session)throw new Error('unavailable');
   return fetch('/api/admin/mail/outbox',{method:body?'POST':'GET',headers:{Authorization:`Bearer ${session.access_token}`,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),cache:'no-store'});
  },[]);
  const load=useCallback(async()=>{
+  const sequence=++readSequence.current;
+  try{
   const response=await request();
-  if(response.status===401||response.status===403){if(alive.current){setQueue(null);setUnavailable(false);}return;}
+  if(!alive.current||sequence!==readSequence.current)return;
+  if(response.status===401||response.status===403){setQueue(null);setUnavailable(false);return;}
   const data=await response.json();
+  if(!alive.current||sequence!==readSequence.current)return;
   if(!response.ok||!Array.isArray(data.items))throw new Error('unavailable');
-  if(alive.current){setQueue(data);setUnavailable(false);}
+  setQueue(data);setUnavailable(false);
+  }catch(error){if(alive.current&&sequence===readSequence.current)throw error;}
  },[request]);
- useEffect(()=>{alive.current=true;void load().catch(()=>{if(alive.current)setUnavailable(true);});return()=>{alive.current=false;};},[load]);
+ useEffect(()=>{alive.current=true;void load().catch(()=>{if(alive.current)setUnavailable(true);});return()=>{alive.current=false;readSequence.current++;};},[load]);
  async function act(body?:Record<string,unknown>){
   if(lock.current)return;lock.current=true;setBusy(true);setNotice('');
   try{
@@ -51,7 +56,7 @@ export default function MailOutbox(){
     <button disabled={busy||(!queue.manual_enabled&&!confirmed)} onClick={()=>void act({action:'set_manual',enabled:!queue.manual_enabled,receipt_confirmed:confirmed})}>{queue.manual_enabled?'停用手動交寄':'啟用手動交寄'}</button>
     <button disabled={busy||unavailable||!queue.manual_enabled||!(queue.counts.pending>0)} onClick={()=>void act({action:'send_next'})}>{busy?'正在處理通知…':'交寄下一封通知'}</button>
    </div>
-   <p>以下顯示最近 50 筆。已交寄代表服務接受，不代表實際送達；結果不明不會自動重試。失敗重試至少間隔一分鐘，每封最多嘗試五次。</p>
+   <p>以下顯示最近 50 筆。已交寄代表服務接受，不代表實際送達；結果不明不會自動重試。失敗重試至少間隔一分鐘，每封最多嘗試五次。冷卻結束後請重新讀取佇列。</p>
    {queue.items.length===0?<p>目前沒有新通知；既有待辦仍請到各審核後台處理。</p>:<ul className="mailOutboxList">{queue.items.map(item=><li key={item.id}>
     <strong>{reviewMailKinds[item.source_kind]?.[0]||'審核待辦'}</strong>
     <span>{states[item.state]||'待確認'} · 已嘗試 {item.attempts} 次</span>
