@@ -1,5 +1,6 @@
 "use client";
-import {useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
+import {useSearchParams} from 'next/navigation';
 import Link from 'next/link';
 import FriendlyIcon,{type IconName} from '../components/FriendlyIcon';
 import WelcomeGarden from '../components/WelcomeGarden';
@@ -27,5 +28,23 @@ const groups=[...baseGroups.slice(0,2),...moreGroups.slice(0,2),...baseGroups.sl
  ] as [string,string,string][])]};
  return group;
 });
-export default function TaskGuide(){const [query,setQuery]=useState(''),[group,setGroup]=useState('all');const q=query.trim().toLocaleLowerCase();const visible=groups.filter(g=>group==='all'||g.id===group).map(g=>({...g,items:g.items.filter(item=>!q||[g.title,g.lead,...item.slice(1)].join(' ').toLocaleLowerCase().includes(q))})).filter(g=>g.items.length);const count=visible.reduce((sum,g)=>sum+g.items.length,0);
-return <><section className="guideHero"><div className="portalWrap guideHeroInner"><div><div className="eyebrow">LET’S SHARE A LITTLE</div><h1>想做什麼？<br/>從這裡找到入口。</h1><p>加入、參與、查進度，讓每一份心意都有清楚的下一步。</p></div><WelcomeGarden/></div></section><section className="portalSection guideBody"><div className="portalWrap"><div className="guideSearch"><FriendlyIcon name="search"/><label htmlFor="task-search">搜尋功能或想做的事<input id="task-search" type="search" placeholder="例如：註冊、積分、預約、修改資料" value={query} onChange={e=>setQuery(e.target.value)}/></label>{query&&<button type="button" onClick={()=>setQuery('')}>清除搜尋</button>}</div><div className="guideFilters" role="group" aria-label="功能分類"><button type="button" aria-pressed={group==='all'} onClick={()=>setGroup('all')}>全部功能</button>{groups.map(g=><button key={g.id} type="button" aria-pressed={group===g.id} onClick={()=>setGroup(g.id)}>{g.title}</button>)}</div><p className="guideCount" role="status">找到 {count} 個入口</p>{visible.length?visible.map(g=><section key={g.id} className="guideGroup" aria-labelledby={`guide-${g.id}`}><div className="guideGroupHeading"><FriendlyIcon name={g.icon}/><div><h2 id={`guide-${g.id}`}>{g.title}</h2><p>{g.lead}</p></div></div><div className="guideGrid">{g.items.map(([href,title,desc])=><Link href={href} key={href} className="guideCard"><h3>{title}<FriendlyIcon name="arrow"/></h3><p>{desc}</p></Link>)}</div></section>):<div className="guideEmpty"><FriendlyIcon name="search"/><h2>還沒找到符合的功能</h2><p>試試「會員」「共享」「資料」等關鍵字，或顯示全部入口。</p><button type="button" onClick={()=>{setQuery('');setGroup('all')}}>顯示全部入口</button></div>}<p className="guideHelp">還需要協助？<Link href="/contact">聯絡協會 →</Link></p></div></section></>}
+function validCategory(value:string|null){return groups.some(g=>g.id===value)?value!:'all';}
+export default function TaskGuide(){
+ const searchParams=useSearchParams(),signature=searchParams.toString();
+ const [query,setQuery]=useState(searchParams.get('q')||''),[group,setGroup]=useState(()=>validCategory(searchParams.get('category')));
+ const synchronized=useRef(signature);
+ useEffect(()=>{
+  if(signature===synchronized.current)return;
+  synchronized.current=signature;
+  setQuery(searchParams.get('q')||'');setGroup(validCategory(searchParams.get('category')));
+ },[signature,searchParams]);
+ function update(nextQuery:string,nextGroup:string){
+  const params=new URLSearchParams();
+  if(nextQuery)params.set('q',nextQuery);
+  if(nextGroup!=='all')params.set('category',nextGroup);
+  const value=params.toString();
+  synchronized.current=value;setQuery(nextQuery);setGroup(nextGroup);
+  window.history.replaceState(null,'',`/guide${value?'?'+value:''}${window.location.hash}`);
+ }
+const q=query.trim().toLocaleLowerCase();const visible=groups.filter(g=>group==='all'||g.id===group).map(g=>({...g,items:g.items.filter(item=>!q||[g.title,g.lead,...item.slice(1)].join(' ').toLocaleLowerCase().includes(q))})).filter(g=>g.items.length);const count=visible.reduce((sum,g)=>sum+g.items.length,0);
+return <><section className="guideHero"><div className="portalWrap guideHeroInner"><div><div className="eyebrow">LET’S SHARE A LITTLE</div><h1>想做什麼？<br/>從這裡找到入口。</h1><p>加入、參與、查進度，讓每一份心意都有清楚的下一步。</p></div><WelcomeGarden/></div></section><section className="portalSection guideBody"><div className="portalWrap"><div className="guideSearch"><FriendlyIcon name="search"/><label htmlFor="task-search">搜尋功能或想做的事<input id="task-search" type="search" placeholder="例如：註冊、積分、預約、修改資料" value={query} onChange={e=>update(e.target.value,group)}/></label>{query&&<button type="button" onClick={()=>update('',group)}>清除搜尋</button>}</div><div className="guideFilters" role="group" aria-label="功能分類"><button type="button" aria-pressed={group==='all'} onClick={()=>update(query,'all')}>全部功能</button>{groups.map(g=><button key={g.id} type="button" aria-pressed={group===g.id} onClick={()=>update(query,g.id)}>{g.title}</button>)}</div><p className="guideCount" role="status">找到 {count} 個入口</p>{visible.length?visible.map(g=><section key={g.id} className="guideGroup" aria-labelledby={`guide-${g.id}`}><div className="guideGroupHeading"><FriendlyIcon name={g.icon}/><div><h2 id={`guide-${g.id}`}>{g.title}</h2><p>{g.lead}</p></div></div><div className="guideGrid">{g.items.map(([href,title,desc])=><Link href={href} key={href} className="guideCard"><h3>{title}<FriendlyIcon name="arrow"/></h3><p>{desc}</p></Link>)}</div></section>):<div className="guideEmpty"><FriendlyIcon name="search"/><h2>還沒找到符合的功能</h2><p>試試「會員」「共享」「資料」等關鍵字，或顯示全部入口。</p><button type="button" onClick={()=>update('','all')}>顯示全部入口</button></div>}<p className="guideHelp">還需要協助？<Link href="/contact">聯絡協會 →</Link></p></div></section></>}
