@@ -1,0 +1,4 @@
+.accountNotifications .notificationToolbar{flex-wrap:wrap;gap:8px}
+.accountNotifications .notificationToolbar button{min-height:44px;max-width:100%;overflow-wrap:anywhere}
+.accountNotifications .notificationList article>div{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.notificationRoutes{display:grid;gap:8px;margin-top:12px}.notificationRoutes>a{display:flex;align-items:center;min-height:44px;max-width:100%;width:fit-content;line-height:1.6;overflow-wrap:anywhere}
