@@ -48,7 +48,7 @@ export default function PersonalDataRequests(){
   {ready&&staleEditing&&<div className="privacyCallout" role="status">原申請狀態已更新，這份補件表單已停止編輯，請查看上方最新進度。<button type="button" onClick={clearDraft}>返回最新申請進度</button></div>}
   {ready&&editable&&<form className="authForm dataRequestForm" aria-label="個人資料申請" onSubmit={begin}>
    <h2>{editing?'補充申請資料':'提出申請'}</h2>
-   <fieldset disabled={busy||step>0}><legend>申請內容</legend><label>申請項目<select value={kind} onChange={e=>setKind(e.target.value as typeof kind)}>{Object.entries(requestKinds).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
+   <fieldset disabled={busy||step>0}><legend>申請內容</legend><label>申請項目<select aria-label="申請項目" value={kind} onChange={e=>setKind(e.target.value as typeof kind)}>{Object.entries(requestKinds).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
    {kind==='edit'&&<><p>只填寫需要修改的欄位；空白欄位不申請變更。若要清除某欄資料，請在原因內說明。</p>{Object.entries(changeLabels).map(([key,label])=><label key={key}>{label}<input type={key==='contact_email'?'email':key==='mobile'?'tel':'text'} maxLength={key==='address'?500:key==='contact_email'?254:key==='mobile'?30:100} value={changes[key]||''} onChange={e=>setChanges(x=>({...x,[key]:e.target.value}))}/></label>)}</>}
    {kind==='reset'&&<p className="dataRequestDanger">申請全部重置：個人資料需重新填寫，可用積分、XP 與足跡歸零，共享等級回到起點，重新提出會員申請。核准前不會重置。</p>}
    {kind==='delete'&&<p className="dataRequestDanger">申請刪除帳號及個人資料。處理完成後可能無法登入、兌換或使用原有權益；協會將先確認刪除範圍及需保留的紀錄。</p>}
