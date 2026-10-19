@@ -1,4 +1,5 @@
 'use client';
+import ActivityWorkspaceNav from '../../components/ActivityWorkspaceNav';
 import SiteHeader from '../../SiteHeader';import {FormEvent,useEffect,useRef,useState} from 'react';import {useSearchParams} from 'next/navigation';import {getSupabaseBrowserClient} from '../../../lib/supabase-browser';import {Locale,useI18n} from '../../i18n';
 type Activity={id:string;name:string;code:string};
 const copy:Record<Locale,any>={
@@ -78,6 +79,7 @@ export default function Participate() {
         {message&&<div className="authMessage sent" role="status" aria-live="polite">{message}</div>}
       </form>
       <aside><b>{c.aside}</b><p>{c.asideLead}</p></aside>
+      <ActivityWorkspaceNav/>
     </div></section>
   </main>;
 }
