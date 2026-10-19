@@ -1,0 +1,8 @@
+.partnerWorkspaceNav{margin:0 0 28px;padding:20px;border:1px solid #d1c5b4;border-radius:18px;background:#fffdf8;color:#29251e}
+.partnerWorkspaceIntro strong{font-size:18px;line-height:1.5}
+.partnerWorkspaceIntro p{margin:8px 0 16px;font-size:14px;line-height:1.7;color:#514b43}
+.partnerWorkspaceLinks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.partnerWorkspaceLinks a{display:flex;align-items:center;min-height:44px;padding:10px 12px;border:1px solid #d1c5b4;border-radius:12px;color:#514329;font-size:14px;line-height:1.5;text-decoration:none;overflow-wrap:anywhere}
+.partnerWorkspaceLinks a:hover,.partnerWorkspaceLinks a:focus-visible{border-color:#8b6c37;background:#f5efe3}
+.partnerWorkspaceLinks a[aria-current=page]{background:#29251e;border-color:#29251e;color:#fffdf8;font-weight:800}
+@media(max-width:700px){.partnerWorkspaceNav{padding:16px}.partnerWorkspaceLinks{grid-template-columns:repeat(2,minmax(0,1fr))}}
