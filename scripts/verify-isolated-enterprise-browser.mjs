@@ -503,7 +503,9 @@ try {
   await reviewPage.getByRole("checkbox",{name:/已核對/}).check();
   await reviewPage.getByRole("button",{name:"確認處理",exact:true}).click();
   await expect(membershipCard.getByText("已核准",{exact:true})).toBeVisible();
-  await membershipPage.goto("http://127.0.0.1:3301/membership/directory");
+  await membershipPage.getByRole('button',{name:'重新讀取申請進度',exact:true}).click();
+  await expect(membershipPage.getByText('已核准',{exact:true})).toBeVisible();
+  await membershipPage.getByRole('link',{name:'查看年度會員名冊 →',exact:true}).click();
   await expect(membershipPage.getByRole("heading",{name:applicantName,exact:true})).toBeVisible();
   await expect(membershipPage.getByText("一般會員",{exact:true})).toBeVisible();
   if((await membershipPage.locator(".membershipRoster").innerText()).includes(applicant.email)) throw new Error("Membership directory exposed contact information");
