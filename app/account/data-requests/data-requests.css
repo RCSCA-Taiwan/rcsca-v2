@@ -9,3 +9,10 @@
 .dataRequestActions {display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:22px}
 .dataRequestActions button,.dataRequestWorkspace article button {padding:10px 14px;border-radius:10px;border:1px solid #aa9676;background:#211c15;color:#fff;cursor:pointer}
 .dataRequestActions button:disabled {opacity:.5;cursor:default}
+.dataRequestRefresh{justify-self:start;min-height:44px;padding:10px 16px;border:1px solid #a28e6d;border-radius:24px;background:transparent;color:#332b22;cursor:pointer}
+.dataRequestRefresh:disabled{opacity:.6;cursor:wait}
+.dataRequestRoutes{display:flex;flex-wrap:wrap;gap:8px 24px}
+.dataRequestRoutes a{display:flex;align-items:center;min-height:44px;max-width:100%;overflow-wrap:anywhere}
+.dataRequestWorkspace .membershipCard p{overflow-wrap:anywhere;white-space:pre-wrap}
+.dataRequestForm label{color:#514b43}
+@media(max-width:620px){.dataRequestRoutes{flex-direction:column;align-items:flex-start}}
