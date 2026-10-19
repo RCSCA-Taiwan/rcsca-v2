@@ -1,0 +1,7 @@
+.legacyClaimWorkspace .claimProgress h2{margin-top:0;line-height:1.5}
+.legacyClaimWorkspace .claimProgress p,.legacyClaimWorkspace .claimNotice{overflow-wrap:anywhere;white-space:pre-wrap}
+.claimRefresh{margin-top:18px;min-height:44px;max-width:100%;padding:10px 16px;border:1px solid #a28e6d;border-radius:24px;background:transparent;color:#332b22;cursor:pointer}
+.claimRefresh:disabled{opacity:.6;cursor:wait}
+.claimRoutes{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:20px}
+.claimRoutes a{display:flex;align-items:center;min-height:44px;max-width:100%;overflow-wrap:anywhere}
+@media(max-width:620px){.claimRoutes{flex-direction:column;align-items:flex-start}}

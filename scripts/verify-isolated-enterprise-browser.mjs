@@ -187,6 +187,9 @@ try {
   await historyPage.getByRole('checkbox',{name:/我確認為本人/}).check();
   await historyPage.getByRole('button',{name:'送出認領申請',exact:true}).click();
   await expect(historyPage.getByRole('status')).toContainText('認領申請已送出');
+  await historyPage.reload();
+  await expect(historyPage.getByRole('heading',{name:'認領進度：待協會核對',exact:true})).toBeVisible();
+  await expect(historyPage.getByRole('form',{name:'歷年會員認領申請',exact:true})).toHaveCount(0);
   await historyAdminPage.getByRole('button',{name:'重新讀取',exact:true}).click();
   const claimCard=historyAdminPage.locator('article').filter({has:historyAdminPage.getByRole('heading',{name:historyName,exact:true})});
   await claimCard.getByRole('button',{name:'檢視認領',exact:true}).click();
@@ -196,7 +199,9 @@ try {
   await historyAdminPage.getByLabel('審核依據與回覆＊').fill('Independent synthetic identity and eligibility review');
   await historyAdminPage.getByRole('button',{name:'確認處理認領',exact:true}).click();
   await expect(historyAdminPage.getByRole('status')).toContainText('已連結原始會籍');
-  await historyPage.goto('http://127.0.0.1:3301/account/profile');
+  await historyPage.reload();
+  await expect(historyPage.getByRole('heading',{name:'認領進度：已核准',exact:true})).toBeVisible();
+  await historyPage.getByRole('link',{name:'查看會籍、年資與生日資料 →',exact:true}).click();
   await expect(historyPage.getByText('會員身分：永久會員（有效）',{exact:true})).toBeVisible();
   await expect(historyPage.getByText('原始入會日期：2018-03-01',{exact:true})).toBeVisible();
   await expect(historyPage.getByLabel('生日',{exact:true})).toHaveValue('1990-02-28');
