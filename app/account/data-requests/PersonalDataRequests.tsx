@@ -52,7 +52,7 @@ export default function PersonalDataRequests(){
    {kind==='edit'&&<><p>只填寫需要修改的欄位；空白欄位不申請變更。若要清除某欄資料，請在原因內說明。</p>{Object.entries(changeLabels).map(([key,label])=><label key={key}>{label}<input type={key==='contact_email'?'email':key==='mobile'?'tel':'text'} maxLength={key==='address'?500:key==='contact_email'?254:key==='mobile'?30:100} value={changes[key]||''} onChange={e=>setChanges(x=>({...x,[key]:e.target.value}))}/></label>)}</>}
    {kind==='reset'&&<p className="dataRequestDanger">申請全部重置：個人資料需重新填寫，可用積分、XP 與足跡歸零，共享等級回到起點，重新提出會員申請。核准前不會重置。</p>}
    {kind==='delete'&&<p className="dataRequestDanger">申請刪除帳號及個人資料。處理完成後可能無法登入、兌換或使用原有權益；協會將先確認刪除範圍及需保留的紀錄。</p>}
-   <label>申請原因或補充說明＊<textarea required maxLength={1000} value={reason} onChange={e=>setReason(e.target.value)}/></label>
+   <label>申請原因或補充說明＊<textarea aria-label="申請原因或補充說明＊" required maxLength={1000} value={reason} onChange={e=>setReason(e.target.value)}/></label>
    <button disabled={busy||step>0}>{busy?'正在送出…':kind==='edit'?'送出資料修改申請':'繼續確認申請'}</button></fieldset>
    {editing&&<button type="button" disabled={busy||step>0} onClick={clearDraft}>取消本次補件編輯</button>}
   </form>}
