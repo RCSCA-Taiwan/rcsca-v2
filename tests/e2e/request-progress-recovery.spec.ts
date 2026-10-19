@@ -10,7 +10,8 @@ test('request progress distinguishes partial failure, total failure, completed r
    expect(url.searchParams.get(table==='support_cases'?'owner_user_id':'requester_user_id')).toMatch(/^eq\.[0-9a-f-]{36}$/i);
    const failed=phase==='failed'||(phase==='partial'&&table==='network_requests');
    const rows=phase==='partial'&&table==='support_cases'?[{id,title:'保留可讀取的關懷紀錄',status:'needs_info',updated_at:'2026-10-19T01:00:00Z',public_summary:'測試補件摘要'}]:phase==='recovered'&&table==='network_requests'?[{id,title:'已完成的媒合仍可回看',status:'completed',request_kind:'life',updated_at:'2026-10-19T02:00:00Z',public_summary:'測試完成摘要'}]:[];
-   await route.fulfill({status:failed?503:200,contentType:'application/json',body:JSON.stringify(failed?{message:'Synthetic read failure'}:rows)});
+   // Keep the provider's built-in 503 retries, but avoid its backoff in this UI-state test.
+   await route.fulfill({status:failed?503:200,headers:failed?{'Retry-After':'0'}:{},contentType:'application/json',body:JSON.stringify(failed?{message:'Synthetic read failure'}:rows)});
   });
  }
  await page.goto('/login?next=%2Faccount%2Frequests');
