@@ -16,6 +16,8 @@
 
 `/guide` 是跨區功能入口；`/admin/operations#workspaces` 是完整後台總覽。現有 `/admin` 仍導向待辦頁。子頁的「目前位置」連回對應區域，管理員中心連回完整總覽。
 
+功能指南支援分類與搜尋直達連結：`/guide?category=account`（個人）、`/guide?category=partner`（企業）、`/guide?category=actions`（活動）、`/guide?category=connect`（專業與人才）。`q` 可帶入搜尋詞，例如 `/guide?category=connect&q=人才`。畫面篩選同步更新網址但不堆疊每次輸入的瀏覽紀錄，重整或從功能頁返回可保留原入口；未知分類顯示全部功能。連結仍遵守各功能原有的登入及權限檢查。
+
 ## 本批架構補齊
 
 - 補齊活動參與、需求、公開成果、生活服務、工作、人才、媒合進度及規則等功能指南入口。
