@@ -22,10 +22,16 @@ test('full reset and deletion each require two separate confirmations and can be
   const dialog=page.getByRole('dialog');
   await expect(dialog.getByRole('heading')).toContainText('第一次提醒');
   await expect(dialog.getByRole('button',{name:'繼續第二次確認'})).toBeDisabled();
+  await dialog.getByRole('button',{name:'繼續第二次確認'}).dispatchEvent('click');
+  await expect(dialog.getByRole('heading')).toContainText('第一次提醒');
   await dialog.getByRole('checkbox').check();
   await dialog.getByRole('button',{name:'繼續第二次確認'}).click();
   await expect(dialog.getByRole('heading')).toContainText('第二次確認');
   await expect(dialog.getByRole('button',{name:'確認送出審核申請'})).toBeDisabled();
+  const beforeUnconfirmed=calls;
+  await dialog.getByRole('button',{name:'確認送出審核申請'}).dispatchEvent('click');
+  await page.getByRole('form',{name:'個人資料申請',exact:true}).dispatchEvent('submit');
+  expect(calls).toBe(beforeUnconfirmed);
   expect(calls).toBe(payloads.length);
   await dialog.getByRole('button',{name:'取消，保留原資料'}).click();
   const before=calls;
@@ -37,7 +43,7 @@ test('full reset and deletion each require two separate confirmations and can be
   await expect(dialog).toHaveCount(0);
   await expect.poll(()=>calls).toBe(before+1);
   expect(payloads.at(-1)).toMatchObject({p_kind:kind,p_confirm_one:true,p_confirm_two:true,p_changes:{}});
-  await expect(page.getByRole('status')).toContainText('申請已送出');
+  await expect(page.getByRole('status').filter({hasText:'申請已送出'})).toContainText('申請已送出');
  }
  expect(calls).toBe(2);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
