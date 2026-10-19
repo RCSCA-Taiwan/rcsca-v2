@@ -214,7 +214,7 @@ try {
   await basicProfile.getByLabel('顯示名稱',{exact:true}).fill('Synthetic updated display');
   await basicProfile.getByLabel('手機',{exact:true}).fill('0912345678');
   await basicProfile.getByRole('button',{name:'儲存基本資料',exact:true}).click();
-  await expect(historyPage.getByRole('region',{name:'基本資料',exact:true}).getByRole('status')).toHaveText('已儲存。');
+  await expect(historyPage.getByRole('region',{name:'基本資料',exact:true}).getByRole('status').filter({hasText:'已儲存。'})).toHaveText('已儲存。');
   expect(sql(`select display_name||'|'||mobile from public.profiles where id='${historyMember.id}'`)).toBe('Synthetic updated display|0912345678');
   await historyPage.reload();await expect(basicProfile.getByLabel('顯示名稱',{exact:true})).toHaveValue('Synthetic updated display');
   await expect(historyPage.getByLabel('生日',{exact:true})).toHaveValue('1992-02-29');

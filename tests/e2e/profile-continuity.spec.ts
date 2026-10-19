@@ -43,7 +43,7 @@ test('profile cannot overwrite unreadable data, retains a draft and separates sa
  await expect(basic.getByRole('alert')).toHaveText('儲存失敗，請稍後再試。');
  await expect(form.getByLabel('顯示名稱',{exact:true})).toHaveValue('合成修改姓名');
  await form.getByRole('button',{name:'儲存基本資料',exact:true}).click();
- await expect(basic.getByRole('status')).toHaveText('已儲存。');
+ await expect(basic.getByRole('status').filter({hasText:'已儲存。'})).toHaveText('已儲存。');
  await expect(basic.getByRole('alert')).toContainText('目前無法確認基本資料');await expect(form).toHaveCount(0);expect(writes).toBe(2);
  failed=false;await retry.click();await expect(form.getByLabel('手機',{exact:true})).toHaveValue('0911111111');
  await page.reload();await expect(form.getByLabel('顯示名稱',{exact:true})).toHaveValue('合成修改姓名');
@@ -73,11 +73,11 @@ test('birthday retries malformed results, retains rejected input, blocks duplica
  await form.getByRole('button',{name:'儲存生日資料',exact:true}).click();
  try{await expect.poll(()=>writes).toBe(1);await expect(form.getByLabel('生日',{exact:true})).toBeDisabled();await form.dispatchEvent('submit');expect(writes).toBe(1);await expect(retry).toBeDisabled();}finally{release();}
  await expect(panel.getByRole('alert')).toHaveText('請填寫有效生日，不能晚於今天。');await expect(form.getByLabel('生日',{exact:true})).toHaveValue('1992-02-29');
- await form.getByRole('button',{name:'儲存生日資料',exact:true}).click();await expect(panel.getByRole('status')).toHaveText('生日資料已儲存。');
+ await form.getByRole('button',{name:'儲存生日資料',exact:true}).click();await expect(panel.getByRole('status').filter({hasText:'生日資料已儲存。'})).toHaveText('生日資料已儲存。');
  await expect(panel.getByRole('alert')).toContainText('目前無法確認會籍與生日資料');await expect(form).toHaveCount(0);expect(writes).toBe(2);
  malformed=false;await retry.click();await expect(form.getByRole('checkbox')).toBeChecked();
  await form.getByLabel('生日',{exact:true}).fill('');await expect(form.getByRole('checkbox')).not.toBeChecked();await expect(form.getByRole('checkbox')).toBeDisabled();
- await form.getByRole('button',{name:'儲存生日資料',exact:true}).click();await expect(panel.getByRole('status')).toHaveText('生日資料已儲存。');
+ await form.getByRole('button',{name:'儲存生日資料',exact:true}).click();await expect(panel.getByRole('status').filter({hasText:'生日資料已儲存。'})).toHaveText('生日資料已儲存。');
  await page.reload();await expect(form.getByLabel('生日',{exact:true})).toHaveValue('');await expect(form.getByRole('checkbox')).not.toBeChecked();
  expect(writes).toBe(3);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
