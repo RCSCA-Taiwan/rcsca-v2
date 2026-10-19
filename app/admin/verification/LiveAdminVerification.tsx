@@ -129,7 +129,7 @@ export default function LiveAdminVerification() {
     const { data, error } = await s
       .from("activity_participations")
       .select(
-        "id,participation_type,status,created_at,activity_id,activities(name),profiles(display_name,email)",
+        "id,participation_type,status,created_at,activity_id,activities(name),profiles!activity_participations_user_id_fkey(display_name,email)",
       )
       .eq("status", "pending")
       .order("created_at", { ascending: true });
