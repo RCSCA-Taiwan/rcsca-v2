@@ -150,6 +150,7 @@ export default function LiveSupportCases() {
                   <label>
                     案件狀態
                     <select
+                      aria-label="案件狀態"
                       value={d.status}
                       onChange={(e) =>
                         setDraft((v) => ({
@@ -168,6 +169,7 @@ export default function LiveSupportCases() {
                   <label>
                     給使用者看的回覆
                     <textarea
+                      aria-label="給使用者看的回覆"
                       value={d.owner}
                       onChange={(e) =>
                         setDraft((v) => ({
@@ -181,6 +183,7 @@ export default function LiveSupportCases() {
                   <label>
                     內部工作筆記
                     <textarea
+                      aria-label="內部工作筆記"
                       value={d.internal}
                       onChange={(e) =>
                         setDraft((v) => ({
