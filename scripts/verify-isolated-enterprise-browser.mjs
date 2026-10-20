@@ -623,7 +623,7 @@ try {
   await careReview.getByRole('textbox',{name:'給使用者看的回覆',exact:true}).fill('Synthetic visible supplement request');
   await careReview.getByRole('textbox',{name:'內部工作筆記',exact:true}).fill(careInternal);
   reviewPage.once('dialog',dialog=>dialog.accept());await careReview.getByRole('button',{name:'更新案件',exact:true}).click();
-  await expect(careReview.getByText('需要補充',{exact:true})).toBeVisible();
+  await expect(careReview.locator('.statusChip')).toHaveText('需要補充');
   const careDetail=membershipPage.locator('.caseDetail');
   await careDetail.getByRole('button',{name:'重新讀取案件與歷程',exact:true}).click();
   await expect(careDetail.getByText('Synthetic visible supplement request',{exact:true})).toBeVisible();await expect(careDetail.getByText(careInternal,{exact:true})).toHaveCount(0);
@@ -633,7 +633,7 @@ try {
   await reviewPage.reload();await expect(careReview.getByText(careReply,{exact:true})).toBeVisible();
   await careReview.getByRole('combobox',{name:'案件狀態',exact:true}).selectOption('completed');
   await careReview.getByRole('textbox',{name:'給使用者看的回覆',exact:true}).fill('Synthetic case completed');
-  reviewPage.once('dialog',dialog=>dialog.accept());await careReview.getByRole('button',{name:'更新案件',exact:true}).click();await expect(careReview.getByText('已完成',{exact:true})).toBeVisible();
+  reviewPage.once('dialog',dialog=>dialog.accept());await careReview.getByRole('button',{name:'更新案件',exact:true}).click();await expect(careReview.locator('.statusChip')).toHaveText('已完成');
   await careDetail.getByRole('button',{name:'重新讀取案件與歷程',exact:true}).click();await expect(careDetail.getByText('案件已結束，目前不能再補充或回覆。',{exact:true})).toBeVisible();await expect(careDetail.getByRole('textbox')).toHaveCount(0);
   if(sql(`select count(*) from public.support_case_events where case_id='${careId}' and event_type='owner_reply';`)!=='1')throw new Error('Support reply was duplicated');
   if(await membershipPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Support case detail overflows mobile');
