@@ -635,14 +635,14 @@ try {
   await managedService.getByLabel('替代時段',{exact:true}).selectOption(alternateSlot);
   await managedService.getByRole('button',{name:'送出替代時段',exact:true}).click();
   await expect(managedService.getByText('夥伴提出新時段，等待你確認',{exact:true})).toBeVisible();
-  await membershipPage.goto("http://127.0.0.1:3301/account/redemptions");
+  await fulfillmentDialog.getByRole('link',{name:'查看我的兌換 →',exact:true}).click();
   const memberService=membershipPage.locator('article').filter({has:membershipPage.getByRole('heading',{name:serviceTitle,exact:true})});
   await memberService.getByRole('button',{name:'接受替代時段並兌換',exact:true}).click();
   await expect(memberService.getByText('預約已確認',{exact:true})).toBeVisible();
   sql(`update private.reward_slots set starts_at=now()-interval '1 hour',ends_at=now()+interval '1 hour' where id='${alternateSlot}';`);
   await ownerPage.reload();
   await managedService.getByRole('button',{name:'記錄服務已提供',exact:true}).click();
-  await membershipPage.reload();
+  await membershipPage.getByRole('button',{name:'重新讀取預約與配送',exact:true}).click();
   await memberService.getByRole('button',{name:'確認已收到商品／服務',exact:true}).click();
   await expect(memberService.getByText('已完成',{exact:true})).toBeVisible();
   await reviewPage.getByLabel("履約方式",{exact:true}).selectOption("delivery");
@@ -676,6 +676,8 @@ try {
   await expect(memberDelivery).toContainText('TEST-ONLY-BROWSER');
   await memberDelivery.getByRole('button',{name:'確認已收到商品／服務',exact:true}).click();
   await expect(memberDelivery.getByText('已完成',{exact:true})).toBeVisible();
+  await membershipPage.getByRole('navigation',{name:'兌換操作',exact:true}).getByRole('link',{name:'查看共享所 →',exact:true}).click();
+  await expect(membershipPage).toHaveURL(/\/share-market$/);
   if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==27) throw new Error('Fulfillment balance mismatch');
   console.log('PASS: admin creates fulfillment catalogs → mobile booking holds points → provider proposes slot → member accepts → service completion; delivery address → provider approval → shipment tracking → member receipt; exactly 15 points spent');
   const postTitle=`Browser community ${randomUUID()}`;
@@ -811,7 +813,7 @@ try {
   await reviewCancel.getByRole('checkbox').check();
   await reviewCancel.getByRole('button',{name:'核准取消並退點',exact:true}).click();
   await expect(reviewCancel).toContainText('取消已核准');
-  await membershipPage.reload();
+  await cancelSection.getByRole('button',{name:'重新讀取取消申請',exact:true}).click();
   await expect(cancelCard).toContainText('已記錄退回 7 點');
   await expect(membershipPage.getByText('SYNTHETIC-CANCEL',{exact:true})).toHaveCount(0);
   if(await membershipPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Cancellation UI overflows mobile viewport');
