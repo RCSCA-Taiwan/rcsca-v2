@@ -2,6 +2,9 @@ name: Backup Operations
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - codex/backup-live-verification
   schedule:
     # Daily at 02:30 Asia/Taipei (18:30 UTC previous day).
     - cron: "30 18 * * *"
@@ -17,7 +20,7 @@ concurrency:
 
 jobs:
   production-backup-offsite:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 18 * * *'
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 18 * * *' || (github.event_name == 'push' && github.ref == 'refs/heads/codex/backup-live-verification')
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
