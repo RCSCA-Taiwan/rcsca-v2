@@ -1,9 +1,18 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
+import type {SupabaseClient} from '@supabase/supabase-js';
 import {getSupabaseBrowserClient} from '../../../lib/supabase-browser';
+import type {Database,Json} from '../../../lib/database.types';
 import {changeLabels,requestKinds,requestStatuses,type DataRequest} from '../../../lib/data-requests';
 
+type PersonalDataFunctions=Database['public']['Functions']&{
+ admin_personal_data_requests:{Args:never;Returns:Json};
+ admin_personal_data_request_review:{Args:{p_request:string;p_decision:string;p_note:string;p_execution_confirmed?:boolean};Returns:undefined};
+ admin_personal_data_request_execute:{Args:{p_request:string;p_note:string};Returns:Json};
+};
+type PersonalDataDatabase=Omit<Database,'public'>&{public:Omit<Database['public'],'Functions'>&{Functions:PersonalDataFunctions}};
 type AdminRow=DataRequest&{execution_summary?:Record<string,unknown>|null;executed_at?:string|null};
+function client(){return getSupabaseBrowserClient() as unknown as SupabaseClient<PersonalDataDatabase>}
 
 export default function LivePersonalDataRequests(){
  const [rows,setRows]=useState<AdminRow[]>([]),[loading,setLoading]=useState(true),[failed,setFailed]=useState(false),[busy,setBusy]=useState(''),[message,setMessage]=useState('');
@@ -12,11 +21,11 @@ export default function LivePersonalDataRequests(){
  const load=useCallback(async()=>{
   setLoading(true);setFailed(false);
   try{
-   const s=getSupabaseBrowserClient();
+   const s=client();
    const {data:{user},error:authError}=await s.auth.getUser();if(authError||!user)throw new Error('admin_required');
    const r=await s.rpc('admin_personal_data_requests');if(r.error)throw r.error;
    if(!active.current)return;
-   const result=Array.isArray(r.data)?r.data as AdminRow[]:[];
+   const result=Array.isArray(r.data)?r.data as unknown as AdminRow[]:[];
    setRows(result.filter(row=>['submitted','needs_info','approved','processing'].includes(row.status)));
   }catch{if(active.current)setFailed(true);}finally{if(active.current)setLoading(false);}
  },[]);
@@ -25,14 +34,14 @@ export default function LivePersonalDataRequests(){
   const note=(notes[row.id]||'').trim();if(busy||!note)return;
   if(!window.confirm(`確定將「${requestKinds[row.request_kind]}」更新為「${decision==='approved'?'已核准':decision==='processing'?'處理中':decision==='needs_info'?'待補資料':'未通過'}」？`))return;
   setBusy(row.id);setMessage('');
-  try{const s=getSupabaseBrowserClient();const r=await s.rpc('admin_personal_data_request_review',{p_request:row.id,p_decision:decision,p_note:note,p_execution_confirmed:false});if(r.error)throw r.error;setMessage('申請狀態已更新。');setNotes(v=>({...v,[row.id]:''}));await load();}catch{setMessage('操作未完成，請重新讀取後確認權限、狀態與審核說明。');}finally{setBusy('');}
+  try{const s=client();const r=await s.rpc('admin_personal_data_request_review',{p_request:row.id,p_decision:decision,p_note:note,p_execution_confirmed:false});if(r.error)throw r.error;setMessage('申請狀態已更新。');setNotes(v=>({...v,[row.id]:''}));await load();}catch{setMessage('操作未完成，請重新讀取後確認權限、狀態與審核說明。');}finally{setBusy('');}
  }
  async function execute(row:AdminRow){
   const note=(notes[row.id]||'').trim();if(busy||!note||row.status!=='processing')return;
   const impact=row.request_kind==='reset'?'這會清除目前個人資料、生日、聯絡資料與共享足跡，將可用積分歸零、等級回到起點並把會籍切為 inactive；正式入會歷史仍保留。':row.request_kind==='delete'?'這會停用網站個人檔案、清除目前可識別個資與共享進度、隱藏公開 Network／社群內容；必要會籍與稽核歷史仍保留。':'這會立即套用已核准的個人資料修改。';
   if(!window.confirm(`${impact}\n\n只有真正執行成功後才會標記「已完成」。確定執行？`))return;
   setBusy(row.id);setMessage('');
-  try{const s=getSupabaseBrowserClient();const r=await s.rpc('admin_personal_data_request_execute',{p_request:row.id,p_note:note});if(r.error)throw r.error;setMessage('實際資料處理已成功完成，案件已標記為已完成。');setNotes(v=>({...v,[row.id]:''}));await load();}catch{setMessage('執行失敗；案件不會被標記為完成。請重新讀取後確認資料狀態。');}finally{setBusy('');}
+  try{const s=client();const r=await s.rpc('admin_personal_data_request_execute',{p_request:row.id,p_note:note});if(r.error)throw r.error;setMessage('實際資料處理已成功完成，案件已標記為已完成。');setNotes(v=>({...v,[row.id]:''}));await load();}catch{setMessage('執行失敗；案件不會被標記為完成。請重新讀取後確認資料狀態。');}finally{setBusy('');}
  }
  if(loading)return <p role="status">正在讀取個人資料申請…</p>;
  if(failed)return <div className="workflowNotice" role="alert"><p>目前無法讀取個人資料申請，請確認管理權限後重試。</p><button onClick={()=>void load()}>重新讀取</button></div>;
