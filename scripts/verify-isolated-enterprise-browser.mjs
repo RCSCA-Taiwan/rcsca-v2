@@ -796,8 +796,8 @@ try {
   await membershipPage.goto('http://127.0.0.1:3301/account/contributions');
   await expect(membershipPage.locator("body")).toContainText('已核實累計：新台幣 1,000 元');
   await expect(membershipPage.locator("body")).toContainText('徽章名稱與門檻尚待協會核定');
-  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==29)throw new Error('Topic approval must add exactly two points; donation must add none');
-  console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; topic approval grants two points, mobile replies grant one point only once, daily topic quota holds; verified donation stays private and grants no unconfigured badge, points or XP');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==30)throw new Error('Topic approval must add exactly two points and a verified NT$1,000 donation must add one point');
+  console.log('PASS: mobile image recompression/upload → private pending post → independent admin publishes → signed image visible to logged-in viewer → report and takedown; topic approval grants two points, mobile replies grant one point only once, daily topic quota holds; verified donation stays private, grants one spendable point per complete NT$1,000, and grants no unconfigured badge or XP');
 
   // Natural-name pledge → saved draft → checked account match → real contribution.
   await reviewPage.goto('http://127.0.0.1:3301/admin/contributions');
@@ -841,7 +841,7 @@ try {
   await cancelCard.getByLabel('取消原因＊',{exact:true}).fill('Synthetic unused code cancellation');
   await cancelCard.getByRole('button',{name:'送出取消申請',exact:true}).click();
   await expect(cancelCard).toContainText('取消審核中');
-  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==22)throw new Error('Cancellation credited before review');
+  if(JSON.parse(sql(`select private.member_points_wallet('${applicant.id}');`)).balance!==25)throw new Error('Cancellation credited before review');
   await reviewPage.goto('http://127.0.0.1:3301/admin/rewards');
   const reviewCancel=reviewPage.getByRole('region',{name:'兌換取消與退點',exact:true}).locator('article').filter({hasText:cancelOrder});
   await expect(reviewCancel.getByRole('button',{name:'核准取消並退點',exact:true})).toBeDisabled();
@@ -854,7 +854,7 @@ try {
   await expect(membershipPage.getByText('SYNTHETIC-CANCEL',{exact:true})).toHaveCount(0);
   if(await membershipPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('Cancellation UI overflows mobile viewport');
   const cancellation=JSON.parse(sql(`select json_build_object('balance',private.member_points_wallet('${applicant.id}')->>'balance','refunds',(select count(*) from public.point_transactions where source_type='reward_refund' and source_id='${cancelOrder}'),'stock',(select stock_remaining from public.reward_catalog where id='${cancelReward}'));`));
-  if(cancellation.balance!=='29'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
+  if(cancellation.balance!=='32'||cancellation.refunds!==1||cancellation.stock!==2)throw new Error('Browser cancellation settlement mismatch');
   console.log('PASS: mobile cancellation request → independent admin confirms review → one original-expiry refund → invalidated code → stock restored; no mobile overflow');
 
   const importMember=await user('roster-import');
