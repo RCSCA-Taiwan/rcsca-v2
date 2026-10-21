@@ -17,6 +17,7 @@ type JobsResponse={jobs?:Job[]};
 
 const RUNS_URL='https://api.github.com/repos/RCSCA-Taiwan/rcsca-v2/actions/workflows/backup-operations.yml/runs?per_page=5';
 const GITHUB_HEADERS={Accept:'application/vnd.github+json','User-Agent':'RCSCA-admin-operations'};
+const MAX_HEALTHY_AGE_MS=36*60*60*1000;
 
 function formatTaipei(value?:string|null){
   if(!value)return '—';
@@ -30,8 +31,13 @@ function productionJob(jobs:Job[]){
 function statusCopy(run:WorkflowRun|null,job:Job|null){
   if(!run||!job)return {tone:'notReady',label:'尚未驗證',detail:'尚無可驗證的 Production 備份執行紀錄；synthetic restore drill 不會被當成正式備份成功。'};
   if(job.status!=='completed')return {tone:'running',label:'執行中',detail:'Production 備份工作正在執行，完成前不視為成功。'};
-  if(job.conclusion==='success')return {tone:'healthy',label:'成功',detail:'最近一次 Production 備份、異地驗證與隔離還原流程已完整成功。'};
-  return {tone:'attention',label:'需要處理',detail:`最近一次 Production 備份結果：${job.conclusion??'unknown'}。請先處理失敗原因，不應視為已備份。`};
+  if(job.conclusion!=='success')return {tone:'attention',label:'需要處理',detail:`最近一次 Production 備份結果：${job.conclusion??'unknown'}。請先處理失敗原因，不應視為已備份。`};
+  const startedAt=Date.parse(run.run_started_at??run.created_at);
+  if(!Number.isFinite(startedAt))return {tone:'attention',label:'時間異常',detail:'最近一次 Production 備份雖成功，但執行時間無法驗證，因此不標示為健康。'};
+  const age=Date.now()-startedAt;
+  if(age<0)return {tone:'attention',label:'時間異常',detail:'最近一次 Production 備份時間晚於目前系統時間，請檢查時鐘或執行紀錄。'};
+  if(age>MAX_HEALTHY_AGE_MS)return {tone:'attention',label:'已逾期',detail:'最近一次 Production 備份曾成功，但已超過 36 小時沒有新的正式成功紀錄；請檢查每日排程與 protected settings。'};
+  return {tone:'healthy',label:'成功',detail:'最近一次 Production 備份、異地驗證與隔離還原流程已完整成功，且仍在每日備份健康時窗內。'};
 }
 
 async function getJobs(runId:number){
@@ -82,6 +88,6 @@ export default async function BackupOperationsHealth(){
       <div><dt>真實備份還原演練</dt><dd>{rehearse?.conclusion??rehearse?.status??(run?'未取得步驟結果':'尚未執行')}</dd></div>
     </dl>
     {run?<a className="backupHealthLink" href={run.html_url} target="_blank" rel="noreferrer">查看 GitHub Actions 執行紀錄 →</a>:null}
-    <p className="backupHealthNote">判定原則：只追蹤 `production-backup-offsite`；只有正式 Production-origin 備份完成、異地重新下載驗證與隔離還原演練皆成功，才視為 DR 驗證成功。每週 synthetic drill 即使成功，也不會把這裡變成健康。</p>
+    <p className="backupHealthNote">判定原則：只追蹤 `production-backup-offsite`；只有正式 Production-origin 備份完成、異地重新下載驗證與隔離還原演練皆成功，且成功紀錄未超過 36 小時，才視為 DR 健康。每週 synthetic drill 即使成功，也不會把這裡變成健康。</p>
   </div>;
 }
