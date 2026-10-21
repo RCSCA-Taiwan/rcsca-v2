@@ -48,11 +48,12 @@ test('matching response read failure never reopens an unsafe reply and can recov
  await page.route('**/rest/v1/network_contact_consents?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
  await page.route('**/rest/v1/network_contact_reveals?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
  await login(page,'/1percent-network/matches');
- await expect(page.getByRole('alert')).toContainText('部分媒合回應目前無法讀取');
+ const responseReadAlert=page.locator('.workflowNotice p[role="alert"]');
+ await expect(responseReadAlert).toContainText('部分媒合回應目前無法讀取');
  await expect(page.getByRole('textbox',{name:'回應 媒合連續性測試',exact:true})).toHaveCount(0);
  responsesFail=false;
  await page.getByRole('button',{name:'重新讀取媒合狀態',exact:true}).click();
- await expect(page.getByRole('alert')).toHaveCount(0);
+ await expect(responseReadAlert).toHaveCount(0);
  await expect(page.getByRole('textbox',{name:'回應 媒合連續性測試',exact:true})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
