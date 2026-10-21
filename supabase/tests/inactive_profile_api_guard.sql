@@ -42,10 +42,25 @@ do $$ declare v jsonb; begin
 end $$;
 reset role;
 
+-- Storage is outside PostgREST, so every authenticated member-media policy that can
+-- expose private community media or mutate member-owned objects must also require an
+-- active profile. Public partner-offer reads intentionally remain public.
+do $$ declare v_missing text; begin
+ select string_agg(policyname,', ' order by policyname) into v_missing
+ from pg_policies
+ where schemaname='storage' and tablename='objects'
+   and policyname in ('community_image_read','community_image_upload','community_unused_image_delete','partner_offer_image_upload','partner_offer_unused_image_delete')
+   and coalesce(qual,'')||' '||coalesce(with_check,'') not ilike '%is_active%';
+ if v_missing is not null then raise exception 'inactive_storage_guard_missing: %',v_missing; end if;
+ if (select count(*) from pg_policies where schemaname='storage' and tablename='objects' and policyname in ('community_image_read','community_image_upload','community_unused_image_delete','partner_offer_image_upload','partner_offer_unused_image_delete'))<>5 then
+   raise exception 'inactive_storage_policy_count_wrong';
+ end if;
+end $$;
+
 -- Trusted service-role traffic is unaffected by user-profile deactivation.
 select set_config('request.jwt.claims',json_build_object('sub',current_setting('rcsca.guard_user'),'role','service_role')::text,true);
 select set_config('request.path','rpc/internal_worker',true);
 select public.rcsca_api_pre_request();
 
-select 'PASS: inactive profiles are scrubbed and blocked at the Data API boundary; status self remains available for global sign-out; service role is unaffected';
+select 'PASS: inactive profiles are scrubbed and blocked at Data API + authenticated member Storage boundaries; status self remains available for global sign-out; service role is unaffected';
 rollback;
