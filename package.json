@@ -19,8 +19,9 @@
     "backup:check": "node scripts/backup/run.mjs check",
     "backup:create": "node scripts/backup/run.mjs create",
     "backup:verify": "node scripts/backup/run.mjs verify",
+    "backup:rehearse": "node scripts/backup/rehearse-bundle.mjs",
     "verify:backup-restore": "node scripts/backup/drill.mjs",
-    "verify:backup-tools": "node --test scripts/backup/archive.test.mjs",
+    "verify:backup-tools": "node --test scripts/backup/archive.test.mjs && node --check scripts/backup/rehearse-bundle.mjs",
     "verify:member-import": "node --test lib/member-import.test.mjs lib/legacy-member-import.test.mjs lib/network-taxonomy.test.mjs lib/donation-import.test.mjs lib/membership-tenure.test.mjs lib/member-birthday-export.test.mjs",
     "verify:network-taxonomy": "node --test lib/network-taxonomy.test.mjs",
     "verify:mail-config": "node --test lib/admin-mail-config.test.mjs lib/admin-mail-outbox.test.mjs lib/admin-mail-worker.test.mjs lib/admin-mail-signature.test.mjs"
