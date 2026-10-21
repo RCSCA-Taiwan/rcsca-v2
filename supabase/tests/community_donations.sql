@@ -29,6 +29,8 @@ select set_config('rcsca.drecord',public.admin_donation_record(current_setting('
 do $$ begin
  begin perform public.admin_donation_record(current_setting('rcsca.cm')||'@example.invalid',1000,current_date,current_setting('rcsca.cp'),'Duplicate',true);raise exception 'duplicate_donation_counted';exception when raise_exception then if sqlerrm<>'duplicate_donation_reference' then raise;end if;end;
  begin perform public.admin_donation_record(current_setting('rcsca.ca')||'@example.invalid',1000,current_date,gen_random_uuid()::text,'Self',true);raise exception 'self_donation_verified';exception when raise_exception then if sqlerrm<>'cannot_verify_own_donation' then raise;end if;end;
+ if (select coalesce(sum(points),0) from public.point_transactions where user_id=current_setting('rcsca.cm')::uuid)<>3 then raise exception 'topic_plus_donation_points_not_awarded';end if;
+ if (select coalesce(sum(points),0) from public.point_transactions where user_id=current_setting('rcsca.cm')::uuid and source_type='donation_verified')<>1 then raise exception 'donation_point_amount_incorrect';end if;
 end $$;
 select set_config('rcsca.drule',public.admin_donation_badge_rule(null,'Synthetic test badge',1000,'lifetime',current_date,true,'draft','Synthetic draft only',false)::text,true);
 reset role;
@@ -71,7 +73,9 @@ do $$ begin
 end $$;
 reset role;
 do $$ begin
- if (select coalesce(sum(points),0) from public.point_transactions where user_id=current_setting('rcsca.cm')::uuid)<>2 or exists(select 1 from public.point_transactions where user_id=current_setting('rcsca.ca')::uuid) or exists(select 1 from public.xp_transactions where user_id=current_setting('rcsca.cm')::uuid) then raise exception 'topic_reward_or_donation_points_incorrect';end if;
+ if (select coalesce(sum(points),0) from public.point_transactions where user_id=current_setting('rcsca.cm')::uuid)<>2 then raise exception 'donation_void_did_not_restore_topic_only_balance';end if;
+ if (select coalesce(sum(points),0) from public.point_transactions where user_id=current_setting('rcsca.cm')::uuid and source_type in ('donation_verified','donation_void'))<>0 then raise exception 'donation_void_not_net_zero';end if;
+ if exists(select 1 from public.point_transactions where user_id=current_setting('rcsca.ca')::uuid) or exists(select 1 from public.xp_transactions where user_id=current_setting('rcsca.cm')::uuid) then raise exception 'unconfigured_donation_xp_or_admin_points_incorrect';end if;
  if (select count(*) from private.community_posts where id=current_setting('rcsca.cp')::uuid)<>1 then raise exception 'duplicate_post_created';end if;
 end $$;
 rollback;
