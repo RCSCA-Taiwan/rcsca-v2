@@ -31,6 +31,7 @@ do $$ declare r jsonb;begin
  begin perform public.admin_donation_import_commit(current_setting('db.batch')::uuid,'Synthetic activity',current_setting('db.rows')::jsonb,current_setting('db.preview')::jsonb->>'digest',false);raise exception 'unverified_commit_accepted';exception when raise_exception then if sqlerrm<>'payment_verification_required' then raise;end if;end;
 end $$;
 select public.admin_donation_import_commit(current_setting('db.batch')::uuid,'Synthetic activity',current_setting('db.rows')::jsonb,current_setting('db.preview')::jsonb->>'digest',true);
+-- Exact retry must not duplicate either the donation row or its points.
 select public.admin_donation_import_commit(current_setting('db.batch')::uuid,'Synthetic activity',current_setting('db.rows')::jsonb,current_setting('db.preview')::jsonb->>'digest',true);
 do $$ begin
  if public.admin_donation_import_preview('Synthetic activity',current_setting('db.rows')::jsonb)->>'ready'<>'0' then raise exception 'existing_reference_accepted';end if;
@@ -42,10 +43,13 @@ reset role;
 select set_config('request.jwt.claims',json_build_object('sub',current_setting('db.a'),'role','authenticated')::text,true);set local role authenticated;
 do $$ declare r jsonb:=public.donation_contribution_self();begin
  if r->>'verified_total'<>'1000' or jsonb_array_length(r->'records')<>1 or r->'records'->0->>'activity_name'<>'Synthetic activity' then raise exception 'contribution_total_or_activity_incorrect';end if;
+ if public.point_wallet_self()->>'balance'<>'1' then raise exception 'donation_point_wallet_incorrect';end if;
 end $$;
 reset role;
 do $$ begin
- if exists(select 1 from public.point_transactions where user_id=current_setting('db.a')::uuid) or exists(select 1 from public.xp_transactions where user_id=current_setting('db.a')::uuid) then raise exception 'donation_awarded_points_or_xp';end if;
+ if (select coalesce(sum(points),0) from public.point_transactions where user_id=current_setting('db.a')::uuid and source_type='donation_verified')<>1 then raise exception 'donation_point_not_awarded_exactly_once';end if;
+ if (select count(*) from public.point_transactions where user_id=current_setting('db.a')::uuid and source_type='donation_verified')<>1 then raise exception 'donation_retry_duplicated_points';end if;
+ if exists(select 1 from public.xp_transactions where user_id=current_setting('db.a')::uuid) then raise exception 'unconfigured_donation_xp_awarded';end if;
  if (select count(*) from private.donation_records where import_batch=current_setting('db.batch')::uuid)<>1 then raise exception 'retry_duplicated_records';end if;
 end $$;
 rollback;
