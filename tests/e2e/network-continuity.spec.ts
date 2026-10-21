@@ -11,9 +11,9 @@ async function login(page:Page,path:string){
 }
 
 test('talent request keeps a direct route to owned progress',async({page})=>{
- await page.goto('/member-network/talent-request');
- const progress=page.getByRole('link',{name:'查看我的需求與進度 →',exact:true});
- await expect(progress).toHaveAttribute('href','/account/requests');
+ await login(page,'/member-network/talent-request');
+ const progress=page.locator('a[href="/account/requests"]');
+ await expect(progress).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 
