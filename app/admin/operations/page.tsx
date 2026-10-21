@@ -5,6 +5,9 @@ import LiveAuditLog from './LiveAuditLog';
 import BackupOperationsHealth from './BackupOperationsHealth';
 import {ADMIN_WORKSPACES,PAGE_NAMES} from '../../../lib/site-navigation.mjs';
 import './workspaces.css';
+
+export const dynamic='force-dynamic';
+
 export default function AdminOperations(){return <main className="adminPage"><SiteHeader/><AdminPageIntro section="operations"/>
  <section className="portalSection"><div className="portalWrap">
  <nav id="workspaces" className="adminWorkspaces" aria-label="後台完整工作區">
