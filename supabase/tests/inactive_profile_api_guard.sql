@@ -6,6 +6,16 @@ update public.profiles
 set display_name='Guard User',mobile='0911222333',email='guard@example.invalid',is_active=true
 where id=current_setting('rcsca.guard_user')::uuid;
 
+-- PostgREST invokes the pre-request hook after switching to the request role, so all
+-- expected API roles must be able to execute it. Authorization still happens inside
+-- the hook itself.
+do $$ begin
+ if not has_function_privilege('anon','public.rcsca_api_pre_request()','execute') then raise exception 'anon_hook_execute_missing'; end if;
+ if not has_function_privilege('authenticated','public.rcsca_api_pre_request()','execute') then raise exception 'authenticated_hook_execute_missing'; end if;
+ if not has_function_privilege('service_role','public.rcsca_api_pre_request()','execute') then raise exception 'service_hook_execute_missing'; end if;
+ if not has_function_privilege('authenticator','public.rcsca_api_pre_request()','execute') then raise exception 'authenticator_hook_execute_missing'; end if;
+end $$;
+
 -- Active authenticated traffic passes the pre-request check.
 select set_config('request.jwt.claims',json_build_object('sub',current_setting('rcsca.guard_user'),'role','authenticated')::text,true);
 select set_config('request.path','rpc/point_wallet_self',true);
@@ -18,12 +28,22 @@ do $$ begin
  if (select display_name is not null or mobile is not null or email is not null from public.profiles where id=current_setting('rcsca.guard_user')::uuid) then raise exception 'inactive_profile_pii_not_scrubbed'; end if;
 end $$;
 
--- Existing JWTs are blocked from ordinary Data API calls.
+-- Existing JWTs are blocked from ordinary Data API calls, including direct attempts
+-- to call the hook itself on a non-status RPC path.
 select set_config('request.path','rpc/point_wallet_self',true);
 do $$ begin
  begin
    perform public.rcsca_api_pre_request();
    raise exception 'inactive_api_access_allowed';
+ exception when sqlstate 'PGRST' then
+   if sqlerrm not like '%account_inactive%' then raise; end if;
+ end;
+end $$;
+select set_config('request.path','rpc/rcsca_api_pre_request',true);
+do $$ begin
+ begin
+   perform public.rcsca_api_pre_request();
+   raise exception 'inactive_direct_hook_call_allowed';
  exception when sqlstate 'PGRST' then
    if sqlerrm not like '%account_inactive%' then raise; end if;
  end;
@@ -38,7 +58,6 @@ do $$ declare v jsonb; begin
  v:=public.account_status_self();
  if v->>'active'<>'false' or v->>'profile_exists'<>'true' then raise exception 'inactive_status_wrong'; end if;
  if has_function_privilege('anon','public.account_status_self()','execute') then raise exception 'status_rpc_exposed_to_anon'; end if;
- if has_function_privilege('authenticated','public.rcsca_api_pre_request()','execute') then raise exception 'pre_request_directly_exposed'; end if;
 end $$;
 reset role;
 
@@ -62,5 +81,5 @@ select set_config('request.jwt.claims',json_build_object('sub',current_setting('
 select set_config('request.path','rpc/internal_worker',true);
 select public.rcsca_api_pre_request();
 
-select 'PASS: inactive profiles are scrubbed and blocked at Data API + authenticated member Storage boundaries; status self remains available for global sign-out; service role is unaffected';
+select 'PASS: inactive profiles are scrubbed and blocked at Data API + authenticated member Storage boundaries; PostgREST API roles can execute the hook; status self remains available for global sign-out; service role is unaffected';
 rollback;
