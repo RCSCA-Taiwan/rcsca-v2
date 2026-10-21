@@ -1,0 +1,9 @@
+.caseDetail {min-width:0;overflow-wrap:anywhere}
+.caseDetail .caseReply {display:grid;gap:12px;margin-top:20px}
+.caseDetail .caseReply label {display:grid;gap:8px}
+.caseDetail textarea {box-sizing:border-box;width:100%;min-height:120px;padding:12px;font:inherit;border:1px solid #a99b84;border-radius:12px;background:#fffdf8;color:#231e18}
+.caseDetailActions {display:flex;flex-wrap:wrap;gap:12px;margin:20px 0}
+.caseDetailActions a,.caseDetail button {display:inline-flex;align-items:center;min-height:44px;padding:10px 14px;border:1px solid #a99b84;border-radius:12px;font:inherit;box-sizing:border-box}
+.caseDetail button {background:#fffdf8;color:#231e18;cursor:pointer}
+.caseDetail button:disabled {opacity:.5;cursor:default}
+@media(max-width:600px){.caseDetailActions {flex-direction:column}}
