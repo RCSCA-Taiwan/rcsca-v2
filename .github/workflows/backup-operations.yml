@@ -19,7 +19,7 @@ jobs:
   production-backup-offsite:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 18 * * *'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       PGHOST: ${{ secrets.RCSCA_BACKUP_PGHOST }}
       PGPORT: "5432"
@@ -57,7 +57,7 @@ jobs:
               echo "Missing required protected settings:"
               for key in "${missing[@]}"; do echo "- \`$key\`"; done
               echo
-              echo "No production backup was created and no offsite copy was claimed."
+              echo "No production backup was created and no offsite copy or restore rehearsal was claimed."
             } >> "$GITHUB_STEP_SUMMARY"
             printf 'Required protected backup settings are missing; no backup was taken.\n' >&2
             exit 1
@@ -113,22 +113,34 @@ jobs:
           if [ -n "${RCSCA_BACKUP_S3_ENDPOINT:-}" ]; then endpoint=(--endpoint-url "$RCSCA_BACKUP_S3_ENDPOINT"); fi
           aws "${endpoint[@]}" s3 cp "s3://$RCSCA_BACKUP_S3_BUCKET/$prefix/" "$verify_dir/" --recursive --only-show-errors
           npm run backup:verify -- "$verify_dir"
+          printf '%s' "$verify_dir" > "$RUNNER_TEMP/offsite-verify-dir"
+
+      - name: Restore Production-origin database into disposable local Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+          verify_dir=$(cat "$RUNNER_TEMP/offsite-verify-dir")
+          npm run backup:rehearse -- "$verify_dir" | tee "$RUNNER_TEMP/restore-rehearsal.json"
           {
-            echo "## Production backup verified"
+            echo "## Production backup and isolated restore rehearsal verified"
             echo
             echo "- Encrypted Production export: complete"
             echo "- Independent offsite upload: complete"
             echo "- Offsite re-download: complete"
             echo "- GCM / SHA-256 / manifest verification: complete"
-            echo "- Production restore: not performed"
-            echo "- Inbox, provider secrets and platform settings are outside this backup scope"
+            echo "- Production-origin database restored into disposable local Supabase: complete"
+            echo "- Required schemas / Storage inventory / FK / RLS metadata checks: complete"
+            echo "- Hosted Production write-back: not performed"
+            echo "- Hosted Supabase disaster restore: not performed"
+            echo "- Storage payload bytes authenticated; hosted Storage API rehydration: not performed"
+            echo "- Inbox, provider secrets and platform settings remain outside this backup scope"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove local backup material
         if: always()
         shell: bash
         run: |
-          rm -rf "$RUNNER_TEMP/rcsca-backup" "$RUNNER_TEMP/offsite-verify" "$RUNNER_TEMP/backup-run-dir" "$RUNNER_TEMP/offsite-prefix" "$RUNNER_TEMP/backup-create.json"
+          rm -rf "$RUNNER_TEMP/rcsca-backup" "$RUNNER_TEMP/offsite-verify" "$RUNNER_TEMP/backup-run-dir" "$RUNNER_TEMP/offsite-prefix" "$RUNNER_TEMP/offsite-verify-dir" "$RUNNER_TEMP/backup-create.json" "$RUNNER_TEMP/restore-rehearsal.json"
 
   isolated-restore-drill:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 19 * * 6'
