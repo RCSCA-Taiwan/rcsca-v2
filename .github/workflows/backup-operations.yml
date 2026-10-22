@@ -21,12 +21,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      PGHOST: ${{ secrets.RCSCA_BACKUP_PGHOST }}
+      # Connection identifiers are not secrets. Keep them versioned so backup
+      # readiness depends only on credentials and offsite-storage configuration.
+      PGHOST: db.zoogppmgajbiridffohm.supabase.co
       PGPORT: "5432"
       PGDATABASE: postgres
-      PGUSER: ${{ secrets.RCSCA_BACKUP_PGUSER }}
+      PGUSER: postgres
       PGPASSWORD: ${{ secrets.RCSCA_BACKUP_PGPASSWORD }}
-      RCSCA_BACKUP_PROJECT_REF: ${{ secrets.RCSCA_BACKUP_PROJECT_REF }}
+      RCSCA_BACKUP_PROJECT_REF: zoogppmgajbiridffohm
       RCSCA_BACKUP_KEY: ${{ secrets.RCSCA_BACKUP_KEY }}
       RCSCA_BACKUP_STORAGE_KEY: ${{ secrets.RCSCA_BACKUP_STORAGE_KEY }}
       RCSCA_BACKUP_S3_BUCKET: ${{ secrets.RCSCA_BACKUP_S3_BUCKET }}
@@ -42,12 +44,12 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Verify required secrets are configured
+      - name: Verify required protected settings are configured
         shell: bash
         run: |
           set -euo pipefail
           missing=()
-          for key in PGHOST PGUSER PGPASSWORD RCSCA_BACKUP_PROJECT_REF RCSCA_BACKUP_KEY RCSCA_BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION; do
+          for key in PGPASSWORD RCSCA_BACKUP_KEY RCSCA_BACKUP_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION; do
             if [ -z "${!key:-}" ]; then missing+=("$key"); fi
           done
           if [ "${#missing[@]}" -gt 0 ]; then
