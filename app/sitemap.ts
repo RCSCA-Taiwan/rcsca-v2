@@ -8,8 +8,14 @@ const publicRoutes=[
   '/cycle-of-goodness', '/cycle-of-goodness/cases', '/share-market', '/register', '/guide'
 ];
 
+function siteBase(){
+  if(process.env.NEXT_PUBLIC_SITE_URL)return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/,'');
+  if(process.env.VERCEL_URL)return `https://${process.env.VERCEL_URL.replace(/\/$/,'')}`;
+  return 'https://rcsca-v2.vercel.app';
+}
+
 export default function sitemap():MetadataRoute.Sitemap{
-  const base=(process.env.NEXT_PUBLIC_SITE_URL||'https://rcsca-v2.vercel.app').replace(/\/$/,'');
+  const base=siteBase();
   const now=new Date();
   return publicRoutes.map(route=>({url:`${base}${route}`,lastModified:now,changeFrequency:route==='/'?'weekly':'monthly',priority:route==='/'?1:0.7}));
 }
