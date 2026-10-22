@@ -7,7 +7,7 @@
 .communityImageGrid figure {margin:0;min-width:0}
 .communityImageGrid button {margin-top:8px}
 .communityBody {white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85}
-.communityActions {display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-top:20px}
+.communityActions {display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:20px}
 .communityActions label {display:grid;gap:8px;flex:1 1 240px}
 .communityActions button {padding:11px 16px;border:1px solid #b09c7b;border-radius:12px;background:#241e16;color:#fff;cursor:pointer}
 .communityActions button:disabled {opacity:.5}
