@@ -1,0 +1,8 @@
+/* Accessibility calibration for MY 1% upper sharing levels.
+   Lv.4 bronze keeps the brand palette but uses a darker field so all text clears normal-text contrast.
+   Lv.5 black/gold already has strong contrast; reinforce the label color explicitly. */
+.cBronze{background:linear-gradient(135deg,#76542f,#4f3822);color:#fff7e8;border:1px solid #b58c55}
+.cBronze small,.cBronze b,.cBronze span{color:#fff7e8}
+.cBlack{background:linear-gradient(135deg,#0d0d0c,#241d14);color:#f2d992;border:1px solid #b89554}
+.cBlack small,.cBlack b,.cBlack span{color:#f2d992}
+.levelSteps .guardian{border-color:#f0d98f;color:#fff0c2}
