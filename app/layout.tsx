@@ -1,5 +1,6 @@
 import './globals.css';
 import './friendly-ui.css';
+import './level-contrast.css';
 import type { Metadata } from 'next';
 import SiteFooter from './SiteFooter';
 import AccountSessionGuard from './AccountSessionGuard';
