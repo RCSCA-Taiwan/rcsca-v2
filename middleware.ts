@@ -28,10 +28,22 @@ function isProtected(pathname: string) {
   );
 }
 
+function shouldNoIndex(pathname: string) {
+  return (
+    isProtected(pathname) ||
+    pathname === "/login" ||
+    pathname.startsWith("/auth/")
+  );
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (shouldNoIndex(request.nextUrl.pathname)) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
 
   if (!url || !key) return response;
 
@@ -47,6 +59,9 @@ export async function middleware(request: NextRequest) {
         Object.entries(headers).forEach(([name, value]) =>
           response.headers.set(name, value),
         );
+        if (shouldNoIndex(request.nextUrl.pathname)) {
+          response.headers.set("X-Robots-Tag", "noindex, nofollow");
+        }
       },
     },
   });
@@ -69,6 +84,7 @@ export async function middleware(request: NextRequest) {
     const redirect = NextResponse.redirect(loginUrl);
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
     redirect.headers.set("Cache-Control", "private, no-store");
+    redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
     return redirect;
   }
 
