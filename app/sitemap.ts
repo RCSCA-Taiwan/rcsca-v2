@@ -2,10 +2,10 @@ import type {MetadataRoute} from 'next';
 
 const publicRoutes=[
   '/', '/about', '/governance', '/privacy', '/terms', '/contact',
-  '/my-1percent', '/1percent-partner', '/1percent-partner/esg', '/1percent-partner/collaboration',
+  '/1percent-partner', '/1percent-partner/esg', '/1percent-partner/collaboration',
   '/care-actions', '/care-actions/archive', '/care-actions/impact',
   '/1percent-network', '/1percent-network/directory',
-  '/cycle-of-goodness', '/cycle-of-goodness/cases', '/share-market', '/login', '/register', '/guide'
+  '/cycle-of-goodness', '/cycle-of-goodness/cases', '/share-market', '/guide'
 ];
 
 export default function sitemap():MetadataRoute.Sitemap{
