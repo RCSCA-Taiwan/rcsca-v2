@@ -1,1 +1,4 @@
 .cBronze{background:linear-gradient(135deg,#7a552f,#4f351f);color:#fff3dc}
+.cBlack{background:linear-gradient(135deg,#0d0d0c,#241d14);color:#f2d992;border:1px solid #b89554}
+.cBlack small,.cBlack b,.cBlack span{color:#f2d992}
+.levelSteps .guardian{border-color:#f0d98f;color:#fff0c2}
