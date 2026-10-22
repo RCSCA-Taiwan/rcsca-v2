@@ -4,7 +4,7 @@
 
 ## Production
 
-- GitHub `main` 最新核對基準：`08ac05b416143b905cbeded03689150e3124fb65`（Harden public indexing boundaries）。
+- GitHub `main` 與 Vercel 最新 Production deployment 為即時版本來源；本檔不再硬寫單一 commit SHA，避免正常維護後基準文字立即過期。
 - Vercel Production：READY。
 - 正式網址目前為 `https://rcsca-v2.vercel.app`；尚未綁定 RCSCA 自有網域。
 - `NEXT_PUBLIC_SITE_URL=https://rcsca-v2.vercel.app` 已配置於 Production，未來接自有網域時只需更新環境變數與網域綁定。
@@ -41,6 +41,7 @@ PR #91 已完成三層保護：
 - #88：認購自然語句支援 `林○○先生認購1單位（1單位＝1000元）`；行內單價與設定不一致時拒絕寫入。
 - #89：兩處 `align-items:end` 改為 `flex-end`；原 autoprefixer 相容性警告已消失。
 - #91：公開索引、robots 與 noindex 邊界硬化。
+- #95：GitHub Actions 的 checkout／setup-node／upload-artifact 升級到 Node 24 runtime release，並以官方 release commit SHA 鎖定；專案本身仍使用 Node 22，application／browser／backup 驗證通過。
 
 ## 首頁動畫／品牌入口
 
@@ -125,6 +126,13 @@ Production 核對：
 
 只有完成「Production 加密備份 → 異地上傳 → 重新下載驗證 → 隔離還原」後，才能把正式備份標成完成。
 
+## 安全／效能稽核
+
+- 最新 Security Advisor 無 ERROR；仍有 `pg_net` 位於 public schema、3 支刻意公開的 SECURITY DEFINER RPC、authenticated SECURITY DEFINER 提示與 Leaked Password Protection 未啟用等 WARN。
+- 已針對管理升權、會員審核、捐款、ESG、Network、活動核實等高風險 SECURITY DEFINER RPC 實際檢查函式本體；均使用 `auth.uid()` 搭配 `private.is_admin()` 或 `public.admin_roles` 驗證角色。
+- 自動掃描未找到「authenticated 可執行＋SECURITY DEFINER＋會寫資料、但完全沒有 auth/admin 身分檢查」的 public RPC；亦未找到 anon 可執行的 SECURITY DEFINER 寫入 RPC。
+- Performance Advisor 目前仍有 22 個未覆蓋 FK、74 個未使用索引與 2 組多 permissive SELECT policy。因正式資料量仍低，不為消 lint 批次增刪索引；待真實會員／交易資料進入後依 query plan 調整。
+
 ## 尚未關閉的正式營運缺口
 
 1. 匯入並核定正式歷史會員名冊，完成舊會員認領、會員年資與生日名單的真實資料驗收。
@@ -134,7 +142,7 @@ Production 核對：
 5. 若要獨立「運費點數折抵」，先核定帳務規則再新增資料層與交易邏輯。
 6. 決定並綁定 RCSCA 自有正式網域；目前只有 `rcsca-v2.vercel.app`。
 7. 完成 iPhone／桌面主要流程最終人工實機驗收；CI/browser 自動測試不等於所有視覺皆已人工確認。
-8. Supabase Advisor 的 leaked-password protection、SECURITY DEFINER 權限邊界、`pg_net` schema、外鍵索引等需逐項硬化；不批次撤權限或搬 extension 破壞現行流程。
+8. Supabase Leaked Password Protection 仍需在可讀寫 Auth 設定的管理介面啟用並驗收；現有連接器只有資料庫層能力，不能用 SQL 假裝已設定。
 
 ## 原則
 
