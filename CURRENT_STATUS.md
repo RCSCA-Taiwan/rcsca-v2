@@ -1,17 +1,17 @@
 # RCSCA V2 — Current Operational Baseline
 
-> 最新營運基準：2026-10-23（Asia/Taipei）。如本檔與 `PROJECT_STATUS.md` 舊段落衝突，以本檔、最新 Production 與 CI 紀錄為準；`PROJECT_STATUS.md` 僅保留歷史演進用途。
+> 最新營運基準：2026-10-25（Asia/Taipei）。如本檔與 `PROJECT_STATUS.md` 舊段落衝突，以本檔、最新 Production 與 CI 紀錄為準；`PROJECT_STATUS.md` 僅保留歷史演進用途。
 
 ## Production
 
 - GitHub `main` 與 Vercel 最新 Production deployment 為即時版本來源；本檔不再硬寫單一 commit SHA，避免正常維護後基準文字立即過期。
-- Vercel Production：READY。
+- Vercel Production：READY；正式站目前採 fail-closed Auth 狀態。
 - 正式網址目前為 `https://rcsca-v2.vercel.app`；尚未綁定 RCSCA 自有網域。
-- `NEXT_PUBLIC_SITE_URL=https://rcsca-v2.vercel.app` 已配置於 Production，未來接自有網域時只需更新環境變數與網域綁定。
+- `NEXT_PUBLIC_SITE_URL=https://rcsca-v2.vercel.app` 已配置於 Production，未來接自有網域時需同步更新環境變數、Auth redirect/callback 與網域綁定後重新完成端到端驗收。
 - Production Supabase：`zoogppmgajbiridffohm`，ACTIVE_HEALTHY。
-- `NEXT_PUBLIC_REGISTRATION_OPEN=true`；`NEXT_PUBLIC_AUTH_EMAIL_ENABLED=true`。
-- 正式 `/api/health` 已回 200、`status=ok`、`configured=true`。
-- 最近核對的 Production runtime errors：0。
+- `NEXT_PUBLIC_REGISTRATION_OPEN=false`；`NEXT_PUBLIC_AUTH_EMAIL_ENABLED=false`。2026/10/25 真實註冊測試確認 Supabase Auth SMTP 回傳 Gmail `535 BadCredentials` 後主動關閉，避免使用者再撞到失敗流程。
+- 正式 `/register` 已實測顯示「線上註冊暫未開放」；`/login` 已停用 Email magic-link、保留既有帳號密碼登入；`/auth/recover` 已停用寄信表單。
+- 正式 `/api/health` 已回 200、`status=ok`、`configured=true`；此 health check 不代表外部 SMTP 寄送成功。
 
 ## 公開／受保護入口
 
@@ -19,7 +19,7 @@
 - `/`、`/register`、`/care-actions`、`/care-actions/request`、`/1percent-partner`、`/1percent-partner/esg`、`/governance` 可正常載入。
 - `/my-1percent`、`/membership/apply`、`/admin/operations` 未登入時會進安全登入，不直接輸出受保護個資或後台營運資料。
 - 關懷需求與企業合作需求的聯絡／情境欄位僅在登入後顯示。
-- 正式登入頁已啟用 Email 安全登入連結；Preview 可維持較保守的寄信關閉設定。
+- 正式 Email magic-link／新註冊／Email 密碼重設暫停；只在正式 SMTP 修復或更換後，完成真實收件、點擊 callback 與登入成功驗收，才重新開放。
 
 ## 搜尋索引邊界
 
@@ -42,6 +42,8 @@ PR #91 已完成三層保護：
 - #89：兩處 `align-items:end` 改為 `flex-end`；原 autoprefixer 相容性警告已消失。
 - #91：公開索引、robots 與 noindex 邊界硬化。
 - #95：GitHub Actions 的 checkout／setup-node／upload-artifact 升級到 Node 24 runtime release，並以官方 release commit SHA 鎖定；專案本身仍使用 Node 22，application／browser／backup 驗證通過。
+- #97：移除已失效的一次性 diagnostics cleanup job。
+- #98：Production Auth SMTP 真實測試失敗後，後台 readiness 改以端到端實際結果為準，明確標示 Auth Email 為 launch blocker。
 
 ## 首頁動畫／品牌入口
 
@@ -53,7 +55,7 @@ PR #91 已完成三層保護：
 
 ## 會員／歷史資料／生日
 
-Production 核對：
+Production 最近核對：
 - `public.profiles`：2
 - `public.enterprises`：1
 - `public.enterprise_applications`：1
@@ -97,13 +99,23 @@ Production 核對：
 - 目前運費政策：免運、收件人另付、運費已包含在兌換點數中。
 - **獨立運費點數折抵尚未實作**；資料層沒有 `shipping_point_cost` 類欄位。需先核定折抵點值、是否可部分折抵、取消／退點規則後再做，不能自行發明帳務規則。
 
-## 管理通知 Mail Worker
+## Auth Email 與管理通知 Mail Worker
+
+### Supabase Auth Email
+
+- 2026/10/25 真實新使用者寄送驗證連結時，Supabase Auth `/auth/v1/otp` 回 HTTP 500；Auth log 明確顯示 Gmail SMTP `535 5.7.8 Username and Password not accepted`。
+- 因此新註冊、Email magic-link 登入與 Email 密碼重設目前全部 fail-closed 暫停。
+- CI 的 `verify:mail-config`、worker heartbeat、設定存在或 health check 均**不能**替代實際 Auth 信件收件驗收。
+- 重新開放硬條件：正式 SMTP 憑證／服務可用 → 真實信箱收到 → 點擊驗證／magic link → callback 正確 → 成功登入 → 再測 recovery。
+
+### 管理通知 Mail Worker
 
 - Supabase `pg_cron`：`rcsca-admin-mail-dispatch`，每 5 分鐘。
 - `automatic_enabled=true`、`manual_enabled=false`。
-- scheduler tick／worker seen 有近期更新，近期 worker run 為 completed；核對時 outbox 無 pending／failed 堆積。
+- scheduler tick／worker seen 有近期更新，worker run 持續 completed。
+- 2026/10/25 核對時 `private.admin_mail_outbox` 與 `private.admin_mail_attempts` 均無資料，因此「worker 正常」不能當成管理通知 SMTP 寄送或實際收件已驗收。
 - 最新架構使用短效 signed tick、一次性 consume、bounded worker token，不依賴 `SB_SERVICE_ROLE_KEY`。
-- 空 outbox 不能當成真實收件驗收；仍需在有受控待寄項目時完成實際收件驗證。
+- 必須用受控待寄項目完成 SMTP accepted 與實際收件確認後，才能把管理通知寄送標成正式驗收完成。
 
 ## Production Backup / Recovery
 
@@ -128,24 +140,34 @@ Production 核對：
 
 ## 安全／效能稽核
 
-- 最新 Security Advisor 無 ERROR；仍有 `pg_net` 位於 public schema、3 支刻意公開的 SECURITY DEFINER RPC、authenticated SECURITY DEFINER 提示與 Leaked Password Protection 未啟用等 WARN。
+- 2026/10/25 最新 Security Advisor 無 ERROR；仍有 `pg_net` 位於 public schema、3 支刻意公開的 SECURITY DEFINER RPC、authenticated SECURITY DEFINER 提示與 Leaked Password Protection 未啟用等 WARN。
 - 已針對管理升權、會員審核、捐款、ESG、Network、活動核實等高風險 SECURITY DEFINER RPC 實際檢查函式本體；均使用 `auth.uid()` 搭配 `private.is_admin()` 或 `public.admin_roles` 驗證角色。
 - 自動掃描未找到「authenticated 可執行＋SECURITY DEFINER＋會寫資料、但完全沒有 auth/admin 身分檢查」的 public RPC；亦未找到 anon 可執行的 SECURITY DEFINER 寫入 RPC。
-- Performance Advisor 目前仍有 22 個未覆蓋 FK、74 個未使用索引與 2 組多 permissive SELECT policy。因正式資料量仍低，不為消 lint 批次增刪索引；待真實會員／交易資料進入後依 query plan 調整。
+- Performance Advisor 既有提示不以批次增刪索引或撤權限方式處理；待真實會員／交易資料進入後依 query plan 調整。
+
+## 正式網域
+
+2026/10/25 即時註冊可用性核對：
+- `rcsca.org.tw`：不可註冊。
+- `rcsca.org`：不可註冊。
+- `rcsca.tw`：目前可註冊。
+- `rcsca.com.tw`：目前可註冊。
+
+網域購買涉及實際費用與註冊人資料，未經明確付款同意不代購。
 
 ## 尚未關閉的正式營運缺口
 
-1. 匯入並核定正式歷史會員名冊，完成舊會員認領、會員年資與生日名單的真實資料驗收。
-2. 配置 Production backup 真實 DB／加密／異地儲存憑證，取得至少一次完整成功紀錄。
-3. 徽章／XP 門檻與「其他活動核實點值」未正式核定前，不自行填規則。
-4. 完成真實新註冊端到端驗收，以及有實際待寄項目時的通知收件驗收。
-5. 若要獨立「運費點數折抵」，先核定帳務規則再新增資料層與交易邏輯。
-6. 決定並綁定 RCSCA 自有正式網域；目前只有 `rcsca-v2.vercel.app`。
+1. **修復／更換 Supabase Auth 正式 SMTP**，並完成真實註冊信收件、點擊 callback、登入及 recovery 端到端驗收；通過前註冊與 Email magic-link 維持關閉。
+2. 用受控真實待寄項目完成管理通知 SMTP accepted＋收件匣確認；worker heartbeat 不算送達證據。
+3. 配置 Production backup 真實 DB／加密／異地儲存憑證，取得至少一次「備份 → 異地 → 下載 → 隔離還原」完整成功紀錄。
+4. 匯入並核定正式歷史會員名冊，完成舊會員認領、會員年資與生日名單的真實資料驗收。
+5. 決定並購買／綁定 RCSCA 自有正式網域；目前只有 `rcsca-v2.vercel.app`。
+6. Supabase Leaked Password Protection 仍需在可讀寫 Auth 設定的管理介面啟用並驗收；現有資料庫連接器不能用 SQL 假裝已設定。
 7. 完成 iPhone／桌面主要流程最終人工實機驗收；CI/browser 自動測試不等於所有視覺皆已人工確認。
-8. Supabase Leaked Password Protection 仍需在可讀寫 Auth 設定的管理介面啟用並驗收；現有連接器只有資料庫層能力，不能用 SQL 假裝已設定。
+8. 徽章／XP 門檻、「其他活動核實點值」與若要獨立「運費點數折抵」的帳務規則，未正式核定前不自行填值。
 
 ## 原則
 
-- 沒有真實證據，不把「工具存在」「CI 模擬成功」「排程有觸發」寫成 Production 備份／通知／註冊已完整驗收。
+- 沒有真實證據，不把「工具存在」「CI 模擬成功」「排程有觸發」「設定已填」寫成 Production 備份／通知／註冊已完整驗收。
 - Production 資料與權限優先 fail-closed；不使用 publishable key、假 secret 或繞過授權來解決部署問題。
 - 已核定需求採最後版本；未核定帳務／等級規則不自行補數字。
