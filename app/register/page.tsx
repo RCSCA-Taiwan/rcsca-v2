@@ -8,12 +8,12 @@ import {safeInternalPath} from '../../lib/auth-navigation';
 import {registrationCopy} from '../../lib/registration-copy';
 import './registration.css';
 
-const signupEnabled = process.env.NEXT_PUBLIC_REGISTRATION_OPEN === 'true' || process.env.NODE_ENV === 'development';
+const signupEnabled = (process.env.NEXT_PUBLIC_REGISTRATION_OPEN === 'true' && process.env.NEXT_PUBLIC_AUTH_EMAIL_ENABLED === 'true') || process.env.NODE_ENV === 'development';
 const availabilityCopy = {
- 'zh-Hant': ['線上註冊暫未開放','註冊服務準備完成後會在此開放。你可以先了解參與方式；已有帳號可直接登入。','了解參與方式'],
- en: ['Online registration is not open yet','Registration will open here when ready. Explore ways to participate or sign in with your existing account.','Explore ways to participate'],
- ja: ['オンライン登録は準備中です','準備完了後に登録を開始します。参加方法をご覧いただくか、既存のアカウントでログインしてください。','参加方法を見る'],
- ko: ['온라인 가입 준비 중','준비가 완료되면 이곳에서 가입할 수 있습니다. 참여 방법을 보거나 기존 계정으로 로그인하세요.','참여 방법 보기'],
+ 'zh-Hant': ['線上註冊暫未開放','註冊與 Email 驗證服務都通過正式驗收後會在此開放。你可以先了解參與方式；已有帳號可使用密碼登入。','了解參與方式'],
+ en: ['Online registration is not open yet','Registration will open after both registration and email verification pass production acceptance. Explore ways to participate or sign in with an existing password.','Explore ways to participate'],
+ ja: ['オンライン登録は準備中です','登録とメール認証の両方が本番環境の検証を通過後に開放します。参加方法をご覧いただくか、既存のパスワードでログインしてください。','参加方法を見る'],
+ ko: ['온라인 가입 준비 중','가입과 이메일 인증이 모두 운영 환경 검증을 통과한 뒤 개방됩니다. 참여 방법을 보거나 기존 비밀번호로 로그인하세요.','참여 방법 보기'],
 };
 
 export default function RegisterPage() {
