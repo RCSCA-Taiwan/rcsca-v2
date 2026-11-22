@@ -116,7 +116,7 @@ export default function ShareMarket() {
   return <main className="marketPage"><SiteHeader />
     <section className="marketHero"><div className="portalWrap"><div>
       <div className="eyebrow">1% 共享所</div><h1>{t('market.title')}</h1><p>{t('market.lead')}</p>
-      <a className="outlineLight" href="/sharing-rules">{c.rules} →</a> <a className="outlineLight" href="/love-pool">共享愛心公池 →</a>
+      <a className="outlineLight" href="/sharing-rules">{c.rules} →</a> <a className="outlineLight" href="/love-pool">共享愛心公池 →</a> <a className="outlineLight" href="/group-buy">共享團購 →</a>
     </div><div className="marketWallet"><small>{t('market.points')}</small>
       <strong aria-live="polite">{balance}</strong>
       {!loading && !readError && account.signed && <span>Lv.{account.level} · {account.footprints} {c.footprints}</span>}
