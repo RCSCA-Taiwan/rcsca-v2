@@ -12,11 +12,11 @@ export default function SharingRules() {
         <table style={{width:'100%',borderCollapse:'collapse',textAlign:'left'}}>
           <thead><tr><th scope="col">積分取得項目</th><th scope="col">建議點數</th><th scope="col">條件與狀態</th></tr></thead>
           <tbody>
-            <tr><td>首次完成註冊</td><td>+50</td><td>每人一次；待核定</td></tr>
-            <tr><td>完成個人基本資料</td><td>+30</td><td>每人一次；待核定</td></tr>
+            <tr><td>首次完成註冊</td><td>+10</td><td>每人一次；待核定</td></tr>
+            <tr><td>完成個人基本資料</td><td>+10</td><td>每人一次；待核定</td></tr>
             <tr><td>論壇發表主題</td><td>+2</td><td>審核通過，每日最多一次；已啟用</td></tr>
             <tr><td>論壇有效回覆</td><td>+1</td><td>首次回覆他人的每個已核准主題；已啟用</td></tr>
-            <tr><td>參與協會公益活動（含志工服務）</td><td>+200</td><td>經協會核實，同一活動不重複核發；待核定</td></tr>
+            <tr><td>參與協會公益活動（含志工服務）</td><td>+50</td><td>經協會核實，同一活動不重複核發；待核定</td></tr>
             <tr><td>推薦新會員加入</td><td>+100</td><td>新會員完成入會核實；待核定</td></tr>
             <tr><td>參與企業共享任務</td><td>+100～500</td><td>依任務內容設定；待核定</td></tr>
             <tr><td>特殊公益貢獻</td><td>+100～1,000</td><td>管理員審核；待核定</td></tr>
