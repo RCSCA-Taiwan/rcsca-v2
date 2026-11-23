@@ -13,7 +13,7 @@ type Props={
 export default function SharePointsReview({referenceValueTwd,pointsPerTwd,roundingIncrement,onDecision}:Props){
  const suggested=useMemo(()=>{
   if(!Number.isSafeInteger(referenceValueTwd)||referenceValueTwd<=0||
-    !Number.isSafeInteger(pointsPerTwd)||!pointsPerTwd||pointsPerTwd<=0||
+    pointsPerTwd===null||!Number.isSafeInteger(pointsPerTwd)||pointsPerTwd<=0||
     !Number.isSafeInteger(roundingIncrement)||roundingIncrement<=0)return null;
   const raw=referenceValueTwd*pointsPerTwd;
   const points=Math.ceil(raw/roundingIncrement)*roundingIncrement;
