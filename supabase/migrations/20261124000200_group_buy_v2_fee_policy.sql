@@ -24,8 +24,8 @@ comment on column public.group_buy_proposals_v2.fee_per_order_snapshot is 'TWD 3
 -- Pure fee calculator; eligibility and refunds must be determined from audited order records, never supplied by sellers.
 create or replace function public.group_buy_v2_calculate_fee(p_completed_orders integer,p_base numeric default 500,p_per_order numeric default 30)
 returns numeric language sql immutable strict set search_path='' as $$
- select case when p_completed_orders < 0 or p_base < 0 or p_per_order < 0 or false
+ select case when p_completed_orders < 0 or p_base < 0 or p_per_order < 0
  then null else p_base+p_completed_orders*p_per_order end
 $$;
 revoke all on function public.group_buy_v2_calculate_fee(integer,numeric,numeric) from public,anon,authenticated;
-comment on function public.group_buy_v2_calculate_fee(integer,numeric,numeric,numeric) is 'Backoffice arithmetic only. A completed order with full refund must not be counted; partial refunds require explicit reconciliation.';
+comment on function public.group_buy_v2_calculate_fee(integer,numeric,numeric) is 'Backoffice arithmetic only. A completed order with full refund must not be counted; partial refunds require explicit reconciliation.';
