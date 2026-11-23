@@ -32,3 +32,18 @@ revoke all on public.group_buy_v2_reward_contributions from anon,authenticated;
 
 -- No automatic insert of two items, no automatic reward publication.
 -- The server-side approval RPC must validate verified totals and proposer identity.
+
+-- Fee snapshot must match verified proposer category before approval.
+-- Existing settlement rows remain intact; new approval code must copy category-specific
+-- fee_base_snapshot and fee_per_order_snapshot to settlement base_fee/per_order_fee.
+-- Cross-table enforcement and settlement approval RPC are still pending.
+create or replace function public.group_buy_v2_category_fee(
+ p_category text,p_eligible_orders integer
+) returns numeric language sql immutable strict set search_path='' as $$
+ select case
+  when p_eligible_orders < 0 then null
+  when p_category='individual_member' then 1000::numeric
+  when p_category='enterprise_shop' then 500::numeric+30::numeric*p_eligible_orders
+  else null end
+$$;
+revoke all on function public.group_buy_v2_category_fee(text,integer) from public,anon,authenticated;
