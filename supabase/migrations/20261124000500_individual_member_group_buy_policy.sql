@@ -1,6 +1,6 @@
 -- Draft policy amendment, NOT deployed.
 -- Individual members: TWD 1,000 per offer, no per-order fee, two physical items for rewards.
--- Enterprise/shop: unchanged TWD 500 + TWD 30 per eligible completed order.
+-- Enterprise/shop: TWD 2,000 + TWD 20 per eligible completed order.
 alter table public.group_buy_proposals_v2
  add column if not exists proposer_category text
   check(proposer_category in ('enterprise_shop','individual_member')),
@@ -43,7 +43,7 @@ create or replace function public.group_buy_v2_category_fee(
  select case
   when p_eligible_orders < 0 then null
   when p_category='individual_member' then 1000::numeric
-  when p_category='enterprise_shop' then 500::numeric+30::numeric*p_eligible_orders
+  when p_category='enterprise_shop' then 2000::numeric+20::numeric*p_eligible_orders
   else null end
 $$;
 revoke all on function public.group_buy_v2_category_fee(text,integer) from public,anon,authenticated;
