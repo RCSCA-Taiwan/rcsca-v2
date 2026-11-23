@@ -10,7 +10,7 @@ create table if not exists public.group_buy_v2_fee_policies (
  constraint group_buy_v2_fee_policy_unique_effective unique (effective_from)
 );
 insert into public.group_buy_v2_fee_policies(base_fee,per_order_fee)
-select 500,30 where not exists(select 1 from public.group_buy_v2_fee_policies);
+select 2000,20 where not exists(select 1 from public.group_buy_v2_fee_policies);
 alter table public.group_buy_v2_fee_policies enable row level security;
 revoke all on public.group_buy_v2_fee_policies from anon,authenticated;
 alter table public.group_buy_proposals_v2
@@ -19,10 +19,10 @@ alter table public.group_buy_proposals_v2
  add column if not exists fee_per_order_snapshot numeric(12,2)
 ;
 comment on column public.group_buy_proposals_v2.fee_policy_id is 'Capture approved fee policy at scheduling; no retroactive repricing of existing listings.';
-comment on column public.group_buy_proposals_v2.fee_base_snapshot is 'TWD 500 initial fixed fee, charged once per listing under approved policy.';
-comment on column public.group_buy_proposals_v2.fee_per_order_snapshot is 'TWD 30 per eligible completed order, not per purchased unit.';
+comment on column public.group_buy_proposals_v2.fee_base_snapshot is 'TWD 2000 initial fixed fee, charged once per listing under approved policy.';
+comment on column public.group_buy_proposals_v2.fee_per_order_snapshot is 'TWD 20 per eligible completed order, not per purchased unit.';
 -- Pure fee calculator; eligibility and refunds must be determined from audited order records, never supplied by sellers.
-create or replace function public.group_buy_v2_calculate_fee(p_completed_orders integer,p_base numeric default 500,p_per_order numeric default 30)
+create or replace function public.group_buy_v2_calculate_fee(p_completed_orders integer,p_base numeric default 2000,p_per_order numeric default 20)
 returns numeric language sql immutable strict set search_path='' as $$
  select case when p_completed_orders < 0 or p_base < 0 or p_per_order < 0
  then null else p_base+p_completed_orders*p_per_order end
