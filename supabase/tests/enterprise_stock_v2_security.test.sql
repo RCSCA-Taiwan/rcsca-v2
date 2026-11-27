@@ -1,0 +1,12 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select plan(6);
+select ok(not has_table_privilege('authenticated','public.enterprise_reward_stock_v2','UPDATE'),'members cannot modify stock');
+select ok(not has_table_privilege('anon','public.enterprise_stock_reservations_v2','SELECT'),'anonymous cannot read reservations');
+select ok(not has_table_privilege('service_role','public.enterprise_stock_allocations_v2','INSERT'),'service role cannot forge allocations');
+select ok(not has_function_privilege('authenticated','public.enterprise_stock_reserve_v2(uuid,uuid,uuid,integer)','EXECUTE'),'no direct reservation');
+select ok(not has_function_privilege('authenticated','public.enterprise_stock_release_v2(uuid)','EXECUTE'),'no direct release');
+select ok(not has_function_privilege('anon','public.enterprise_reward_available_v2(uuid)','EXECUTE'),'no internal availability exposure');
+select * from finish();
+rollback;
