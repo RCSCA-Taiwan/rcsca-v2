@@ -65,3 +65,11 @@
 - e46902ae78c642043976d28dcf19e92f1b4bc048：登入身分與伺服器運費串接原子下單，重試保留原運費。
 - 本機確認 Node 可用，psql、postgres、Supabase CLI 不在 PATH，尚無 PostgreSQL 實測。會員資格、運費設定鎖定、逾期政策、可信任執行角色及所有整合驗收仍待完成。未開放交易。
 - 五階段維持 68/30/5/10/0%，加權20.20%。未合併、未部署。
+
+## 2026-11-28 隔離驗收流程
+- 2dd1bb68ada4048eadb4c8114748f18ecdc77ea0：8項 pgTAP 權限測試，未執行。
+- bd4b7cb1c6282142637dda5a472585c32319eb40：本機隔離測試腳本。
+- f87b5eaf21b8886218f733335fdbfddd4eecce33：GitHub Actions 隔離測試流程。
+- 49f056b5b5cf3ddeba28bccba5f5277d1ff72409：補 PR 觸發與同 ref 舊任務取消。
+- Application and Database Verification #407 (46066709865) 查詢時 pending；新資料庫專用流程尚無確認結果。不得視為測試通過。
+- 五階段 68/30/5/10/0%，加權20.20%。未部署或合併。
