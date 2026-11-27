@@ -87,3 +87,15 @@
 - 504a2e9e8d26c1930ead234101cfe0c72d367211：每週三檔唯一名額；19d3b1b586d0d994ba254fbdd28020b90c212b07：排程函式；ac97b2452da315f3d0a463b6170743ff1b2b985f、c175e905de33f6f433dcf2664b338cc130d45511：6項排程測試與 runner。
 - 6607b899c3227ac62e3dee56fdee62fa1ccc7764：會員資格 predicate。既有 app/account/identity/page.tsx 證實 memberships.user_id/status/membership_type/member_since/member_number 及 enterprise_users.user_id/enterprise_id 查詢；尚未確認企業角色、審核與會籍期限 schema，不可授權交易。
 - 累計46項 pgTAP 與1項並發案例，未取得完整通過結果。週次 fixture 相容性需核對。五階段維持68/30/5/10/0，加權20.2%。未合併或部署。
+
+## 2026-11-28 企業共享庫存交易層
+- 323eb67e89a514392c0d8e13c27df4a6220eaf96：已驗收實體商品入庫。
+- 5376f47f747a2cec9d557fa6ccfafcf1660f03d0：已入庫驗收紀錄防修改。
+- 59e01bcce31d9334d7f8158178837e98aa5abc12：既有 reward_catalog 關聯。
+- ae50f242ba197134acb88f99b85173abdcb1ceb5：有效庫存計算。
+- 2e9f1a98b2e860542990f31f5714cdcfc47bc08d：跨批次原子分配。
+- a95515f324332e8bbe59b1e393122097f454ca32：原批次返還。
+- 58956e114568233a79cfb013937d401ddc0531ff：拒絕已取消請求重試。
+- 1ba3ab22218f3535f66940944fafc6b1ca6c1bd2、bdfcc4f1e34a45a893d91c26df127df5969043f6：6項權限測試與 runner。累計52項 pgTAP、1項並發案例，尚無完整通過證據。
+- 既有 app/share-market/page.tsx 使用 reward_catalog、reward_redemptions、point_wallet_self、reward_submit_redemption、reward_submit_fulfillment。新制不得另建積分帳本；需確認既有 RPC 交易鎖與扣點/返還規則，避免兩套庫存同時出售。尚缺批次交易實測、授權、庫存調整、個人贈品、服務券與前後台整合。
+- 五階段維持68/30/5/10/0，加權20.2%。未合併、未部署。
