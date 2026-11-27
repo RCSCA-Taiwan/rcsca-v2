@@ -73,3 +73,10 @@
 - 49f056b5b5cf3ddeba28bccba5f5277d1ff72409：補 PR 觸發與同 ref 舊任務取消。
 - Application and Database Verification #407 (46066709865) 查詢時 pending；新資料庫專用流程尚無確認結果。不得視為測試通過。
 - 五階段 68/30/5/10/0%，加權20.20%。未部署或合併。
+
+## 2026-11-28 交易驗收案例補充
+- 10012465cc91a4450b84a145176fc168e530db64：庫存6項；e6993008da81fb2c4864af75e6ca28f506986f09 納入 runner。
+- c408fcdf43d13046584a2ca7011fcbfd6d532afc：付款6項；2688085629593e6943c145730dbe3f17b5f29eb4 納入 runner。
+- 5fbda3a59032cad7fbfd9ef0a2877f53a5882e9c：退款5項；823f6b3ca49f630bc4b1e74d52645d7d04219850 納入 runner。
+- 5a4a338534652a832554204946e9925948ca2d52：雙連線容量測試；134f8f8fa33d75678c4acdb8f07d13c4eebce3b1 納入 runner。
+- CI #16 (46066976324) queued、#415 (46066976286) pending，尚無通過證據。共25項 pgTAP 與1項多連線案例。進度維持68/30/5/10/0，加權20.2%。
