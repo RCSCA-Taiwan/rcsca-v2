@@ -80,3 +80,10 @@
 - 5fbda3a59032cad7fbfd9ef0a2877f53a5882e9c：退款5項；823f6b3ca49f630bc4b1e74d52645d7d04219850 納入 runner。
 - 5a4a338534652a832554204946e9925948ca2d52：雙連線容量測試；134f8f8fa33d75678c4acdb8f07d13c4eebce3b1 納入 runner。
 - CI #16 (46066976324) queued、#415 (46066976286) pending，尚無通過證據。共25項 pgTAP 與1項多連線案例。進度維持68/30/5/10/0，加權20.2%。
+
+## 2026-11-28 排程與資格補充
+- bb448c7f3284cd9b7a986c25db8b395a7373dfda、9177b6c11cab406c4e2f3598f1c72239e3087e58、360fae5efd199363721a8004cfb5e69b51de2dd3、ad47669706aba369a9b7a320f1a206a070889c19：結算與撥款15項案例。
+- 752b8dd5c14d7f2e48617dc5557dcc23d7b6d51e：停止取消正在執行的專用 CI。
+- 504a2e9e8d26c1930ead234101cfe0c72d367211：每週三檔唯一名額；19d3b1b586d0d994ba254fbdd28020b90c212b07：排程函式；ac97b2452da315f3d0a463b6170743ff1b2b985f、c175e905de33f6f433dcf2664b338cc130d45511：6項排程測試與 runner。
+- 6607b899c3227ac62e3dee56fdee62fa1ccc7764：會員資格 predicate。既有 app/account/identity/page.tsx 證實 memberships.user_id/status/membership_type/member_since/member_number 及 enterprise_users.user_id/enterprise_id 查詢；尚未確認企業角色、審核與會籍期限 schema，不可授權交易。
+- 累計46項 pgTAP 與1項並發案例，未取得完整通過結果。週次 fixture 相容性需核對。五階段維持68/30/5/10/0，加權20.2%。未合併或部署。
