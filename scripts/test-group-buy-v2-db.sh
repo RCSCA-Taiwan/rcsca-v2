@@ -7,3 +7,5 @@ docker info >/dev/null
 supabase start
 supabase db reset --local --no-seed
 supabase test db supabase/tests/group_buy_v2_security.test.sql --local
+
+supabase test db supabase/tests/group_buy_v2_reservation.test.sql --local
