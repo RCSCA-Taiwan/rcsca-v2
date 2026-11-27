@@ -36,3 +36,8 @@
 - 3c11b02888f9ac6d050e7e062a8ff45ec8fda8a7：結算預覽要求已交付訂單明確確認爭議期結束，否則凍結。
 - e933f1eb976a6d8582ad227de71961673774ed56：更新測試資料及新增爭議期測試，共八項，尚未執行。
 - 五階段維持 68/30/5/10/0%，加權 20.20%。尚未串接可信任資料庫狀態及權限，不可授權撥款。
+
+## 2026-11-28 本機測試紀錄
+- Node v22.16.0，node --test：8 passed, 0 failed。核帳模組與測試檔 Git blob SHA 分別核對 d1c65b2c6e0ca6b5fd1bee96e2470b1a79735000、0dd18e74d381853ab01cf6e65d1f54111425a62a 一致。
+- 基礎計算依賴為手動重建等效函式，非完整原檔；尚須完整 checkout 重跑。直接 git ls-remote 失敗：Could not resolve host: github.com。GitHub connector 仍可讀寫。
+- 五階段維持 68/30/5/10/0%，加權20.20%。未測試 DB/RLS/並發及完整 build。
