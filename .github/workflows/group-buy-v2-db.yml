@@ -6,11 +6,20 @@ on:
       - 'supabase/**'
       - 'scripts/test-group-buy-v2-db.sh'
       - '.github/workflows/group-buy-v2-db.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'scripts/test-group-buy-v2-db.sh'
+      - '.github/workflows/group-buy-v2-db.yml'
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: group-buy-db-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   local-db:
+    if: github.event_name != 'pull_request' || github.head_ref == 'feature/shared-inventory-service-redemption-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
