@@ -14,5 +14,6 @@ supabase test db supabase/tests/group_buy_v2_payment.test.sql --local
 
 supabase test db supabase/tests/group_buy_v2_refund.test.sql --local
 
+supabase test db supabase/tests/group_buy_v2_settlement.test.sql --local
 command -v psql >/dev/null
 bash scripts/test-group-buy-v2-concurrency.sh
