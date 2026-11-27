@@ -1,0 +1,14 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(8);
+select ok(not has_table_privilege('authenticated','public.group_buy_v2_orders','INSERT'),'buyers cannot insert orders directly');
+select ok(not has_table_privilege('authenticated','public.group_buy_v2_fulfillment','SELECT'),'recipient data is private');
+select ok(not has_table_privilege('anon','public.group_buy_v2_payment_reports','SELECT'),'anonymous cannot read payment reports');
+select ok(not has_table_privilege('service_role','public.group_buy_v2_orders','UPDATE'),'service role cannot bypass order transitions');
+select ok(not has_function_privilege('authenticated','public.group_buy_v2_quoted_checkout(uuid,uuid,integer,timestamptz,text,text,text,text,text,text,text)','EXECUTE'),'draft checkout remains disabled');
+select ok(not has_function_privilege('authenticated','public.group_buy_v2_confirm_payout(uuid,numeric,text)','EXECUTE'),'payout remains disabled');
+select ok(not has_table_privilege('authenticated','public.group_buy_v2_staff_permissions','INSERT'),'users cannot grant themselves staff rights');
+select ok(not has_function_privilege('anon','public.group_buy_v2_seller_fulfillment(uuid)','EXECUTE'),'anonymous cannot call seller fulfillment');
+select * from finish();
+rollback;
