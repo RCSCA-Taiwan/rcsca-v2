@@ -18,3 +18,5 @@ supabase test db supabase/tests/group_buy_v2_settlement.test.sql --local
 supabase test db supabase/tests/group_buy_v2_schedule.test.sql --local
 command -v psql >/dev/null
 bash scripts/test-group-buy-v2-concurrency.sh
+
+supabase test db supabase/tests/enterprise_stock_v2_security.test.sql --local
