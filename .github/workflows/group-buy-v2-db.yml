@@ -16,7 +16,7 @@ permissions:
   contents: read
 concurrency:
   group: group-buy-db-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   local-db:
     if: github.event_name != 'pull_request' || github.head_ref == 'feature/shared-inventory-service-redemption-v1'
