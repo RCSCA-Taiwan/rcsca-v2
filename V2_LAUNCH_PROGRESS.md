@@ -41,3 +41,8 @@
 - Node v22.16.0，node --test：8 passed, 0 failed。核帳模組與測試檔 Git blob SHA 分別核對 d1c65b2c6e0ca6b5fd1bee96e2470b1a79735000、0dd18e74d381853ab01cf6e65d1f54111425a62a 一致。
 - 基礎計算依賴為手動重建等效函式，非完整原檔；尚須完整 checkout 重跑。直接 git ls-remote 失敗：Could not resolve host: github.com。GitHub connector 仍可讀寫。
 - 五階段維持 68/30/5/10/0%，加權20.20%。未測試 DB/RLS/並發及完整 build。
+
+## 2026-11-28 庫存模組驗證
+- 652e71d78d6c4973debfbeb2d79cb1be67ce97de：純庫存計算模組。
+- 0cf2559591a2e420282281d290c20b56208feec4：五項庫存測試。Node v22.16.0 實測 5 pass / 0 fail；本機模組 blob SHA 與 GitHub 核對一致（80b836dbd3448195f18f17302783e72c9c65edf2）。
+- 五階段維持 68/30/5/10/0%，加權20.20%。尚無原子保留、並發鎖、付款核帳、逾期排程及 DB/RLS 驗收；不可開放交易。
