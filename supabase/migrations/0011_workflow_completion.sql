@@ -2,10 +2,10 @@
 alter table public.network_match_responses add column if not exists reviewed_by uuid references public.profiles(id), add column if not exists reviewed_at timestamptz, add column if not exists admin_note text;
 
 create policy "enterprise users create own shares" on public.enterprise_shares for insert to authenticated
-with check (private.is_enterprise_user(enterprise_id) and status='submitted' and public_result=false);
+with check (public.is_enterprise_user(enterprise_id) and status='submitted' and public_result=false);
 create policy "enterprise users update needs info shares" on public.enterprise_shares for update to authenticated
-using (private.is_enterprise_user(enterprise_id) and status='needs_info')
-with check (private.is_enterprise_user(enterprise_id) and status='submitted' and public_result=false);
+using (public.is_enterprise_user(enterprise_id) and status='needs_info')
+with check (public.is_enterprise_user(enterprise_id) and status='submitted' and public_result=false);
 
 create or replace function public.admin_review_network_response(p_response_id uuid,p_decision text,p_note text default null) returns void
 language plpgsql security definer set search_path=public,private as $$
