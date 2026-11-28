@@ -110,3 +110,8 @@
 - CI #451 (46110924403)：application、backup-restore 成功，database-replay 失敗。
 - f3fd22a74196fb23268ad322fb92f193440d0dc1：0009 先建立 private schema 並撤銷公開存取，沿用 0002 public.is_admin 授權判斷；保留 private trigger 函式及其 execute 限制。後續遷移的權限相容性及完整重播仍待驗證。
 - 五階段維持 68/30/5/10/0%，加權20.20%。52項 pgTAP 與並發案例尚未取得通過證據。未合併、未部署、未修改正式資料庫。
+
+## 2026-11-28 隔離重播第三次修正
+- CI 46137469276 / job 140956269220：0009、0010 已通過，0011 statement 1 缺少 private.is_enterprise_user(uuid)（42883）。
+- 1dab3c214c17875f326f409d5e657731ffaf2e58：0011 三處政策改用 0002 已建立的 public.is_enterprise_user，保留原身分、狀態與公開結果限制。待 CI 重播及後續權限驗收。
+- 五階段維持 68/30/5/10/0%，加權20.20%；52項 pgTAP 與並發尚未驗收。未合併、部署或修改正式資料庫。
