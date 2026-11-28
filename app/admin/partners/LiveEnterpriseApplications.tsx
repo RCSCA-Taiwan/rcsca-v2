@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import {getEnterpriseRegistrationClient} from "../../../lib/enterprise-registration-api";
 import {networkCategoryPath} from "../../../lib/network-taxonomy";
+import SharePointsReview from "../components/SharePointsReview";
 type A = {
   industry_code?:string|null;professional_codes?:string[];network_public_consent?:boolean;network_public_description?:string|null;
   industry?:string|null;address?:string|null;website_url?:string|null;contact_title?:string|null;phone_extension?:string|null;mobile?:string|null;contribution_kind?:string|null;contribution_description?:string|null;
@@ -18,6 +19,7 @@ type A = {
   created_at: string;
 };
 export default function LiveEnterpriseApplications() {
+  const [previewValue,setPreviewValue]=useState<Record<string,string>>({});
   const [rows, setRows] = useState<A[]>([]),
     [notes, setNotes] = useState<Record<string, string>>({}),
     [notice, setNotice] = useState(""),
@@ -105,6 +107,14 @@ export default function LiveEnterpriseApplications() {
                 {a.address&&<p>企業/團體/店家地址：{a.address}</p>}
                 {a.website_url&&<p>網站：{a.website_url}</p>}
                 {a.contribution_description&&<p style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>1% 產品／服務內容：{a.contribution_description}</p>}
+                <details>
+                  <summary>共享兌換點數試算（僅供審核參考）</summary>
+                  <p>這裡試算的是共享項目，不等同於核准企業身份。正式換算政策尚未核定，也不會寫入商品或開放兌換。</p>
+                  <label>商品參考市價（NT$，試算用）
+                    <input type="number" min="1" step="1" value={previewValue[a.id]||""} onChange={e=>setPreviewValue(v=>({...v,[a.id]:e.target.value}))}/>
+                  </label>
+                  <SharePointsReview referenceValueTwd={Number(previewValue[a.id]||0)} pointsPerTwd={null} roundingIncrement={1}/>
+                </details>
                 <textarea
                   value={notes[a.id] || ""}
                   onChange={(e) =>

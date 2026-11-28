@@ -1,0 +1,34 @@
+name: Group buy v2 database regression
+on:
+  push:
+    branches: [feature/shared-inventory-service-redemption-v1]
+    paths:
+      - 'supabase/**'
+      - 'scripts/test-group-buy-v2-db.sh'
+      - '.github/workflows/group-buy-v2-db.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'scripts/test-group-buy-v2-db.sh'
+      - '.github/workflows/group-buy-v2-db.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: group-buy-db-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  local-db:
+    if: github.event_name != 'pull_request' || github.head_ref == 'feature/shared-inventory-service-redemption-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.54.11
+      - name: Run isolated database regression
+        run: bash scripts/test-group-buy-v2-db.sh
+      - name: Stop disposable stack
+        if: always()
+        run: supabase stop --no-backup

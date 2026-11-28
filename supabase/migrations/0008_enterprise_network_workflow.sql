@@ -28,7 +28,7 @@ using (
     select 1 from public.network_requests nr
     where nr.id = request_id and nr.requester_user_id = (select auth.uid())
   )
-  or private.is_admin(null)
+  or public.is_admin(null)
 );
 
 drop policy if exists "match responses create self" on public.network_match_responses;
@@ -44,15 +44,15 @@ with check (
   )
   and (
     responder_enterprise_id is null
-    or private.is_enterprise_user(responder_enterprise_id)
+    or public.is_enterprise_user(responder_enterprise_id)
   )
 );
 
 drop policy if exists "match responses responder update" on public.network_match_responses;
 create policy "match responses responder update" on public.network_match_responses
 for update to authenticated
-using (responder_user_id = (select auth.uid()) or private.is_admin(null))
-with check (responder_user_id = (select auth.uid()) or private.is_admin(null));
+using (responder_user_id = (select auth.uid()) or public.is_admin(null))
+with check (responder_user_id = (select auth.uid()) or public.is_admin(null));
 
 -- Signed-in users can create their own Network requests.
 drop policy if exists "network requests self insert" on public.network_requests;
@@ -60,7 +60,7 @@ create policy "network requests self insert" on public.network_requests
 for insert to authenticated
 with check (
   requester_user_id = (select auth.uid())
-  and (requester_enterprise_id is null or private.is_enterprise_user(requester_enterprise_id))
+  and (requester_enterprise_id is null or public.is_enterprise_user(requester_enterprise_id))
   and status = 'submitted'
 );
 
@@ -69,7 +69,7 @@ drop policy if exists "enterprise shares assigned insert" on public.enterprise_s
 create policy "enterprise shares assigned insert" on public.enterprise_shares
 for insert to authenticated
 with check (
-  private.is_enterprise_user(enterprise_id)
+  public.is_enterprise_user(enterprise_id)
   and status = 'submitted'
   and public_result = false
 );
@@ -77,8 +77,8 @@ with check (
 drop policy if exists "enterprise shares assigned update draft" on public.enterprise_shares;
 create policy "enterprise shares assigned update draft" on public.enterprise_shares
 for update to authenticated
-using (private.is_enterprise_user(enterprise_id) and status in ('draft','submitted','needs_info'))
-with check (private.is_enterprise_user(enterprise_id) and status in ('draft','submitted','needs_info'));
+using (public.is_enterprise_user(enterprise_id) and status in ('draft','submitted','needs_info'))
+with check (public.is_enterprise_user(enterprise_id) and status in ('draft','submitted','needs_info'));
 
 -- Enterprise-linked Network requests remain visible to enterprise users as well as the individual requester.
 drop policy if exists "network requests owner read" on public.network_requests;
@@ -86,12 +86,12 @@ create policy "network requests owner read" on public.network_requests
 for select to authenticated
 using (
   requester_user_id = (select auth.uid())
-  or (requester_enterprise_id is not null and private.is_enterprise_user(requester_enterprise_id))
-  or private.is_admin(null)
+  or (requester_enterprise_id is not null and public.is_enterprise_user(requester_enterprise_id))
+  or public.is_admin(null)
 );
 
 -- Admin reviewers need a readable queue; verification itself remains behind the guarded RPC.
 drop policy if exists "participation admin queue read" on public.activity_participations;
 create policy "participation admin queue read" on public.activity_participations
 for select to authenticated
-using (user_id = (select auth.uid()) or private.is_admin(null));
+using (user_id = (select auth.uid()) or public.is_admin(null));

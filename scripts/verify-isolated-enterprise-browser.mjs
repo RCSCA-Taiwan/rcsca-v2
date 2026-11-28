@@ -318,6 +318,8 @@ try {
       await page.getByRole('button',{name:'下一步 →',exact:true}).click();
       await page.getByLabel('提供類型＊',{exact:true}).selectOption('both');
       await page.getByLabel('1% 產品／服務內容＊',{exact:true}).fill('Synthetic product and event service; once per month; Taipei; discuss scheduling.');
+      await page.getByLabel('每期提供數量',{exact:true}).fill('12');
+      await page.getByLabel('預計提供月份／季度',{exact:true}).fill('每年 6 月');
       await page.getByRole('checkbox',{name:/我同意審核通過後/}).check();
       await page.getByLabel('共享專業網絡公開介紹＊',{exact:true}).fill('Synthetic public event and video service.');
       await page.getByRole('button',{name:'下一步 →',exact:true}).click();

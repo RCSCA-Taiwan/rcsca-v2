@@ -1,5 +1,9 @@
 -- V160: bilateral contact consent, enterprise-share review, and user notifications.
 
+-- Private trigger functions are introduced here; authorization helpers still live in public at this migration version.
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+
 create table if not exists public.network_contact_consents (
   id uuid primary key default gen_random_uuid(),
   response_id uuid not null references public.network_match_responses(id) on delete cascade,
@@ -58,7 +62,7 @@ for select to authenticated using (
     where r.id = response_id
       and (r.responder_user_id = (select auth.uid()) or q.requester_user_id = (select auth.uid()))
   )
-  or private.is_admin(null)
+  or public.is_admin(null)
 );
 
 drop policy if exists "contact consent self write" on public.network_contact_consents;
@@ -82,11 +86,11 @@ with check (user_id = (select auth.uid()));
 
 drop policy if exists "contact reveal participant read" on public.network_contact_reveals;
 create policy "contact reveal participant read" on public.network_contact_reveals
-for select to authenticated using (visible_to_user_id = (select auth.uid()) or private.is_admin(null));
+for select to authenticated using (visible_to_user_id = (select auth.uid()) or public.is_admin(null));
 
 drop policy if exists "notifications own read" on public.user_notifications;
 create policy "notifications own read" on public.user_notifications
-for select to authenticated using (recipient_user_id = (select auth.uid()) or private.is_admin(null));
+for select to authenticated using (recipient_user_id = (select auth.uid()) or public.is_admin(null));
 
 drop policy if exists "notifications own update" on public.user_notifications;
 create policy "notifications own update" on public.user_notifications
@@ -192,7 +196,7 @@ declare
   v_share public.enterprise_shares%rowtype;
   v_status public.review_status;
 begin
-  if v_actor is null or not private.is_admin(null) then raise exception 'insufficient_privilege'; end if;
+  if v_actor is null or not public.is_admin(null) then raise exception 'insufficient_privilege'; end if;
   if p_decision not in ('approved','needs_info','rejected') then raise exception 'invalid_decision'; end if;
   v_status := p_decision::public.review_status;
   select * into v_share from public.enterprise_shares where id=p_share_id for update;
