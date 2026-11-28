@@ -99,3 +99,8 @@
 - 1ba3ab22218f3535f66940944fafc6b1ca6c1bd2、bdfcc4f1e34a45a893d91c26df127df5969043f6：6項權限測試與 runner。累計52項 pgTAP、1項並發案例，尚無完整通過證據。
 - 既有 app/share-market/page.tsx 使用 reward_catalog、reward_redemptions、point_wallet_self、reward_submit_redemption、reward_submit_fulfillment。新制不得另建積分帳本；需確認既有 RPC 交易鎖與扣點/返還規則，避免兩套庫存同時出售。尚缺批次交易實測、授權、庫存調整、個人贈品、服務券與前後台整合。
 - 五階段維持68/30/5/10/0，加權20.2%。未合併、未部署。
+
+## 2026-11-28 隔離資料庫初始化修正
+- CI 46068525061 / job 140739857299 實際日誌：0008 引用尚不存在的 private schema，SQLSTATE 3F000。
+- ff55c24c417d463421961561fdab73385dfc8573：0008 改用 0002 已建立的 public 權限函式，保留原政策判斷。僅開發分支，待確認後續 private 遷移是否完整重建政策及乾淨重播結果；不得部署。
+- 五階段維持 68/30/5/10/0%，加權20.20%。尚無修正後 CI 通過證據。
